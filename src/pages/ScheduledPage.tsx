@@ -41,14 +41,6 @@ import toast from "react-hot-toast";
 // HELPERS
 // ════════════════════════════════════════════
 
-function fmtCurrency(n: number): string {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    maximumFractionDigits: 0,
-  }).format(n);
-}
-
 function fmtDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString("en-US", {
     month: "short",

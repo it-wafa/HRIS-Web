@@ -17,7 +17,6 @@ import type { JwtPayload } from "@/types/auth";
 interface User {
   id: string;
   email: string;
-  provider: string;
 }
 
 /** Cached profile data stored in localStorage */
@@ -114,12 +113,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser({
         id: payload.id,
         email: payload.email,
-        provider: payload.userAuthProvider?.provider ?? "local",
       });
       setTokenState(jwt);
       localStorage.setItem(TOKEN_KEY, jwt);
 
-      // Fetch profile if this is a fresh login/register
+      // Fetch profile if this is a fresh login
       if (shouldFetchProfile) {
         fetchAndCacheProfile(jwt);
       }
@@ -127,23 +125,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [fetchAndCacheProfile],
   );
 
-  // On mount, restore token from localStorage or URL hash (OAuth redirect)
+  // On mount, restore token from localStorage
   useEffect(() => {
-    // Check URL hash for OAuth token (#aurify_token=xxx)
-    const hash = window.location.hash;
-    if (hash.includes("aurify_token=")) {
-      const params = new URLSearchParams(hash.substring(1));
-      const hashToken = params.get("aurify_token");
-      if (hashToken) {
-        // OAuth login — fetch profile fresh
-        processToken(hashToken, true);
-        // Clean hash from URL
-        window.history.replaceState(null, "", window.location.pathname);
-        setIsLoading(false);
-        return;
-      }
-    }
-
     // Restore from localStorage
     const stored = localStorage.getItem(TOKEN_KEY);
     const storedProfile = localStorage.getItem(PROFILE_KEY);
@@ -163,7 +146,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const setToken = useCallback(
     (jwt: string) => {
-      // Fresh login/register — fetch profile
+      // Fresh login — fetch profile
       processToken(jwt, true);
     },
     [processToken],

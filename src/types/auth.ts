@@ -13,11 +13,4 @@ export interface JwtPayload {
   exp?: number;
 }
 
-export type AuthStep =
-  | "login"
-  | "register"
-  | "verify-otp"
-  | "complete-profile"
-  | "forgot-password"
-  | "set-password"
-  | "oauth-set-password";
+export type AuthStep = "login";

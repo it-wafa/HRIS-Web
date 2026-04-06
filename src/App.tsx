@@ -2,11 +2,6 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./contexts/AuthContext";
 import { useDemo } from "./contexts/DemoContext";
 import { LoginPage } from "./pages/LoginPage";
-import { RegisterPage } from "./pages/RegisterPage";
-import { VerifyOtpPage } from "./pages/VerifyOtpPage";
-import { CompleteProfilePage } from "./pages/CompleteProfilePage";
-import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
-import { SetPasswordPage } from "./pages/SetPasswordPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { WalletPage } from "./pages/WalletPage";
 import { InvestmentPage } from "./pages/InvestmentPage";
@@ -29,11 +24,6 @@ function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
-      <Route path="/verify-otp" element={<VerifyOtpPage />} />
-      <Route path="/complete-profile" element={<CompleteProfilePage />} />
-      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-      <Route path="/set-password" element={<SetPasswordPage />} />
       <Route
         path="/"
         element={

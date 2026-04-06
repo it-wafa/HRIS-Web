@@ -1,23 +1,13 @@
 import React, { useState } from "react";
 import ReactDOM from "react-dom";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { AuthLayout } from "@/components/layout/AuthLayout";
-import {
-  Input,
-  Button,
-  Divider,
-  OAuthButton,
-} from "@/components/ui/FormElements";
-import { OAuthPasswordModal } from "@/components/ui/OAuthPasswordModal";
-import { loginApi, getOAuthUrl, requestSetPasswordApi } from "@/lib/api";
+import { Input, Button } from "@/components/ui/FormElements";
+import { loginApi } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDemo } from "@/contexts/DemoContext";
 import type { ApiError } from "@/lib/api";
-import {
-  resolveErrorMessage,
-  isOAuthPasswordConflict,
-  SUCCESS_MESSAGES,
-} from "@/lib/messages";
+import { resolveErrorMessage, SUCCESS_MESSAGES } from "@/lib/messages";
 import toast from "react-hot-toast";
 
 export function LoginPage() {
@@ -32,9 +22,6 @@ export function LoginPage() {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>(
     {},
   );
-
-  // 409 modal state
-  const [showOAuthModal, setShowOAuthModal] = useState(false);
 
   const validate = () => {
     const e: typeof errors = {};
@@ -60,36 +47,10 @@ export function LoginPage() {
       navigate("/");
     } catch (err) {
       const apiErr = err as ApiError;
-      if (
-        apiErr.statusCode === 409 &&
-        isOAuthPasswordConflict(apiErr.message)
-      ) {
-        setShowOAuthModal(true);
-      } else {
-        toast.error(resolveErrorMessage(apiErr.message, "Login failed"));
-      }
+      toast.error(resolveErrorMessage(apiErr.message, "Login failed"));
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleSetPasswordFromModal = async () => {
-    setIsLoading(true);
-    try {
-      await requestSetPasswordApi(email);
-      toast.success(SUCCESS_MESSAGES.otpSent);
-      navigate("/verify-otp", { state: { email, flow: "set-password" } });
-    } catch (err) {
-      const apiErr = err as ApiError;
-      toast.error(resolveErrorMessage(apiErr.message));
-    } finally {
-      setIsLoading(false);
-      setShowOAuthModal(false);
-    }
-  };
-
-  const handleOAuth = (provider: "google" | "github" | "microsoft") => {
-    window.location.href = getOAuthUrl(provider);
   };
 
   return (
@@ -165,55 +126,10 @@ export function LoginPage() {
             </button>
           </div>
 
-          <div className="flex items-center justify-end">
-            <Link
-              to="/forgot-password"
-              className="text-xs text-(--primary) hover:underline"
-            >
-              Forgot password?
-            </Link>
-          </div>
-
           <Button type="submit" className="w-full" isLoading={isLoading}>
             Sign In
           </Button>
         </form>
-
-        <Divider text="or continue with" />
-
-        <div className="grid grid-cols-2 gap-3">
-          <OAuthButton
-            provider="google"
-            onClick={() => handleOAuth("google")}
-          />
-          {/* <OAuthButton
-            provider="github"
-            onClick={() => handleOAuth("github")}
-          /> */}
-          <OAuthButton
-            provider="microsoft"
-            onClick={() => handleOAuth("microsoft")}
-          />
-        </div>
-
-        <p className="mt-6 text-center text-sm text-(--muted-foreground)">
-          Don&apos;t have an account?{" "}
-          <Link
-            to="/register"
-            className="font-medium text-(--primary) hover:underline"
-          >
-            Sign up
-          </Link>
-        </p>
-
-        {/* 409 OAuth password modal */}
-        <OAuthPasswordModal
-          isOpen={showOAuthModal}
-          isLoading={isLoading}
-          email={email}
-          onClose={() => setShowOAuthModal(false)}
-          onSetPassword={handleSetPasswordFromModal}
-        />
       </AuthLayout>
 
       {/* Demo mode button — portal to escape AuthLayout's relative container */}
