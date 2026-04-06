@@ -61,7 +61,7 @@ export function LoginPage() {
             Welcome back
           </h2>
           <p className="text-sm text-(--muted-foreground)">
-            Sign in to your Aurify account
+            
           </p>
         </div>
 

@@ -10,6 +10,11 @@ import { ProfilePage } from "./pages/ProfilePage";
 import { CategoriesPage } from "./pages/CategoriesPage";
 import { BudgetPage } from "./pages/BudgetPage";
 import { ScheduledPage } from "./pages/ScheduledPage";
+import { EmployeePage } from "./pages/EmployeePage";
+import { EmployeeDetailPage } from "./pages/EmployeeDetailPage";
+import { BranchPage } from "./pages/BranchPage";
+import { PositionPage } from "./pages/PositionPage";
+import { RolePage } from "./pages/RolePage";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { token, isLoading } = useAuth();
@@ -85,6 +90,48 @@ function App() {
         element={
           <PrivateRoute>
             <ScheduledPage />
+          </PrivateRoute>
+        }
+      />
+
+      {/* Master Data Routes */}
+      <Route
+        path="/employees"
+        element={
+          <PrivateRoute>
+            <EmployeePage />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/employees/:id"
+        element={
+          <PrivateRoute>
+            <EmployeeDetailPage />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/branches"
+        element={
+          <PrivateRoute>
+            <BranchPage />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/positions"
+        element={
+          <PrivateRoute>
+            <PositionPage />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/roles"
+        element={
+          <PrivateRoute>
+            <RolePage />
           </PrivateRoute>
         }
       />

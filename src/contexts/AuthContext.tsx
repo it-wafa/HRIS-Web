@@ -41,8 +41,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const TOKEN_KEY = "aurify_token";
-const PROFILE_KEY = "aurify_profile";
+const TOKEN_KEY = "token";
+const PROFILE_KEY = "profile";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
