@@ -16,8 +16,11 @@ import {
   CalendarClock,
   Users,
   Building2,
+  Network,
   Briefcase,
   Shield,
+  Calendar,
+  Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -44,8 +47,14 @@ const MONEY_FLOW_NAV: NavItem[] = [
 const MASTER_DATA_NAV: NavItem[] = [
   { icon: Users, label: "Pegawai", path: "/employees" },
   { icon: Building2, label: "Cabang", path: "/branches" },
+  { icon: Network, label: "Departemen", path: "/departments" },
   { icon: Briefcase, label: "Jabatan", path: "/positions" },
   { icon: Shield, label: "Role", path: "/roles" },
+];
+
+const JADWAL_NAV: NavItem[] = [
+  { icon: Clock, label: "Shift", path: "/shifts" },
+  { icon: Calendar, label: "Hari Libur", path: "/holidays" },
 ];
 
 export function AppSidebar() {
@@ -80,6 +89,58 @@ export function AppSidebar() {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  const renderNavItem = (item: NavItem, isActive: boolean) => {
+    const Icon = item.icon;
+    return (
+      <button
+        key={item.path}
+        onClick={() => navigate(item.path)}
+        title={collapsed ? item.label : undefined}
+        className={cn(
+          "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-all",
+          isActive
+            ? "nav-active shadow-sm"
+            : "text-(--muted-foreground) hover:bg-(--muted) hover:text-(--foreground)",
+          collapsed && "justify-center px-2",
+        )}
+      >
+        <Icon
+          size={16}
+          className={cn("shrink-0", isActive && "text-(--primary)")}
+        />
+        {!collapsed && <span>{item.label}</span>}
+        {isActive && !collapsed && (
+          <span className="ml-auto h-1.5 w-1.5 rounded-full bg-(--primary)" />
+        )}
+      </button>
+    );
+  };
+
+  const renderSection = (
+    label: string,
+    items: NavItem[],
+    pathPrefix?: string,
+  ) => (
+    <>
+      <div
+        className={cn(
+          "mt-3 mb-1 px-2 text-[10px] font-semibold uppercase tracking-widest text-(--muted-foreground)",
+          collapsed && "hidden",
+        )}
+      >
+        {label}
+      </div>
+      {collapsed && <div className="my-1 mx-2 h-px bg-(--border)" />}
+      {items.map((item) => {
+        const isActive = pathPrefix
+          ? location.pathname === item.path ||
+            location.pathname.startsWith(item.path + "/")
+          : location.pathname === item.path;
+        return renderNavItem(item, isActive);
+      })}
+    </>
+  );
+
   const sidebarContent = (
     <>
       {/* Logo */}
@@ -112,8 +173,9 @@ export function AppSidebar() {
         </button>
       </div>
 
-      {/* Main Nav */}
+      {/* Nav */}
       <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-2">
+        {/* Main Menu */}
         <div
           className={cn(
             "mb-1 px-2 text-[10px] font-semibold uppercase tracking-widest text-(--muted-foreground)",
@@ -124,109 +186,17 @@ export function AppSidebar() {
         </div>
         {MAIN_NAV.map((item) => {
           const isActive = location.pathname === item.path;
-          const Icon = item.icon;
-          return (
-            <button
-              key={item.path}
-              onClick={() => navigate(item.path)}
-              title={collapsed ? item.label : undefined}
-              className={cn(
-                "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-all",
-                isActive
-                  ? "nav-active shadow-sm"
-                  : "text-(--muted-foreground) hover:bg-(--muted) hover:text-(--foreground)",
-                collapsed && "justify-center px-2",
-              )}
-            >
-              <Icon
-                size={16}
-                className={cn("shrink-0", isActive && "text-(--primary)")}
-              />
-              {!collapsed && <span>{item.label}</span>}
-              {isActive && !collapsed && (
-                <span className="ml-auto h-1.5 w-1.5 rounded-full bg-(--primary)" />
-              )}
-            </button>
-          );
+          return renderNavItem(item, isActive);
         })}
 
-        {/* Money Flow Section */}
-        <div
-          className={cn(
-            "mt-3 mb-1 px-2 text-[10px] font-semibold uppercase tracking-widest text-(--muted-foreground)",
-            collapsed && "hidden",
-          )}
-        >
-          Money Flow
-        </div>
-        {collapsed && <div className="my-1 mx-2 h-px bg-(--border)" />}
-        {MONEY_FLOW_NAV.map((item) => {
-          const isActive = location.pathname === item.path;
-          const Icon = item.icon;
-          return (
-            <button
-              key={item.path}
-              onClick={() => navigate(item.path)}
-              title={collapsed ? item.label : undefined}
-              className={cn(
-                "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-all",
-                isActive
-                  ? "nav-active shadow-sm"
-                  : "text-(--muted-foreground) hover:bg-(--muted) hover:text-(--foreground)",
-                collapsed && "justify-center px-2",
-              )}
-            >
-              <Icon
-                size={16}
-                className={cn("shrink-0", isActive && "text-(--primary)")}
-              />
-              {!collapsed && <span>{item.label}</span>}
-              {isActive && !collapsed && (
-                <span className="ml-auto h-1.5 w-1.5 rounded-full bg-(--primary)" />
-              )}
-            </button>
-          );
-        })}
+        {/* Money Flow */}
+        {renderSection("Money Flow", MONEY_FLOW_NAV)}
 
-        {/* Master Data Section */}
-        <div
-          className={cn(
-            "mt-3 mb-1 px-2 text-[10px] font-semibold uppercase tracking-widest text-(--muted-foreground)",
-            collapsed && "hidden",
-          )}
-        >
-          Master Data
-        </div>
-        {collapsed && <div className="my-1 mx-2 h-px bg-(--border)" />}
-        {MASTER_DATA_NAV.map((item) => {
-          const isActive =
-            location.pathname === item.path ||
-            location.pathname.startsWith(item.path + "/");
-          const Icon = item.icon;
-          return (
-            <button
-              key={item.path}
-              onClick={() => navigate(item.path)}
-              title={collapsed ? item.label : undefined}
-              className={cn(
-                "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-all",
-                isActive
-                  ? "nav-active shadow-sm"
-                  : "text-(--muted-foreground) hover:bg-(--muted) hover:text-(--foreground)",
-                collapsed && "justify-center px-2",
-              )}
-            >
-              <Icon
-                size={16}
-                className={cn("shrink-0", isActive && "text-(--primary)")}
-              />
-              {!collapsed && <span>{item.label}</span>}
-              {isActive && !collapsed && (
-                <span className="ml-auto h-1.5 w-1.5 rounded-full bg-(--primary)" />
-              )}
-            </button>
-          );
-        })}
+        {/* Master Data */}
+        {renderSection("Master Data", MASTER_DATA_NAV, "prefix")}
+
+        {/* Jadwal */}
+        {renderSection("Jadwal", JADWAL_NAV)}
       </nav>
 
       {/* Bottom Section */}

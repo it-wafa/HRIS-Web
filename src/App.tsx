@@ -13,8 +13,11 @@ import { ScheduledPage } from "./pages/ScheduledPage";
 import { EmployeePage } from "./pages/EmployeePage";
 import { EmployeeDetailPage } from "./pages/EmployeeDetailPage";
 import { BranchPage } from "./pages/BranchPage";
+import { DepartmentPage } from "./pages/DepartmentPage";
 import { PositionPage } from "./pages/PositionPage";
 import { RolePage } from "./pages/RolePage";
+import { ShiftPage } from "./pages/ShiftPage";
+import { HolidayPage } from "./pages/HolidayPage";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { token, isLoading } = useAuth();
@@ -120,6 +123,14 @@ function App() {
         }
       />
       <Route
+        path="/departments"
+        element={
+          <PrivateRoute>
+            <DepartmentPage />
+          </PrivateRoute>
+        }
+      />
+      <Route
         path="/positions"
         element={
           <PrivateRoute>
@@ -132,6 +143,24 @@ function App() {
         element={
           <PrivateRoute>
             <RolePage />
+          </PrivateRoute>
+        }
+      />
+
+      {/* Jadwal Routes */}
+      <Route
+        path="/shifts"
+        element={
+          <PrivateRoute>
+            <ShiftPage />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/holidays"
+        element={
+          <PrivateRoute>
+            <HolidayPage />
           </PrivateRoute>
         }
       />
