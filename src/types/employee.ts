@@ -25,6 +25,7 @@ export interface Employee {
   photo_url: string | null;
   is_active: boolean;
   branch_id: number | null;
+  department_id: number | null;
   role_id: number | null;
   job_positions_id: number | null;
   created_at: string;
@@ -32,6 +33,7 @@ export interface Employee {
   deleted_at: string | null;
   // Joined fields for display
   branch_name?: string;
+  department_name?: string;
   role_name?: string;
   job_position_title?: string;
 }
@@ -66,6 +68,7 @@ export interface CreateEmployeePayload {
   photo_url?: string;
   is_active?: boolean;
   branch_id?: number;
+  department_id?: number;
   role_id?: number;
   job_positions_id?: number;
 }
@@ -88,6 +91,7 @@ export interface UpdateEmployeePayload {
   photo_url?: string;
   is_active?: boolean;
   branch_id?: number;
+  department_id?: number;
   role_id?: number;
   job_positions_id?: number;
 }
@@ -108,6 +112,7 @@ export interface UpdateContactPayload {
 
 export interface EmployeeListParams {
   branch_id?: number;
+  department_id?: number;
   is_active?: boolean;
   search?: string;
 }
