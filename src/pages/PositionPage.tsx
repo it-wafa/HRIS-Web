@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Plus, Pencil, Trash2, X, Briefcase } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Input, Button } from "@/components/ui/FormElements";
+import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import { usePositionList, usePositionMutations } from "@/hooks/usePosition";
+import { useDepartmentList } from "@/hooks/useDepartment";
 import type { JobPosition, CreatePositionPayload } from "@/types/job-position";
 
 // ════════════════════════════════════════════
@@ -117,23 +119,34 @@ function PositionForm({
   onClose,
   onSubmit,
   editPosition,
+  departments,
   isLoading,
 }: {
   onClose: () => void;
   onSubmit: (payload: CreatePositionPayload) => void;
   editPosition?: JobPosition;
+  departments: { id: number; name: string }[];
   isLoading?: boolean;
 }) {
   const [title, setTitle] = useState(editPosition?.title || "");
-  const [error, setError] = useState("");
+  const [departmentId, setDepartmentId] = useState(
+    editPosition?.department_id ? String(editPosition.department_id) : "",
+  );
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!title.trim()) {
-      setError("Nama jabatan wajib diisi");
+    const newErrors: Record<string, string> = {};
+    if (!title.trim()) newErrors.title = "Nama jabatan wajib diisi";
+    if (!departmentId) newErrors.department_id = "Departemen wajib dipilih";
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
-    onSubmit({ title: title.trim() });
+    onSubmit({
+      title: title.trim(),
+      department_id: departmentId ? parseInt(departmentId) : null,
+    });
   };
 
   return (
@@ -144,12 +157,33 @@ function PositionForm({
         value={title}
         onChange={(e) => {
           setTitle(e.target.value);
-          setError("");
+          setErrors((prev) => ({ ...prev, title: "" }));
         }}
         placeholder="Contoh: Manager HRD"
-        error={error}
+        error={errors.title}
         autoFocus
       />
+
+      <div className="space-y-1.5">
+        <SearchableSelect
+          label="Departemen"
+          value={departmentId}
+          onChange={(val) => {
+            setDepartmentId(val);
+            setErrors((prev) => ({ ...prev, department_id: "" }));
+          }}
+          options={departments.map((d) => ({
+            value: String(d.id),
+            label: d.name,
+          }))}
+          placeholder="Pilih departemen..."
+          searchPlaceholder="Cari departemen..."
+          required
+        />
+        {errors.department_id && (
+          <p className="text-xs text-(--destructive)">{errors.department_id}</p>
+        )}
+      </div>
 
       <div className="flex justify-end gap-2 pt-2">
         <Button
@@ -180,7 +214,10 @@ function SkeletonTable() {
           key={i}
           className="flex items-center justify-between rounded-xl border border-(--border) bg-(--card) px-5 py-4"
         >
-          <Skeleton className="h-5 w-40" />
+          <div className="flex-1 space-y-1">
+            <Skeleton className="h-5 w-40" />
+            <Skeleton className="h-4 w-28" />
+          </div>
           <div className="flex gap-2">
             <Skeleton className="h-8 w-8 rounded-lg" />
             <Skeleton className="h-8 w-8 rounded-lg" />
@@ -196,6 +233,11 @@ function SkeletonTable() {
 // ════════════════════════════════════════════
 
 export function PositionPage() {
+  const { data: departments } = useDepartmentList({ is_active: true });
+
+  // Filter state
+  const [filterDepartment, setFilterDepartment] = useState("");
+
   const { data: positions, loading, refetch } = usePositionList();
   const {
     loading: mutationLoading,
@@ -208,28 +250,34 @@ export function PositionPage() {
   const [editPosition, setEditPosition] = useState<JobPosition | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<JobPosition | null>(null);
 
+  // Client-side filter by department
+  const filtered = useMemo(() => {
+    if (!positions) return [];
+    if (!filterDepartment) return positions;
+    return positions.filter(
+      (p) => p.department_id === parseInt(filterDepartment),
+    );
+  }, [positions, filterDepartment]);
+
   const handleCreate = async (payload: CreatePositionPayload) => {
     const result = await createPosition(payload);
-    if (result) {
-      setShowForm(false);
-    }
+    if (result) setShowForm(false);
   };
 
   const handleUpdate = async (payload: CreatePositionPayload) => {
     if (!editPosition) return;
     const result = await updatePosition(editPosition.id, payload);
-    if (result) {
-      setEditPosition(null);
-    }
+    if (result) setEditPosition(null);
   };
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
     const result = await deletePosition(deleteTarget.id);
-    if (result) {
-      setDeleteTarget(null);
-    }
+    if (result) setDeleteTarget(null);
   };
+
+  const departmentOptions =
+    departments?.map((d) => ({ id: d.id, name: d.name })) || [];
 
   return (
     <MainLayout>
@@ -255,23 +303,58 @@ export function PositionPage() {
           </Button>
         </div>
 
+        {/* Filter */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <select
+            value={filterDepartment}
+            onChange={(e) => setFilterDepartment(e.target.value)}
+            className={cn(
+              "rounded-lg border bg-(--input) px-4 py-2 text-sm text-(--foreground)",
+              "border-(--border) transition-colors duration-200",
+              "focus:border-(--ring) focus:outline-none focus:ring-1 focus:ring-(--ring)",
+            )}
+          >
+            <option value="">Semua Departemen</option>
+            {departments?.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.name}
+              </option>
+            ))}
+          </select>
+          {filterDepartment && (
+            <span className="text-xs text-(--muted-foreground)">
+              {filtered.length} jabatan ditemukan
+            </span>
+          )}
+        </div>
+
         {/* Content */}
         {loading ? (
           <SkeletonTable />
-        ) : !positions || positions.length === 0 ? (
+        ) : !filtered || filtered.length === 0 ? (
           <EmptyState
-            title="Belum ada data jabatan"
-            description="Tambahkan jabatan baru untuk memulai"
+            title={
+              filterDepartment
+                ? "Tidak ada jabatan di departemen ini"
+                : "Belum ada data jabatan"
+            }
+            description={
+              filterDepartment
+                ? "Coba pilih departemen lain atau hapus filter"
+                : "Tambahkan jabatan baru untuk memulai"
+            }
             icon={<Briefcase className="h-12 w-12" />}
             action={
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => setShowForm(true)}
-              >
-                <Plus size={16} />
-                Tambah Jabatan
-              </Button>
+              !filterDepartment && (
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => setShowForm(true)}
+                >
+                  <Plus size={16} />
+                  Tambah Jabatan
+                </Button>
+              )
             }
           />
         ) : (
@@ -282,13 +365,16 @@ export function PositionPage() {
                   <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-(--muted-foreground)">
                     Nama Jabatan
                   </th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-(--muted-foreground)">
+                    Departemen
+                  </th>
                   <th className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wider text-(--muted-foreground)">
                     Aksi
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {positions.map((position, index) => (
+                {filtered.map((position, index) => (
                   <tr
                     key={position.id}
                     className={cn(
@@ -300,6 +386,17 @@ export function PositionPage() {
                       <span className="font-medium text-(--foreground)">
                         {position.title}
                       </span>
+                    </td>
+                    <td className="px-5 py-4">
+                      {position.department_name ? (
+                        <span className="inline-flex items-center rounded-md border border-(--border) bg-(--secondary)/50 px-2 py-0.5 text-xs font-medium text-(--muted-foreground)">
+                          {position.department_name}
+                        </span>
+                      ) : (
+                        <span className="text-xs italic text-(--muted-foreground)">
+                          —
+                        </span>
+                      )}
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex justify-end gap-2">
@@ -336,6 +433,7 @@ export function PositionPage() {
         <PositionForm
           onClose={() => setShowForm(false)}
           onSubmit={handleCreate}
+          departments={departmentOptions}
           isLoading={mutationLoading}
         />
       </Modal>
@@ -351,6 +449,7 @@ export function PositionPage() {
             onClose={() => setEditPosition(null)}
             onSubmit={handleUpdate}
             editPosition={editPosition}
+            departments={departmentOptions}
             isLoading={mutationLoading}
           />
         )}

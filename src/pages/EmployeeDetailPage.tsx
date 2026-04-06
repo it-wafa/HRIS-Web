@@ -12,6 +12,7 @@ import {
   Mail,
   MapPin,
   AlertTriangle,
+  Network,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -659,10 +660,20 @@ export function EmployeeDetailPage() {
               <h1 className="text-xl font-bold text-(--foreground)">
                 {employee.full_name}
               </h1>
-              <p className="text-sm text-(--muted-foreground)">
-                {employee.employee_number} •{" "}
-                {employee.job_position_title || "Belum ada jabatan"}
-              </p>
+              <div className="flex flex-wrap items-center gap-2 mt-0.5">
+                <p className="text-sm text-(--muted-foreground)">
+                  {employee.employee_number}
+                  {employee.job_position_title
+                    ? ` · ${employee.job_position_title}`
+                    : ""}
+                </p>
+                {employee.department_name && (
+                  <span className="inline-flex items-center gap-1 rounded-md border border-(--border) bg-(--secondary)/50 px-2 py-0.5 text-xs font-medium text-(--muted-foreground)">
+                    <Network size={10} />
+                    {employee.department_name}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -711,6 +722,10 @@ export function EmployeeDetailPage() {
                     }
                   />
                   <InfoItem label="Cabang" value={employee.branch_name} />
+                  <InfoItem
+                    label="Departemen"
+                    value={employee.department_name}
+                  />
                   <InfoItem
                     label="Jabatan"
                     value={employee.job_position_title}
@@ -809,7 +824,7 @@ export function EmployeeDetailPage() {
                           <span className="text-xs text-(--muted-foreground)">
                             {CONTACT_TYPE_LABELS[contact.contact_type]}
                             {contact.contact_label &&
-                              ` • ${contact.contact_label}`}
+                              ` · ${contact.contact_label}`}
                           </span>
                           {contact.is_primary && (
                             <span className="rounded-full bg-(--primary)/10 px-2 py-0.5 text-xs font-medium text-(--primary)">

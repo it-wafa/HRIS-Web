@@ -11,6 +11,7 @@ import { useEmployeeList, useEmployeeMutations } from "@/hooks/useEmployee";
 import { useBranchList } from "@/hooks/useBranch";
 import { usePositionList } from "@/hooks/usePosition";
 import { useRoleList } from "@/hooks/useRole";
+import { useDepartmentList } from "@/hooks/useDepartment";
 import {
   GENDER_LABELS,
   MARITAL_STATUS_LABELS,
@@ -80,6 +81,7 @@ function EmployeeForm({
   onClose,
   onSubmit,
   branches,
+  departments,
   positions,
   roles,
   isLoading,
@@ -87,7 +89,8 @@ function EmployeeForm({
   onClose: () => void;
   onSubmit: (payload: CreateEmployeePayload) => void;
   branches: { id: number; name: string }[];
-  positions: { id: number; title: string }[];
+  departments: { id: number; name: string }[];
+  positions: { id: number; title: string; department_id: number | null }[];
   roles: { id: number; name: string }[];
   isLoading?: boolean;
 }) {
@@ -99,6 +102,7 @@ function EmployeeForm({
     birth_place: "",
     gender: "male" as Gender,
     branch_id: "",
+    department_id: "",
     job_positions_id: "",
     role_id: "",
     nik: "",
@@ -116,6 +120,20 @@ function EmployeeForm({
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: "" }));
+  };
+
+  // Cascading: filter positions by selected department
+  const filteredPositions = useMemo(() => {
+    if (!formData.department_id) return positions;
+    return positions.filter(
+      (p) => p.department_id === parseInt(formData.department_id),
+    );
+  }, [positions, formData.department_id]);
+
+  // Reset jabatan when department changes
+  const handleDepartmentChange = (val: string) => {
+    setFormData((prev) => ({ ...prev, department_id: val, job_positions_id: "" }));
+    setErrors((prev) => ({ ...prev, department_id: "" }));
   };
 
   const validateTab1 = () => {
@@ -145,6 +163,9 @@ function EmployeeForm({
       gender: formData.gender,
       birth_place: formData.birth_place.trim() || undefined,
       branch_id: formData.branch_id ? parseInt(formData.branch_id) : undefined,
+      department_id: formData.department_id
+        ? parseInt(formData.department_id)
+        : undefined,
       job_positions_id: formData.job_positions_id
         ? parseInt(formData.job_positions_id)
         : undefined,
@@ -242,27 +263,48 @@ function EmployeeForm({
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-3">
-            <SearchableSelect
-              label="Cabang"
-              value={formData.branch_id}
-              onChange={(val) => handleChange("branch_id", val)}
-              options={branches.map((b) => ({
-                value: String(b.id),
-                label: b.name,
-              }))}
-              placeholder="Pilih cabang"
-            />
+          {/* Cabang */}
+          <SearchableSelect
+            label="Cabang"
+            value={formData.branch_id}
+            onChange={(val) => handleChange("branch_id", val)}
+            options={branches.map((b) => ({
+              value: String(b.id),
+              label: b.name,
+            }))}
+            placeholder="Pilih cabang"
+          />
+
+          {/* Departemen — cascading parent untuk jabatan */}
+          <SearchableSelect
+            label="Departemen"
+            value={formData.department_id}
+            onChange={handleDepartmentChange}
+            options={departments.map((d) => ({
+              value: String(d.id),
+              label: d.name,
+            }))}
+            placeholder="Pilih departemen"
+          />
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            {/* Jabatan — filtered by department */}
             <SearchableSelect
               label="Jabatan"
               value={formData.job_positions_id}
               onChange={(val) => handleChange("job_positions_id", val)}
-              options={positions.map((p) => ({
+              options={filteredPositions.map((p) => ({
                 value: String(p.id),
                 label: p.title,
               }))}
-              placeholder="Pilih jabatan"
+              placeholder={
+                formData.department_id
+                  ? "Pilih jabatan"
+                  : "Pilih departemen dulu"
+              }
             />
+
+            {/* Role */}
             <SearchableSelect
               label="Role"
               value={formData.role_id}
@@ -321,10 +363,7 @@ function EmployeeForm({
               label="Agama"
               value={formData.religion}
               onChange={(val) => handleChange("religion", val)}
-              options={RELIGION_OPTIONS.map((r) => ({
-                value: r,
-                label: r,
-              }))}
+              options={RELIGION_OPTIONS.map((r) => ({ value: r, label: r }))}
               placeholder="Pilih agama"
             />
             <SearchableSelect
@@ -332,10 +371,7 @@ function EmployeeForm({
               value={formData.marital_status}
               onChange={(val) => handleChange("marital_status", val)}
               options={Object.entries(MARITAL_STATUS_LABELS).map(
-                ([value, label]) => ({
-                  value,
-                  label,
-                }),
+                ([value, label]) => ({ value, label }),
               )}
               placeholder="Pilih status"
             />
@@ -431,6 +467,7 @@ function SkeletonTable() {
             <Skeleton className="h-5 w-40" />
             <Skeleton className="h-4 w-24" />
           </div>
+          <Skeleton className="h-4 w-28" />
           <Skeleton className="h-4 w-24" />
           <Skeleton className="h-4 w-32" />
           <Skeleton className="h-6 w-16 rounded-full" />
@@ -451,6 +488,7 @@ export function EmployeePage() {
   // Filter state
   const [searchQuery, setSearchQuery] = useState("");
   const [filterBranch, setFilterBranch] = useState("");
+  const [filterDepartment, setFilterDepartment] = useState("");
   const [filterStatus, setFilterStatus] = useState<"" | "active" | "inactive">(
     "",
   );
@@ -460,6 +498,7 @@ export function EmployeePage() {
     () => ({
       search: searchQuery || undefined,
       branch_id: filterBranch ? parseInt(filterBranch) : undefined,
+      department_id: filterDepartment ? parseInt(filterDepartment) : undefined,
       is_active:
         filterStatus === "active"
           ? true
@@ -467,11 +506,12 @@ export function EmployeePage() {
             ? false
             : undefined,
     }),
-    [searchQuery, filterBranch, filterStatus],
+    [searchQuery, filterBranch, filterDepartment, filterStatus],
   );
 
   const { data: employees, loading, refetch } = useEmployeeList(params);
   const { data: branches } = useBranchList();
+  const { data: departments } = useDepartmentList({ is_active: true });
   const { data: positions } = usePositionList();
   const { data: roles } = useRoleList();
   const { loading: mutationLoading, createEmployee } =
@@ -481,9 +521,7 @@ export function EmployeePage() {
 
   const handleCreate = async (payload: CreateEmployeePayload) => {
     const result = await createEmployee(payload);
-    if (result) {
-      setShowForm(false);
-    }
+    if (result) setShowForm(false);
   };
 
   return (
@@ -496,7 +534,7 @@ export function EmployeePage() {
               Pegawai
             </h1>
             <p className="text-sm text-(--muted-foreground)">
-              Kelola data pegawai beserta kontak & kontrak kerja
+              Kelola data pegawai beserta kontak &amp; kontrak kerja
             </p>
           </div>
           <Button
@@ -511,8 +549,8 @@ export function EmployeePage() {
         </div>
 
         {/* Filter Bar */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="relative flex-1 max-w-sm">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+          <div className="relative flex-1 min-w-[200px] max-w-sm">
             <Search
               size={16}
               className="absolute left-3 top-1/2 -translate-y-1/2 text-(--muted-foreground)"
@@ -544,6 +582,23 @@ export function EmployeePage() {
             {branches?.map((branch) => (
               <option key={branch.id} value={branch.id}>
                 {branch.name}
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={filterDepartment}
+            onChange={(e) => setFilterDepartment(e.target.value)}
+            className={cn(
+              "rounded-lg border bg-(--input) px-4 py-2 text-sm text-(--foreground)",
+              "border-(--border) transition-colors duration-200",
+              "focus:border-(--ring) focus:outline-none focus:ring-1 focus:ring-(--ring)",
+            )}
+          >
+            <option value="">Semua Departemen</option>
+            {departments?.map((dept) => (
+              <option key={dept.id} value={dept.id}>
+                {dept.name}
               </option>
             ))}
           </select>
@@ -603,6 +658,9 @@ export function EmployeePage() {
                       Pegawai
                     </th>
                     <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-(--muted-foreground)">
+                      Departemen
+                    </th>
+                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-(--muted-foreground)">
                       Jabatan
                     </th>
                     <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-(--muted-foreground)">
@@ -650,6 +708,15 @@ export function EmployeePage() {
                             </div>
                           </div>
                         </div>
+                      </td>
+                      <td className="px-5 py-4 text-sm text-(--muted-foreground)">
+                        {employee.department_name ? (
+                          <span className="inline-flex items-center rounded-md border border-(--border) bg-(--secondary)/50 px-2 py-0.5 text-xs font-medium text-(--muted-foreground)">
+                            {employee.department_name}
+                          </span>
+                        ) : (
+                          "—"
+                        )}
                       </td>
                       <td className="px-5 py-4 text-sm text-(--foreground)">
                         {employee.job_position_title || "-"}
@@ -699,6 +766,9 @@ export function EmployeePage() {
                       {employee.full_name}
                     </div>
                     <div className="text-xs text-(--muted-foreground)">
+                      {employee.department_name
+                        ? `${employee.department_name} · `
+                        : ""}
                       {employee.job_position_title || employee.employee_number}
                     </div>
                   </div>
@@ -725,8 +795,15 @@ export function EmployeePage() {
           onClose={() => setShowForm(false)}
           onSubmit={handleCreate}
           branches={branches?.map((b) => ({ id: b.id, name: b.name })) || []}
+          departments={
+            departments?.map((d) => ({ id: d.id, name: d.name })) || []
+          }
           positions={
-            positions?.map((p) => ({ id: p.id, title: p.title })) || []
+            positions?.map((p) => ({
+              id: p.id,
+              title: p.title,
+              department_id: p.department_id,
+            })) || []
           }
           roles={roles?.map((r) => ({ id: r.id, name: r.name })) || []}
           isLoading={mutationLoading}
