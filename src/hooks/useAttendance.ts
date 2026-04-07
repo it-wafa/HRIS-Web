@@ -266,3 +266,49 @@ export function useOverrideMutations(onSuccess?: () => void) {
 
   return { loading, createOverride, approveOverride, rejectOverride };
 }
+
+// ════════════════════════════════════════════════════════════════════════════════
+// useManualAttendanceMutations — Create Manual Attendance (§4.6)
+// ════════════════════════════════════════════════════════════════════════════════
+
+import type { CreateManualAttendancePayload } from "@/types/attendance";
+import { createManualAttendance as createManualAttendanceApi } from "@/lib/attendance-api";
+
+export function useManualAttendanceMutations(onSuccess?: () => void) {
+  const { token } = useAuth();
+  const { isDemo } = useDemo();
+  const [loading, setLoading] = useState(false);
+
+  const createManualAttendance = useCallback(
+    async (payload: CreateManualAttendancePayload) => {
+      if (isDemo) {
+        toast("Demo mode — data is read-only", { icon: "🔒" });
+        return null;
+      }
+      if (!token) {
+        toast.error("Authentication required");
+        return null;
+      }
+
+      setLoading(true);
+      try {
+        const res = await createManualAttendanceApi(token, payload);
+        toast.success("Presensi manual berhasil ditambahkan");
+        onSuccess?.();
+        return res.data;
+      } catch (err: unknown) {
+        const message =
+          err instanceof Error
+            ? err.message
+            : "Gagal menambahkan presensi manual";
+        toast.error(message);
+        return null;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [token, isDemo, onSuccess],
+  );
+
+  return { loading, createManualAttendance };
+}

@@ -130,3 +130,21 @@ export const APPROVAL_STATUS_OPTIONS: {
   { value: "approved", label: "Disetujui", color: "green" },
   { value: "rejected", label: "Ditolak", color: "red" },
 ];
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Leave Type CRUD Payloads (§1.5)
+// ══════════════════════════════════════════════════════════════════════════════
+
+export interface CreateLeaveTypePayload {
+  name: string;
+  category: LeaveCategory;
+  requires_document: boolean;
+  requires_document_type?: string | null;
+  max_duration_per_request?: number | null;
+  max_duration_unit?: DurationUnit | null;
+  max_occurrences_per_year?: number | null;
+  max_total_duration_per_year?: number | null;
+  max_total_duration_unit?: DurationUnit | null;
+}
+
+export interface UpdateLeaveTypePayload extends Partial<CreateLeaveTypePayload> {}

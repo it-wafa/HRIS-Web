@@ -74,3 +74,15 @@ export const CLOCK_METHOD_OPTIONS: {
   { value: "face_recognition", label: "Face Recognition" },
   { value: "manual", label: "Manual" },
 ];
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Manual Attendance Payload (§4.6)
+// ══════════════════════════════════════════════════════════════════════════════
+
+export interface CreateManualAttendancePayload {
+  employee_id: number;
+  attendance_date: string; // "2026-04-06"
+  clock_in_at: string; // ISO timestamp
+  clock_out_at?: string | null; // opsional
+  notes: string; // alasan presensi manual — wajib
+}

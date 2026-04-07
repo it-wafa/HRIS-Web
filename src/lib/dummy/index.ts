@@ -132,3 +132,21 @@ export {
   getDummyDailyReports,
   getDummyDailyReportById,
 } from "./daily-report.dummy";
+
+// ════════════════════════════════════════════
+// DASHBOARD & AUDIT LOG DUMMY EXPORTS
+// ════════════════════════════════════════════
+
+// Dashboard
+export {
+  getDummyEmployeeDashboard,
+  getDummyHRDDashboard,
+  getDummyTodayStatus,
+} from "./dashboard.dummy";
+
+// Audit Log
+export {
+  DUMMY_AUDIT_LOGS,
+  getDummyAuditLogs,
+  getDummyAuditLogDisplay,
+} from "./audit-log.dummy";

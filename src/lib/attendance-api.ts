@@ -116,3 +116,21 @@ export async function updateOverrideStatus(
     body: JSON.stringify(payload),
   });
 }
+
+// ════════════════════════════════════════════
+// MANUAL ATTENDANCE API (§4.6)
+// ════════════════════════════════════════════
+
+import type { CreateManualAttendancePayload } from "@/types/attendance";
+
+/** POST /attendance/manual — Create manual attendance entry */
+export async function createManualAttendance(
+  token: string,
+  payload: CreateManualAttendancePayload,
+) {
+  return bffCall<AttendanceLog>("/attendance/manual", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+}
