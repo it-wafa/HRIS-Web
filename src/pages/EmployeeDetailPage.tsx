@@ -42,6 +42,7 @@ import type {
   CreateContractPayload,
   ContractType,
 } from "@/types/contract";
+import { SearchableSelect } from "@/components/ui/SearchableSelect";
 
 // ════════════════════════════════════════════
 // CONFIRM DIALOG
@@ -263,29 +264,24 @@ function ContactForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-1.5">
-        <label className="block text-sm font-medium text-(--foreground) opacity-80">
-          Tipe Kontak *
-        </label>
-        <select
+        <SearchableSelect
+          label="Tipe Kontak *"
           value={formData.contact_type}
-          onChange={(e) =>
+          onChange={(val) =>
             setFormData((prev) => ({
               ...prev,
-              contact_type: e.target.value as ContactType,
+              contact_type: val as ContactType,
             }))
           }
-          className={cn(
-            "w-full rounded-lg border bg-(--input) px-4 py-2.5 text-sm text-(--foreground)",
-            "border-(--border) transition-colors duration-200",
-            "focus:border-(--ring) focus:outline-none focus:ring-1 focus:ring-(--ring)",
+          options={Object.entries(CONTACT_TYPE_LABELS).map(
+            ([value, label]) => ({
+              value,
+              label,
+            }),
           )}
-        >
-          {Object.entries(CONTACT_TYPE_LABELS).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
+          placeholder="Pilih tipe kontak"
+          searchPlaceholder="Cari tipe kontak..."
+        />
       </div>
 
       <Input
@@ -409,28 +405,19 @@ function ContractForm({
       />
 
       <div className="space-y-1.5">
-        <label
-          htmlFor="contract_type"
-          className="block text-sm font-medium text-(--foreground) opacity-80"
-        >
-          Tipe Kontrak *
-        </label>
-        <select
-          id="contract_type"
+        <SearchableSelect
+          label="Tipe Kontrak *"
           value={formData.contract_type}
-          onChange={(e) => handleChange("contract_type", e.target.value)}
-          className={cn(
-            "w-full rounded-lg border bg-(--input) px-4 py-2.5 text-sm text-(--foreground)",
-            "border-(--border) transition-colors duration-200",
-            "focus:border-(--ring) focus:outline-none focus:ring-1 focus:ring-(--ring)",
+          onChange={(val) => handleChange("contract_type", val)}
+          options={Object.entries(CONTRACT_TYPE_LABELS).map(
+            ([value, label]) => ({
+              value,
+              label,
+            }),
           )}
-        >
-          {Object.entries(CONTRACT_TYPE_LABELS).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
-            </option>
-          ))}
-        </select>
+          placeholder="Pilih tipe kontrak"
+          searchPlaceholder="Cari tipe kontrak..."
+        />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">

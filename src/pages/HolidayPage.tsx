@@ -227,28 +227,19 @@ function HolidayForm({
         />
 
         <div className="space-y-1.5">
-          <label
-            htmlFor="type"
-            className="block text-sm font-medium text-(--foreground) opacity-80"
-          >
-            Tipe
-          </label>
-          <select
-            id="type"
+          <SearchableSelect
+            label="Tipe"
             value={formData.type}
-            onChange={(e) => handleChange("type", e.target.value)}
-            className={cn(
-              "w-full rounded-lg border bg-(--input) px-4 py-2.5 text-sm text-(--foreground)",
-              "border-(--border) transition-colors duration-200",
-              "focus:border-(--ring) focus:outline-none focus:ring-1 focus:ring-(--ring)",
+            onChange={(val) => handleChange("type", val)}
+            options={Object.entries(HOLIDAY_TYPE_LABELS).map(
+              ([value, label]) => ({
+                value,
+                label,
+              }),
             )}
-          >
-            {Object.entries(HOLIDAY_TYPE_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
+            placeholder="Pilih tipe"
+            searchPlaceholder="Cari tipe..."
+          />
         </div>
       </div>
 

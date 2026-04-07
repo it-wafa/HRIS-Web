@@ -532,7 +532,7 @@ export function DailyReportPage() {
       <div className="mx-auto max-w-350 p-3 sm:p-5 space-y-4">
         {/* Summary */}
         {!loading && filtered.length > 0 && (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
             <div className="rounded-xl border border-(--border) bg-green-50 dark:bg-green-900/20 px-4 py-3">
               <p className="text-xs text-(--muted-foreground)">Terkirim</p>
               <p className="text-2xl font-bold text-green-600">
