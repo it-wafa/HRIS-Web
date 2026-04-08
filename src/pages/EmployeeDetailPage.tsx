@@ -13,7 +13,9 @@ import {
   MapPin,
   AlertTriangle,
   Network,
+  Lock,
 } from "lucide-react";
+import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -22,7 +24,6 @@ import { Input, Button } from "@/components/ui/FormElements";
 import {
   useEmployeeById,
   useEmployeeContacts,
-  useEmployeeMutations,
   useEmployeeContactMutations,
 } from "@/hooks/useEmployee";
 import { useContractList, useContractMutations } from "@/hooks/useContract";
@@ -43,6 +44,9 @@ import type {
   ContractType,
 } from "@/types/contract";
 import { SearchableSelect } from "@/components/ui/SearchableSelect";
+import { useDemo } from "@/contexts/DemoContext";
+import { resetEmployeePassword } from "@/lib/employee-api";
+import { useAuth } from "@/contexts/AuthContext";
 
 // ════════════════════════════════════════════
 // CONFIRM DIALOG
@@ -473,6 +477,91 @@ function ContractForm({
 }
 
 // ════════════════════════════════════════════
+// RESET PASSWORD FORM
+// ════════════════════════════════════════════
+
+function ResetPasswordForm({
+  onClose,
+  onSubmit,
+  isLoading,
+}: {
+  onClose: () => void;
+  onSubmit: (newPassword: string, confirmPassword: string) => void;
+  isLoading?: boolean;
+}) {
+  const [formData, setFormData] = useState({
+    new_password: "",
+    confirm_password: "",
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const handleChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => ({ ...prev, [field]: "" }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.new_password) {
+      newErrors.new_password = "Password baru wajib diisi";
+    } else if (formData.new_password.length < 8) {
+      newErrors.new_password = "Password minimal 8 karakter";
+    }
+
+    if (!formData.confirm_password) {
+      newErrors.confirm_password = "Konfirmasi password wajib diisi";
+    } else if (formData.new_password !== formData.confirm_password) {
+      newErrors.confirm_password = "Password tidak sama";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    onSubmit(formData.new_password, formData.confirm_password);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <Input
+        id="new_password"
+        label="Password Baru *"
+        type="password"
+        value={formData.new_password}
+        onChange={(e) => handleChange("new_password", e.target.value)}
+        placeholder="Minimal 8 karakter"
+        error={errors.new_password}
+      />
+      <Input
+        id="confirm_password"
+        label="Konfirmasi Password *"
+        type="password"
+        value={formData.confirm_password}
+        onChange={(e) => handleChange("confirm_password", e.target.value)}
+        placeholder="Ulangi password baru"
+        error={errors.confirm_password}
+      />
+      <div className="flex justify-end gap-2 pt-4 border-t border-(--border)">
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={onClose}
+          disabled={isLoading}
+        >
+          Batal
+        </Button>
+        <Button type="submit" variant="primary" isLoading={isLoading}>
+          Simpan
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+// ════════════════════════════════════════════
 // MAIN PAGE
 // ════════════════════════════════════════════
 
@@ -480,18 +569,15 @@ export function EmployeeDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const employeeId = Number.parseInt(id || "0");
+  const { token } = useAuth();
+  const { isDemo } = useDemo();
 
-  const {
-    data: employee,
-    loading,
-    refetch: refetchEmployee,
-  } = useEmployeeById(employeeId);
+  const { data: employee, loading } = useEmployeeById(employeeId);
   const { data: contacts, refetch: refetchContacts } =
     useEmployeeContacts(employeeId);
   const { data: contracts, refetch: refetchContracts } =
     useContractList(employeeId);
 
-  const { deleteEmployee } = useEmployeeMutations(refetchEmployee);
   const {
     loading: contactMutLoading,
     createContact,
@@ -506,6 +592,7 @@ export function EmployeeDetailPage() {
   } = useContractMutations(refetchContracts);
 
   const [activeTab, setActiveTab] = useState(0);
+  const [resetPasswordLoading, setResetPasswordLoading] = useState(false);
 
   // Contact state
   const [showContactForm, setShowContactForm] = useState(false);
@@ -522,8 +609,8 @@ export function EmployeeDetailPage() {
   const [deletingContract, setDeletingContract] =
     useState<EmploymentContract | null>(null);
 
-  // Delete employee state
-  const [showDeleteEmployee, setShowDeleteEmployee] = useState(false);
+  // Reset password state
+  const [showResetPassword, setShowResetPassword] = useState(false);
 
   // Handlers: Contacts
   const handleCreateContact = async (payload: CreateContactPayload) => {
@@ -561,10 +648,35 @@ export function EmployeeDetailPage() {
     setDeletingContract(null);
   };
 
-  // Handlers: Employee
-  const handleDeleteEmployee = async () => {
-    await deleteEmployee(employeeId);
-    navigate("/employees");
+  // Handlers: Reset Password
+  const handleResetPassword = async (
+    newPassword: string,
+    confirmPassword: string,
+  ) => {
+    if (isDemo) {
+      toast("Demo mode — password tidak diubah", { icon: "🔒" });
+      return;
+    }
+    if (!token) {
+      toast.error("Authentication required");
+      return;
+    }
+
+    setResetPasswordLoading(true);
+    try {
+      await resetEmployeePassword(token, employeeId, {
+        new_password: newPassword,
+        confirm_password: confirmPassword,
+      });
+      toast.success("Password berhasil diubah");
+      setShowResetPassword(false);
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "Gagal mengubah password";
+      toast.error(message);
+    } finally {
+      setResetPasswordLoading(false);
+    }
   };
 
   const formatDate = (dateStr?: string | null) => {
@@ -667,11 +779,10 @@ export function EmployeeDetailPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setShowDeleteEmployee(true)}
-              className="text-(--destructive)"
+              onClick={() => setShowResetPassword(true)}
             >
-              <Trash2 size={14} />
-              Hapus
+              <Lock size={14} />
+              Ubah Password
             </Button>
           </div>
         </div>
@@ -1023,16 +1134,18 @@ export function EmployeeDetailPage() {
         variant="danger"
       />
 
-      {/* Delete Employee */}
-      <ConfirmDialog
-        open={showDeleteEmployee}
-        title="Hapus Pegawai"
-        description={`Anda yakin ingin menghapus pegawai "${employee.full_name}"? Semua data terkait (kontak, kontrak) juga akan dihapus.`}
-        confirmLabel="Hapus"
-        onConfirm={handleDeleteEmployee}
-        onCancel={() => setShowDeleteEmployee(false)}
-        variant="danger"
-      />
+      {/* Reset Password Modal */}
+      <Modal
+        open={showResetPassword}
+        title="Ubah Password Pegawai"
+        onClose={() => setShowResetPassword(false)}
+      >
+        <ResetPasswordForm
+          onClose={() => setShowResetPassword(false)}
+          onSubmit={handleResetPassword}
+          isLoading={resetPasswordLoading}
+        />
+      </Modal>
     </MainLayout>
   );
 }

@@ -7,6 +7,8 @@ import {
   X,
   AlertCircle,
   Eye,
+  Check,
+  Ban,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -65,7 +67,7 @@ function LeaveStatusBadge({ status }: { status: LeaveRequestStatus }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
+        "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium text-nowrap",
         config.className,
       )}
     >
@@ -132,7 +134,6 @@ function LeaveRequestForm({
   isLoading?: boolean;
 }) {
   const { data: leaveTypes } = useLeaveTypeList();
-
   const [formData, setFormData] = useState({
     leave_type_id: "",
     start_date: "",
@@ -154,10 +155,10 @@ function LeaveRequestForm({
 
   const totalDays = useMemo(() => {
     if (!formData.start_date || !formData.end_date) return 0;
-    const start = new Date(formData.start_date);
-    const end = new Date(formData.end_date);
     const diff = Math.ceil(
-      (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24),
+      (new Date(formData.end_date).getTime() -
+        new Date(formData.start_date).getTime()) /
+        (1000 * 60 * 60 * 24),
     );
     return diff >= 0 ? diff + 1 : 0;
   }, [formData.start_date, formData.end_date]);
@@ -169,11 +170,12 @@ function LeaveRequestForm({
     if (!formData.start_date)
       newErrors.start_date = "Tanggal mulai wajib diisi";
     if (!formData.end_date) newErrors.end_date = "Tanggal selesai wajib diisi";
-    if (formData.start_date && formData.end_date) {
-      if (new Date(formData.end_date) < new Date(formData.start_date)) {
-        newErrors.end_date =
-          "Tanggal selesai tidak boleh sebelum tanggal mulai";
-      }
+    if (
+      formData.start_date &&
+      formData.end_date &&
+      new Date(formData.end_date) < new Date(formData.start_date)
+    ) {
+      newErrors.end_date = "Tanggal selesai tidak boleh sebelum tanggal mulai";
     }
     if (selectedLeaveType?.requires_document && !formData.document_url.trim()) {
       newErrors.document_url =
@@ -220,7 +222,6 @@ function LeaveRequestForm({
         )}
       </div>
 
-      {/* Leave type info */}
       {selectedLeaveType && (
         <div className="rounded-lg bg-(--muted)/50 border border-(--border) p-3 text-xs space-y-1">
           {selectedLeaveType.max_duration_per_request && (
@@ -311,6 +312,218 @@ function LeaveRequestForm({
 }
 
 // ════════════════════════════════════════════
+// LEAVE DETAIL MODAL (with approve/reject)
+// ════════════════════════════════════════════
+
+function LeaveDetailModal({
+  request,
+  onClose,
+  onApprove,
+  onReject,
+  isLoading,
+}: {
+  request: LeaveRequest;
+  onClose: () => void;
+  onApprove: () => void;
+  onReject: (notes: string) => void;
+  isLoading?: boolean;
+}) {
+  const [rejectMode, setRejectMode] = useState(false);
+  const [rejectNotes, setRejectNotes] = useState("");
+
+  const CATEGORY_LABELS: Record<string, string> = {
+    annual: "Cuti Tahunan",
+    sick: "Sakit",
+    special: "Cuti Khusus",
+    other: "Lainnya",
+  };
+
+  const formatDate = (dateStr: string) =>
+    new Date(dateStr).toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+
+  const getTimelineSteps = (req: LeaveRequest): TimelineStep[] => {
+    if (!req.approvals || req.approvals.length === 0) return [];
+    return req.approvals.map((approval) => ({
+      level: approval.level,
+      label: approval.level === 1 ? "Leader Departemen" : "Leader HRGA",
+      approver_name: approval.approver_name || null,
+      status: approval.status,
+      notes: approval.notes,
+      decided_at: approval.decided_at,
+    }));
+  };
+
+  const isPending =
+    request.status === "pending" || request.status === "approved_leader";
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 backdrop-blur-sm p-4"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-lg overflow-hidden rounded-2xl border border-(--border) bg-(--card) my-8"
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          boxShadow:
+            "0 0 40px rgba(212,21,140,0.1), 0 25px 50px rgba(0,0,0,0.5)",
+        }}
+      >
+        <div className="flex items-center justify-between border-b border-(--border) px-5 py-3">
+          <div>
+            <h3 className="text-sm font-bold text-(--foreground)">
+              Detail Pengajuan Cuti
+            </h3>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-lg p-1 text-(--muted-foreground) hover:text-(--foreground)"
+          >
+            <X size={16} />
+          </button>
+        </div>
+        <div className="p-5 space-y-5">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-sm font-semibold text-(--foreground)">
+                {request.employee_name || "—"}
+              </p>
+              <p className="text-xs text-(--muted-foreground)">
+                {request.leave_type_name}
+                {request.leave_category &&
+                  ` • ${CATEGORY_LABELS[request.leave_category]}`}
+              </p>
+            </div>
+            <LeaveStatusBadge status={request.status} />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 rounded-lg bg-(--muted)/30 p-3">
+            <div>
+              <p className="text-xs text-(--muted-foreground)">Periode</p>
+              <p className="text-sm font-medium text-(--foreground)">
+                {formatDate(request.start_date)} —{" "}
+                {formatDate(request.end_date)}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-(--muted-foreground)">Durasi</p>
+              <p className="text-sm font-medium text-(--foreground)">
+                {request.total_days} hari
+              </p>
+            </div>
+          </div>
+
+          {request.reason && (
+            <div>
+              <p className="text-xs text-(--muted-foreground) mb-1">Alasan</p>
+              <p className="text-sm text-(--foreground)">{request.reason}</p>
+            </div>
+          )}
+
+          {request.document_url && (
+            <div>
+              <p className="text-xs text-(--muted-foreground) mb-1">
+                Dokumen Pendukung
+              </p>
+              <a
+                href={request.document_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-(--primary) hover:underline"
+              >
+                Lihat Dokumen →
+              </a>
+            </div>
+          )}
+
+          <div>
+            <h4 className="text-sm font-semibold text-(--foreground) mb-3">
+              Timeline Persetujuan
+            </h4>
+            <ApprovalTimeline
+              steps={getTimelineSteps(request)}
+              current_status={request.status}
+            />
+          </div>
+
+          {rejectMode && (
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium text-(--foreground) opacity-80">
+                Catatan Penolakan *
+              </label>
+              <textarea
+                value={rejectNotes}
+                onChange={(e) => setRejectNotes(e.target.value)}
+                placeholder="Jelaskan alasan penolakan..."
+                rows={3}
+                className="w-full rounded-lg border bg-(--input) px-4 py-2.5 text-sm text-(--foreground) border-(--border) placeholder:text-(--muted-foreground) focus:border-(--ring) focus:outline-none focus:ring-1 focus:ring-(--ring) resize-none"
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-end gap-2 border-t border-(--border) px-5 py-3">
+          {isPending && !rejectMode && (
+            <>
+              <Button variant="ghost" size="sm" onClick={onClose}>
+                Tutup
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setRejectMode(true)}
+                className="text-red-600 hover:bg-red-500/10"
+              >
+                <Ban size={14} />
+                Tolak
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={onApprove}
+                isLoading={isLoading}
+              >
+                <Check size={14} />
+                Setujui
+              </Button>
+            </>
+          )}
+          {isPending && rejectMode && (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setRejectMode(false)}
+              >
+                Batal
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => onReject(rejectNotes)}
+                isLoading={isLoading}
+                className="bg-red-500 hover:bg-red-600"
+              >
+                Konfirmasi Tolak
+              </Button>
+            </>
+          )}
+          {!isPending && (
+            <Button variant="ghost" size="sm" onClick={onClose}>
+              Tutup
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════
 // SKELETON
 // ════════════════════════════════════════════
 
@@ -371,12 +584,26 @@ function LeaveRequestTab() {
 
   const { data: requests, loading, refetch } = useLeaveRequestList(params);
   const { data: employees } = useEmployeeList({ is_active: true });
-  const { loading: mutLoading, createRequest } =
-    useLeaveRequestMutations(refetch);
+  const {
+    loading: mutLoading,
+    createRequest,
+    approveRequest,
+    rejectRequest,
+  } = useLeaveRequestMutations(refetch);
 
   const handleCreate = async (payload: CreateLeavePayload) => {
     const result = await createRequest(payload);
     if (result) setShowForm(false);
+  };
+
+  const handleApprove = async (req: LeaveRequest) => {
+    await approveRequest(req.id);
+    setSelectedRequest(null);
+  };
+
+  const handleReject = async (req: LeaveRequest, notes: string) => {
+    await rejectRequest(req.id, { notes });
+    setSelectedRequest(null);
   };
 
   const formatDate = (dateStr: string) =>
@@ -393,24 +620,11 @@ function LeaveRequestTab() {
     other: "Lainnya",
   };
 
-  // Transform approval data to timeline steps
-  const getTimelineSteps = (request: LeaveRequest): TimelineStep[] => {
-    if (!request.approvals || request.approvals.length === 0) {
-      return [];
-    }
-    return request.approvals.map((approval) => ({
-      level: approval.level,
-      label: approval.level === 1 ? "Leader Departemen" : "Leader HRGA",
-      approver_name: approval.approver_name || null,
-      status: approval.status,
-      notes: approval.notes,
-      decided_at: approval.decided_at,
-    }));
-  };
+  const isPending = (status: LeaveRequestStatus) =>
+    status === "pending" || status === "approved_leader";
 
   return (
     <div className="space-y-4">
-      {/* Filters + Action */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap gap-3">
           <SearchableSelect
@@ -459,9 +673,8 @@ function LeaveRequestTab() {
         </Button>
       </div>
 
-      {/* Table */}
       {loading ? (
-        <SkeletonTable />
+        <SkeletonTable cols={8} />
       ) : !requests || requests.length === 0 ? (
         <EmptyState
           title="Belum ada pengajuan cuti"
@@ -496,7 +709,7 @@ function LeaveRequestTab() {
                     ].map((h) => (
                       <th
                         key={h}
-                        className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-(--muted-foreground)"
+                        className={`px-5 py-3 ${h !== "Aksi" ? "text-left" : "text-center"} text-xs font-semibold uppercase tracking-wider text-(--muted-foreground)`}
                       >
                         {h}
                       </th>
@@ -541,14 +754,39 @@ function LeaveRequestTab() {
                         <LeaveStatusBadge status={req.status} />
                       </td>
                       <td className="px-5 py-3">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setSelectedRequest(req)}
-                        >
-                          <Eye size={14} />
-                          Detail
-                        </Button>
+                        <div className="flex items-center gap-1.5">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSelectedRequest(req)}
+                            className="h-7 px-2 text-xs"
+                          >
+                            <Eye size={13} />
+                            Detail
+                          </Button>
+                          {isPending(req.status) && (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleApprove(req)}
+                                className="h-7 px-2 text-xs text-green-700 hover:bg-green-500/10 dark:text-green-400"
+                              >
+                                <Check size={13} />
+                                Setuju
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setSelectedRequest(req)}
+                                className="h-7 px-2 text-xs text-red-600 hover:bg-red-500/10"
+                              >
+                                <Ban size={13} />
+                                Tolak
+                              </Button>
+                            </>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -557,7 +795,6 @@ function LeaveRequestTab() {
             </div>
           </div>
 
-          {/* Mobile Cards */}
           <div className="flex flex-col gap-3 md:hidden">
             {requests.map((req) => (
               <div
@@ -575,7 +812,7 @@ function LeaveRequestTab() {
                   </div>
                   <LeaveStatusBadge status={req.status} />
                 </div>
-                <div className="grid grid-cols-2 gap-2 text-xs text-(--muted-foreground)">
+                <div className="grid grid-cols-2 gap-2 text-xs text-(--muted-foreground) mb-3">
                   <div>
                     <p className="font-medium">Periode</p>
                     <p>
@@ -587,22 +824,45 @@ function LeaveRequestTab() {
                     <p>{req.total_days} hari</p>
                   </div>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setSelectedRequest(req)}
-                  className="mt-2 w-full"
-                >
-                  <Eye size={14} />
-                  Lihat Detail
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSelectedRequest(req)}
+                    className="flex-1"
+                  >
+                    <Eye size={13} />
+                    Detail
+                  </Button>
+                  {isPending(req.status) && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleApprove(req)}
+                        className="flex-1 text-green-700 hover:bg-green-500/10 dark:text-green-400"
+                      >
+                        <Check size={13} />
+                        Setuju
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedRequest(req)}
+                        className="flex-1 text-red-600 hover:bg-red-500/10"
+                      >
+                        <Ban size={13} />
+                        Tolak
+                      </Button>
+                    </>
+                  )}
+                </div>
               </div>
             ))}
           </div>
         </>
       )}
 
-      {/* Form Modal */}
       <Modal
         open={showForm}
         title="Ajukan Cuti"
@@ -615,92 +875,14 @@ function LeaveRequestTab() {
         />
       </Modal>
 
-      {/* Detail Modal with Approval Timeline */}
       {selectedRequest && (
-        <Modal
-          open={!!selectedRequest}
-          title="Detail Pengajuan Cuti"
+        <LeaveDetailModal
+          request={selectedRequest}
           onClose={() => setSelectedRequest(null)}
-        >
-          <div className="space-y-5">
-            {/* Request Info */}
-            <div className="space-y-3">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-(--foreground)">
-                    {selectedRequest.employee_name || "—"}
-                  </p>
-                  <p className="text-xs text-(--muted-foreground)">
-                    {selectedRequest.leave_type_name}
-                    {selectedRequest.leave_category &&
-                      ` • ${CATEGORY_LABELS[selectedRequest.leave_category]}`}
-                  </p>
-                </div>
-                <LeaveStatusBadge status={selectedRequest.status} />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 rounded-lg bg-(--muted)/30 p-3">
-                <div>
-                  <p className="text-xs text-(--muted-foreground)">Periode</p>
-                  <p className="text-sm font-medium text-(--foreground)">
-                    {formatDate(selectedRequest.start_date)} —{" "}
-                    {formatDate(selectedRequest.end_date)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-(--muted-foreground)">Durasi</p>
-                  <p className="text-sm font-medium text-(--foreground)">
-                    {selectedRequest.total_days} hari
-                  </p>
-                </div>
-              </div>
-
-              {selectedRequest.reason && (
-                <div>
-                  <p className="text-xs text-(--muted-foreground) mb-1">
-                    Alasan
-                  </p>
-                  <p className="text-sm text-(--foreground)">
-                    {selectedRequest.reason}
-                  </p>
-                </div>
-              )}
-
-              {selectedRequest.document_url && (
-                <div>
-                  <p className="text-xs text-(--muted-foreground) mb-1">
-                    Dokumen Pendukung
-                  </p>
-                  <a
-                    href={selectedRequest.document_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-(--primary) hover:underline"
-                  >
-                    Lihat Dokumen →
-                  </a>
-                </div>
-              )}
-            </div>
-
-            {/* Approval Timeline */}
-            <div>
-              <h4 className="text-sm font-semibold text-(--foreground) mb-3">
-                Timeline Persetujuan
-              </h4>
-              <ApprovalTimeline
-                steps={getTimelineSteps(selectedRequest)}
-                current_status={selectedRequest.status}
-              />
-            </div>
-
-            <div className="flex justify-end pt-3 border-t border-(--border)">
-              <Button variant="ghost" onClick={() => setSelectedRequest(null)}>
-                Tutup
-              </Button>
-            </div>
-          </div>
-        </Modal>
+          onApprove={() => handleApprove(selectedRequest)}
+          onReject={(notes) => handleReject(selectedRequest, notes)}
+          isLoading={mutLoading}
+        />
       )}
     </div>
   );
@@ -872,7 +1054,6 @@ function LeaveTypeTab() {
     special: "Cuti Khusus",
     other: "Lainnya",
   };
-
   const CATEGORY_COLORS: Record<string, string> = {
     annual: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
     sick: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
@@ -967,7 +1148,6 @@ function LeaveTypeTab() {
             </div>
           </div>
 
-          {/* Mobile Cards */}
           <div className="flex flex-col gap-3 md:hidden">
             {leaveTypes.map((lt) => (
               <div
@@ -1027,7 +1207,6 @@ export function LeavePage() {
 
   return (
     <MainLayout>
-      {/* Sticky Header */}
       <header className="sticky top-0 z-40 flex flex-col gap-3 border-b border-(--border) bg-(--card) px-4 py-3 sm:px-6 sm:py-3.5">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>

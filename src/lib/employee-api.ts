@@ -144,3 +144,28 @@ export async function deleteEmployeeContact(token: string, contactId: number) {
     headers: { Authorization: `Bearer ${token}` },
   });
 }
+
+// ════════════════════════════════════════════
+// EMPLOYEE PASSWORD RESET API
+// ════════════════════════════════════════════
+
+export interface ResetPasswordPayload {
+  new_password: string;
+  confirm_password: string;
+}
+
+/** PATCH /employees/:id/reset-password — Reset password for an employee (admin only) */
+export async function resetEmployeePassword(
+  token: string,
+  employeeId: number,
+  payload: ResetPasswordPayload,
+) {
+  return apiCall<{ message: string }>(
+    `/employees/${employeeId}/reset-password`,
+    {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify(payload),
+    },
+  );
+}

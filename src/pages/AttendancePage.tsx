@@ -12,6 +12,9 @@ import {
   CalendarDays,
   Edit2,
   UserPlus,
+  Eye,
+  Check,
+  Ban,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -311,6 +314,213 @@ function OverrideForm({
 }
 
 // ════════════════════════════════════════════
+// OVERRIDE DETAIL MODAL
+// ════════════════════════════════════════════
+
+function OverrideDetailModal({
+  override: ov,
+  onClose,
+  onApprove,
+  onReject,
+  isLoading,
+}: {
+  override: AttendanceOverride;
+  onClose: () => void;
+  onApprove: () => void;
+  onReject: (notes: string) => void;
+  isLoading?: boolean;
+}) {
+  const [rejectMode, setRejectMode] = useState(false);
+  const [rejectNotes, setRejectNotes] = useState("");
+
+  const formatDateTime = (ts: string | null) => {
+    if (!ts) return "—";
+    return new Date(ts).toLocaleString("id-ID", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const OVERRIDE_STATUS_COLORS: Record<string, string> = {
+    pending:
+      "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400",
+    approved:
+      "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+    rejected: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+  };
+  const OVERRIDE_STATUS_LABELS: Record<string, string> = {
+    pending: "Menunggu",
+    approved: "Disetujui",
+    rejected: "Ditolak",
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/60 backdrop-blur-sm p-4"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-lg overflow-hidden rounded-2xl border border-(--border) bg-(--card) my-8"
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          boxShadow:
+            "0 0 40px rgba(212,21,140,0.1), 0 25px 50px rgba(0,0,0,0.5)",
+        }}
+      >
+        <div className="flex items-center justify-between border-b border-(--border) px-5 py-3">
+          <h3 className="text-sm font-bold text-(--foreground)">
+            Detail Koreksi Presensi
+          </h3>
+          <button
+            onClick={onClose}
+            className="rounded-lg p-1 text-(--muted-foreground) transition hover:text-(--foreground)"
+          >
+            <X size={16} />
+          </button>
+        </div>
+        <div className="p-5 space-y-4">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-sm font-semibold text-(--foreground)">
+                {ov.requester_name || "—"}
+              </p>
+              <p className="text-xs text-(--muted-foreground)">
+                {ov.attendance_date || "—"}
+              </p>
+            </div>
+            <span
+              className={cn(
+                "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
+                OVERRIDE_STATUS_COLORS[ov.status] ||
+                  OVERRIDE_STATUS_COLORS.pending,
+              )}
+            >
+              {OVERRIDE_STATUS_LABELS[ov.status] || ov.status}
+            </span>
+          </div>
+
+          <div className="rounded-lg bg-(--muted)/30 border border-(--border) p-4 space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <p className="text-xs text-(--muted-foreground)">
+                  Tipe Koreksi
+                </p>
+                <p className="text-sm font-medium text-(--foreground)">
+                  {OVERRIDE_TYPE_OPTIONS.find(
+                    (o) => o.value === ov.override_type,
+                  )?.label || ov.override_type}
+                </p>
+              </div>
+              {ov.override_type !== "clock_out" && (
+                <div>
+                  <p className="text-xs text-(--muted-foreground)">
+                    Masuk Asli → Koreksi
+                  </p>
+                  <p className="text-sm text-(--foreground)">
+                    {formatDateTime(ov.original_clock_in)} →{" "}
+                    <span className="text-(--primary) font-medium">
+                      {formatDateTime(ov.corrected_clock_in)}
+                    </span>
+                  </p>
+                </div>
+              )}
+              {ov.override_type !== "clock_in" && (
+                <div>
+                  <p className="text-xs text-(--muted-foreground)">
+                    Keluar Asli → Koreksi
+                  </p>
+                  <p className="text-sm text-(--foreground)">
+                    {formatDateTime(ov.original_clock_out)} →{" "}
+                    <span className="text-(--primary) font-medium">
+                      {formatDateTime(ov.corrected_clock_out)}
+                    </span>
+                  </p>
+                </div>
+              )}
+            </div>
+            <div>
+              <p className="text-xs text-(--muted-foreground) mb-1">Alasan</p>
+              <p className="text-sm text-(--foreground)">{ov.reason}</p>
+            </div>
+          </div>
+
+          {rejectMode && (
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium text-(--foreground) opacity-80">
+                Catatan Penolakan *
+              </label>
+              <textarea
+                value={rejectNotes}
+                onChange={(e) => setRejectNotes(e.target.value)}
+                placeholder="Jelaskan alasan penolakan..."
+                rows={3}
+                className="w-full rounded-lg border bg-(--input) px-4 py-2.5 text-sm text-(--foreground) border-(--border) placeholder:text-(--muted-foreground) focus:border-(--ring) focus:outline-none focus:ring-1 focus:ring-(--ring) resize-none"
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-end gap-2 border-t border-(--border) px-5 py-3">
+          {ov.status === "pending" && !rejectMode && (
+            <>
+              <Button variant="ghost" size="sm" onClick={onClose}>
+                Tutup
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setRejectMode(true)}
+                className="text-red-600 hover:bg-red-500/10"
+              >
+                <Ban size={14} />
+                Tolak
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={onApprove}
+                isLoading={isLoading}
+              >
+                <Check size={14} />
+                Setujui
+              </Button>
+            </>
+          )}
+          {ov.status === "pending" && rejectMode && (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setRejectMode(false)}
+              >
+                Batal
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => onReject(rejectNotes)}
+                isLoading={isLoading}
+                className="bg-red-500 hover:bg-red-600"
+              >
+                Konfirmasi Tolak
+              </Button>
+            </>
+          )}
+          {ov.status !== "pending" && (
+            <Button variant="ghost" size="sm" onClick={onClose}>
+              Tutup
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════
 // MANUAL ATTENDANCE FORM
 // ════════════════════════════════════════════
 
@@ -360,13 +570,10 @@ function ManualAttendanceForm({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
-
-    // Construct ISO timestamps
     const clockInAt = `${formData.attendance_date}T${formData.clock_in_at}:00`;
     const clockOutAt = formData.clock_out_at
       ? `${formData.attendance_date}T${formData.clock_out_at}:00`
       : null;
-
     onSubmit({
       employee_id: parseInt(formData.employee_id),
       attendance_date: formData.attendance_date,
@@ -531,15 +738,12 @@ function AttendanceLogTab() {
   const { data: logs, loading, refetch } = useAttendanceList(params);
   const { data: employees } = useEmployeeList({ is_active: true });
   const { data: branches } = useBranchList();
-
-  // Manual attendance mutations
   const { createManualAttendance, loading: manualLoading } =
     useManualAttendanceMutations(() => {
       setShowManualForm(false);
       refetch();
     });
 
-  // Summary counts
   const summary = useMemo(() => {
     if (!logs) return { present: 0, late: 0, absent: 0, leave: 0 };
     return {
@@ -551,7 +755,6 @@ function AttendanceLogTab() {
     };
   }, [logs]);
 
-  // Client-side search
   const filtered = useMemo(() => {
     if (!logs) return [];
     if (!searchQuery) return logs;
@@ -582,7 +785,6 @@ function AttendanceLogTab() {
 
   return (
     <div className="space-y-4">
-      {/* Summary Cards */}
       {!loading && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {[
@@ -628,7 +830,6 @@ function AttendanceLogTab() {
         </div>
       )}
 
-      {/* Filters & Manual Button */}
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center flex-1">
           <div className="relative flex-1 min-w-45 max-w-xs">
@@ -687,8 +888,6 @@ function AttendanceLogTab() {
             searchPlaceholder="Cari cabang..."
           />
         </div>
-
-        {/* Manual Attendance Button - Demo mode: always show */}
         <Button
           variant="primary"
           onClick={() => setShowManualForm(true)}
@@ -699,7 +898,6 @@ function AttendanceLogTab() {
         </Button>
       </div>
 
-      {/* Date Filter */}
       <div className="flex items-center gap-2">
         <input
           type="date"
@@ -722,7 +920,6 @@ function AttendanceLogTab() {
         />
       </div>
 
-      {/* Table */}
       {loading ? (
         <SkeletonTable cols={8} />
       ) : filtered.length === 0 ? (
@@ -733,7 +930,6 @@ function AttendanceLogTab() {
         />
       ) : (
         <>
-          {/* Desktop Table */}
           <div className="hidden md:block overflow-hidden rounded-xl border border-(--border)">
             <div className="overflow-x-auto">
               <table className="w-full">
@@ -819,7 +1015,6 @@ function AttendanceLogTab() {
             </div>
           </div>
 
-          {/* Mobile Cards */}
           <div className="flex flex-col gap-3 md:hidden">
             {filtered.map((log) => (
               <div
@@ -859,7 +1054,6 @@ function AttendanceLogTab() {
         </>
       )}
 
-      {/* Manual Attendance Modal */}
       <Modal
         open={showManualForm}
         title="Input Presensi Manual"
@@ -884,6 +1078,8 @@ function AttendanceOverrideTab() {
   const [filterStatus, setFilterStatus] = useState("");
   const [filterEmployee, setFilterEmployee] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [detailOverride, setDetailOverride] =
+    useState<AttendanceOverride | null>(null);
 
   const params = useMemo(
     () => ({
@@ -896,13 +1092,28 @@ function AttendanceOverrideTab() {
   const { data: overrides, loading, refetch } = useOverrideList(params);
   const { data: employees } = useEmployeeList({ is_active: true });
   const { data: logs } = useAttendanceList({});
-  const { loading: mutLoading, createOverride } = useOverrideMutations(refetch);
+  const {
+    loading: mutLoading,
+    createOverride,
+    approveOverride,
+    rejectOverride,
+  } = useOverrideMutations(refetch);
 
   const handleCreate = async (
     payload: Parameters<typeof createOverride>[0],
   ) => {
     const result = await createOverride(payload);
     if (result) setShowForm(false);
+  };
+
+  const handleApprove = async (ov: AttendanceOverride) => {
+    await approveOverride(ov.id);
+    setDetailOverride(null);
+  };
+
+  const handleReject = async (ov: AttendanceOverride, notes: string) => {
+    await rejectOverride(ov.id, notes);
+    setDetailOverride(null);
   };
 
   const OVERRIDE_STATUS_COLORS: Record<
@@ -937,7 +1148,6 @@ function AttendanceOverrideTab() {
 
   return (
     <div className="space-y-4">
-      {/* Filters + Action */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap gap-3">
           <SearchableSelect
@@ -976,7 +1186,6 @@ function AttendanceOverrideTab() {
         </Button>
       </div>
 
-      {/* Table */}
       {loading ? (
         <SkeletonTable cols={7} />
       ) : !overrides || overrides.length === 0 ? (
@@ -1009,10 +1218,11 @@ function AttendanceOverrideTab() {
                       "Jam Original → Koreksi",
                       "Alasan",
                       "Status",
+                      "Aksi",
                     ].map((h) => (
                       <th
                         key={h}
-                        className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-(--muted-foreground)"
+                        className={`px-5 py-3 ${h !== "Aksi" ? "text-left" : "text-center"} text-xs font-semibold uppercase tracking-wider text-(--muted-foreground)`}
                       >
                         {h}
                       </th>
@@ -1075,12 +1285,47 @@ function AttendanceOverrideTab() {
                         <td className="px-5 py-3">
                           <span
                             className={cn(
-                              "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
+                              "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium text-nowrap",
                               statusConfig.className,
                             )}
                           >
                             {statusConfig.label}
                           </span>
+                        </td>
+                        <td className="px-5 py-3">
+                          <div className="flex items-center gap-1.5">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setDetailOverride(ov)}
+                              className="h-7 px-2 text-xs"
+                            >
+                              <Eye size={13} />
+                              Detail
+                            </Button>
+                            {ov.status === "pending" && (
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleApprove(ov)}
+                                  className="h-7 px-2 text-xs text-green-700 hover:bg-green-500/10 dark:text-green-400"
+                                >
+                                  <Check size={13} />
+                                  Setuju
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setDetailOverride(ov)}
+                                  className="h-7 px-2 text-xs text-red-600 hover:bg-red-500/10"
+                                >
+                                  <Ban size={13} />
+                                  Tolak
+                                </Button>
+                              </>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     );
@@ -1090,7 +1335,6 @@ function AttendanceOverrideTab() {
             </div>
           </div>
 
-          {/* Mobile Cards */}
           <div className="flex flex-col gap-3 md:hidden">
             {overrides.map((ov) => {
               const statusConfig =
@@ -1126,9 +1370,42 @@ function AttendanceOverrideTab() {
                       )?.label
                     }
                   </p>
-                  <p className="text-xs text-(--foreground) line-clamp-2">
+                  <p className="text-xs text-(--foreground) line-clamp-2 mb-3">
                     {ov.reason}
                   </p>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setDetailOverride(ov)}
+                      className="flex-1"
+                    >
+                      <Eye size={13} />
+                      Detail
+                    </Button>
+                    {ov.status === "pending" && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleApprove(ov)}
+                          className="flex-1 text-green-700 hover:bg-green-500/10 dark:text-green-400"
+                        >
+                          <Check size={13} />
+                          Setuju
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setDetailOverride(ov)}
+                          className="flex-1 text-red-600 hover:bg-red-500/10"
+                        >
+                          <Ban size={13} />
+                          Tolak
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </div>
               );
             })}
@@ -1136,7 +1413,6 @@ function AttendanceOverrideTab() {
         </>
       )}
 
-      {/* Create Override Modal */}
       <Modal
         open={showForm}
         title="Ajukan Koreksi Presensi"
@@ -1149,6 +1425,16 @@ function AttendanceOverrideTab() {
           isLoading={mutLoading}
         />
       </Modal>
+
+      {detailOverride && (
+        <OverrideDetailModal
+          override={detailOverride}
+          onClose={() => setDetailOverride(null)}
+          onApprove={() => handleApprove(detailOverride)}
+          onReject={(notes) => handleReject(detailOverride, notes)}
+          isLoading={mutLoading}
+        />
+      )}
     </div>
   );
 }
@@ -1164,7 +1450,6 @@ export function AttendancePage() {
 
   return (
     <MainLayout>
-      {/* Sticky Header */}
       <header className="sticky top-0 z-40 flex flex-col gap-3 border-b border-(--border) bg-(--card) px-4 py-3 sm:px-6 sm:py-3.5 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-sm font-bold tracking-wide text-(--foreground) md:text-lg">
@@ -1174,7 +1459,6 @@ export function AttendancePage() {
             Monitor log kehadiran dan kelola koreksi presensi
           </p>
         </div>
-        {/* Tab Toggle */}
         <div className="flex gap-1 p-1 rounded-lg bg-(--muted)/50 w-fit">
           <button
             onClick={() => setActiveTab("log")}
