@@ -108,15 +108,6 @@ const DUMMY_MUTABAAH_TODAY: MutabaahTodayStatus = {
   attendance_log_id: 1,
 };
 
-const DUMMY_MUTABAAH_TODAY_SUBMITTED: MutabaahTodayStatus = {
-  has_record: true,
-  is_submitted: true,
-  submitted_at: getTimestamp(getDateString(0), "07:55"),
-  target_pages: 5,
-  mutabaah_log_id: 1,
-  attendance_log_id: 1,
-};
-
 const DUMMY_EMPLOYEE_DASHBOARD: EmployeeDashboardData = {
   today: DUMMY_TODAY_STATUS,
   mutabaah_today: DUMMY_MUTABAAH_TODAY,

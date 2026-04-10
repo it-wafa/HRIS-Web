@@ -19,7 +19,6 @@ import { ClockWidget, ClockWidgetSkeleton } from "@/components/ui/ClockWidget";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import {
-  MutabaahWidget,
   MutabaahWidgetSkeleton,
 } from "@/components/ui/MutabaahWidget";
 import { useAuth } from "@/contexts/AuthContext";
@@ -350,8 +349,8 @@ function MutabaahCard({
         className={cn(
           "relative px-5 pt-5 pb-8",
           status.is_submitted
-            ? "bg-gradient-to-br from-emerald-500 via-teal-500 to-emerald-600"
-            : "bg-gradient-to-br from-wafa-700 via-wafa-500 to-wafa-400",
+            ? "bg-linear-to-br from-emerald-500 via-teal-500 to-emerald-600"
+            : "bg-linear-to-br from-wafa-700 via-wafa-500 to-wafa-400",
         )}
       >
         {/* Decorative circles */}
@@ -387,8 +386,8 @@ function MutabaahCard({
         className={cn(
           "h-6",
           status.is_submitted
-            ? "bg-gradient-to-br from-emerald-500 via-teal-500 to-emerald-600"
-            : "bg-gradient-to-br from-wafa-700 via-wafa-500 to-wafa-400",
+            ? "bg-linear-to-br from-emerald-500 via-teal-500 to-emerald-600"
+            : "bg-linear-to-br from-wafa-700 via-wafa-500 to-wafa-400",
         )}
         style={{ clipPath: "ellipse(100% 100% at 50% 0%)" }}
       />
@@ -440,7 +439,7 @@ function MutabaahCard({
               disabled={loading}
               className={cn(
                 "group relative flex flex-1 items-center justify-center gap-2.5 overflow-hidden rounded-xl px-4 py-3.5 font-semibold text-white transition-all",
-                "bg-gradient-to-r from-wafa-700 to-wafa-500 shadow-lg",
+                "bg-linear-to-r from-wafa-700 to-wafa-500 shadow-lg",
                 "hover:shadow-xl hover:-translate-y-0.5",
                 "disabled:cursor-not-allowed disabled:opacity-50 disabled:transform-none",
               )}
