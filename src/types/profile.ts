@@ -45,8 +45,6 @@ export interface EmployeeProfile {
   marital_status: MaritalStatus | null;
   blood_type: string | null;
   nationality: string | null;
-  height: number | null;
-  weight: number | null;
 
   // Work info (joined from other tables)
   branch_id: number | null;

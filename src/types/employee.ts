@@ -20,8 +20,7 @@ export interface Employee {
   marital_status: MaritalStatus | null;
   blood_type: string | null;
   nationality: string | null;
-  height: number | null;
-  weight: number | null;
+
   photo_url: string | null;
   is_active: boolean;
   is_trainer: boolean;
@@ -64,8 +63,7 @@ export interface CreateEmployeePayload {
   marital_status?: MaritalStatus;
   blood_type?: string;
   nationality?: string;
-  height?: number;
-  weight?: number;
+
   photo_url?: string;
   is_active?: boolean;
   is_trainer?: boolean;
@@ -88,8 +86,7 @@ export interface UpdateEmployeePayload {
   marital_status?: MaritalStatus;
   blood_type?: string;
   nationality?: string;
-  height?: number;
-  weight?: number;
+
   photo_url?: string;
   is_active?: boolean;
   is_trainer?: boolean;

@@ -832,14 +832,7 @@ export function ProfilePage() {
                     label="Kewarganegaraan"
                     value={profile.nationality}
                   />
-                  <InfoItem
-                    label="Tinggi/Berat Badan"
-                    value={
-                      profile.height || profile.weight
-                        ? `${profile.height || "-"} cm / ${profile.weight || "-"} kg`
-                        : undefined
-                    }
-                  />
+
                 </div>
               </div>
             </div>

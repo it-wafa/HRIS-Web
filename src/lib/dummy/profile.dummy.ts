@@ -22,8 +22,6 @@ export const DUMMY_EMPLOYEE_PROFILE: EmployeeProfile = {
   marital_status: "married",
   blood_type: "A",
   nationality: "Indonesia",
-  height: 162,
-  weight: 55,
 
   // Work info
   branch_id: 1,

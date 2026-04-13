@@ -112,8 +112,7 @@ function EmployeeForm({
     marital_status: "" as MaritalStatus | "",
     blood_type: "",
     nationality: "Indonesia",
-    height: "",
-    weight: "",
+
     is_trainer: false,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -184,8 +183,7 @@ function EmployeeForm({
       marital_status: (formData.marital_status as MaritalStatus) || undefined,
       blood_type: formData.blood_type || undefined,
       nationality: formData.nationality.trim() || undefined,
-      height: formData.height ? parseFloat(formData.height) : undefined,
-      weight: formData.weight ? parseFloat(formData.weight) : undefined,
+
       is_trainer: formData.is_trainer,
     };
 
@@ -444,22 +442,7 @@ function EmployeeForm({
               value={formData.nationality}
               onChange={(e) => handleChange("nationality", e.target.value)}
             />
-            <Input
-              id="height"
-              label="Tinggi Badan (cm)"
-              type="number"
-              value={formData.height}
-              onChange={(e) => handleChange("height", e.target.value)}
-              placeholder="170"
-            />
-            <Input
-              id="weight"
-              label="Berat Badan (kg)"
-              type="number"
-              value={formData.weight}
-              onChange={(e) => handleChange("weight", e.target.value)}
-              placeholder="65"
-            />
+
           </div>
         </div>
       )}

@@ -395,8 +395,7 @@ function EmployeeForm({
     marital_status: initialData.marital_status || ("single" as MaritalStatus),
     blood_type: initialData.blood_type || "",
     nationality: initialData.nationality || "",
-    height: initialData.height?.toString() || "",
-    weight: initialData.weight?.toString() || "",
+
     is_active: initialData.is_active ?? true,
     is_trainer: initialData.is_trainer ?? false,
     branch_id: initialData.branch_id?.toString() || "",
@@ -440,8 +439,7 @@ function EmployeeForm({
       marital_status: formData.marital_status || undefined,
       blood_type: formData.blood_type || undefined,
       nationality: formData.nationality.trim() || undefined,
-      height: formData.height ? Number.parseInt(formData.height) : undefined,
-      weight: formData.weight ? Number.parseInt(formData.weight) : undefined,
+
       is_active: formData.is_active,
       is_trainer: formData.is_trainer,
       branch_id: formData.branch_id
@@ -634,22 +632,7 @@ function EmployeeForm({
             placeholder="Pilih"
             searchPlaceholder="Cari..."
           />
-          <Input
-            id="height"
-            label="Tinggi Badan (cm)"
-            type="number"
-            value={formData.height}
-            onChange={(e) => handleChange("height", e.target.value)}
-            placeholder="170"
-          />
-          <Input
-            id="weight"
-            label="Berat Badan (kg)"
-            type="number"
-            value={formData.weight}
-            onChange={(e) => handleChange("weight", e.target.value)}
-            placeholder="65"
-          />
+
         </div>
         <Input
           id="nationality"
@@ -1247,14 +1230,7 @@ export function EmployeeDetailPage() {
                     label="Kewarganegaraan"
                     value={employee.nationality}
                   />
-                  <InfoItem
-                    label="Tinggi/Berat Badan"
-                    value={
-                      employee.height || employee.weight
-                        ? `${employee.height || "-"} cm / ${employee.weight || "-"} kg`
-                        : undefined
-                    }
-                  />
+
                 </div>
               </div>
             </div>
