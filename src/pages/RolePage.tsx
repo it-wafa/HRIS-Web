@@ -20,8 +20,8 @@ import {
   useRoleMutations,
   useRolePermissions,
 } from "@/hooks/useRole";
-import { PERMISSION_MODULES, PERMISSION_ACTIONS } from "@/types/role";
-import type { Role, Permission, CreateRolePayload } from "@/types/role";
+import { useRoleMetadata } from "@/hooks/useMetadata";
+import type { Role, Permission, CreateRolePayload, RoleMetadata } from "@/types/role";
 
 // ════════════════════════════════════════════
 // MODAL WRAPPER
@@ -210,29 +210,6 @@ function RoleForm({
 }
 
 // ════════════════════════════════════════════
-// MODULE LABELS
-// ════════════════════════════════════════════
-
-const MODULE_LABELS: Record<string, string> = {
-  dashboard: "Dashboard",
-  employee: "Pegawai",
-  branch: "Cabang",
-  position: "Jabatan",
-  role: "Role",
-  attendance: "Kehadiran",
-  leave: "Cuti",
-  report: "Laporan",
-};
-
-const ACTION_LABELS: Record<string, string> = {
-  view: "Lihat",
-  create: "Tambah",
-  edit: "Edit",
-  delete: "Hapus",
-  approve: "Approve",
-};
-
-// ════════════════════════════════════════════
 // PERMISSION MATRIX
 // ════════════════════════════════════════════
 
@@ -241,12 +218,14 @@ function PermissionMatrix({
   permissions,
   rolePermissionIds,
   onUpdatePermissions,
+  metadata,
   isLoading,
 }: {
   roleId: number;
   permissions: Permission[];
   rolePermissionIds: number[];
   onUpdatePermissions: (roleId: number, permissionIds: number[]) => void;
+  metadata: RoleMetadata;
   isLoading?: boolean;
 }) {
   const [selectedIds, setSelectedIds] = useState<number[]>(rolePermissionIds);
@@ -288,27 +267,27 @@ function PermissionMatrix({
               <th className="pb-2 pr-4 text-left font-medium text-(--muted-foreground)">
                 Modul
               </th>
-              {PERMISSION_ACTIONS.map((action) => (
+              {metadata.action_meta.map((action) => (
                 <th
-                  key={action}
+                  key={action.id}
                   className="pb-2 px-2 text-center font-medium text-(--muted-foreground)"
                 >
-                  {ACTION_LABELS[action] || action}
+                  {action.name}
                 </th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {PERMISSION_MODULES.map((module) => {
-              const modulePermissions = permissionsByModule[module] || [];
+            {metadata.module_meta.map((module) => {
+              const modulePermissions = permissionsByModule[module.id] || [];
               return (
-                <tr key={module} className="border-b border-(--border)/50">
+                <tr key={module.id} className="border-b border-(--border)/50">
                   <td className="py-2 pr-4 font-medium text-(--foreground)">
-                    {MODULE_LABELS[module] || module}
+                    {module.name}
                   </td>
-                  {PERMISSION_ACTIONS.map((action) => {
+                  {metadata.action_meta.map((action) => {
                     const permission = modulePermissions.find(
-                      (p) => p.action === action,
+                      (p) => p.action === action.id,
                     );
                     if (!permission) {
                       return (
@@ -319,7 +298,7 @@ function PermissionMatrix({
                     }
                     const isChecked = selectedIds.includes(permission.id);
                     return (
-                      <td key={action} className="py-2 px-2 text-center">
+                      <td key={action.id} className="py-2 px-2 text-center">
                         <button
                           type="button"
                           onClick={() => togglePermission(permission.id)}
@@ -365,6 +344,7 @@ function PermissionMatrix({
 function RoleCard({
   role,
   permissions,
+  metadata,
   onEdit,
   onDelete,
   onUpdatePermissions,
@@ -372,6 +352,7 @@ function RoleCard({
 }: {
   role: Role;
   permissions: Permission[];
+  metadata: RoleMetadata;
   onEdit: () => void;
   onDelete: () => void;
   onUpdatePermissions: (roleId: number, permissionIds: number[]) => void;
@@ -441,6 +422,7 @@ function RoleCard({
             permissions={permissions}
             rolePermissionIds={rolePermissionIds}
             onUpdatePermissions={onUpdatePermissions}
+            metadata={metadata}
             isLoading={isLoading}
           />
         </div>
@@ -483,6 +465,7 @@ export function RolePage() {
   const { data: roles, loading: rolesLoading, refetch } = useRoleList();
   const { data: permissions, loading: permissionsLoading } =
     usePermissionList();
+  const { data: metadata, loading: metaLoading } = useRoleMetadata();
   const {
     loading: mutationLoading,
     createRole,
@@ -495,7 +478,7 @@ export function RolePage() {
   const [editRole, setEditRole] = useState<Role | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Role | null>(null);
 
-  const loading = rolesLoading || permissionsLoading;
+  const loading = rolesLoading || permissionsLoading || metaLoading;
 
   const handleCreate = async (payload: CreateRolePayload) => {
     const result = await createRole(payload);
@@ -577,6 +560,7 @@ export function RolePage() {
                 key={role.id}
                 role={role}
                 permissions={permissions || []}
+                metadata={metadata!}
                 onEdit={() => setEditRole(role)}
                 onDelete={() => setDeleteTarget(role)}
                 onUpdatePermissions={handleUpdatePermissions}

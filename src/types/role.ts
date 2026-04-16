@@ -2,6 +2,8 @@
 // ROLE & PERMISSION TYPES
 // ════════════════════════════════════════════
 
+import type { MetaItem } from "./meta";
+
 export interface Role {
   id: number;
   name: string;
@@ -42,29 +44,12 @@ export interface UpdateRolePayload {
 }
 
 export interface UpdateRolePermissionsPayload {
-  permission_ids: number[];
+  permission_codes: string[];
 }
 
-// Module list for permission matrix
-export const PERMISSION_MODULES = [
-  "dashboard",
-  "employee",
-  "branch",
-  "position",
-  "role",
-  "attendance",
-  "leave",
-  "report",
-] as const;
+export interface RoleMetadata {
+  module_meta: MetaItem[];
+  action_meta: MetaItem[];
+}
 
-// Action list for permission matrix
-export const PERMISSION_ACTIONS = [
-  "view",
-  "create",
-  "edit",
-  "delete",
-  "approve",
-] as const;
 
-export type PermissionModule = (typeof PERMISSION_MODULES)[number];
-export type PermissionAction = (typeof PERMISSION_ACTIONS)[number];

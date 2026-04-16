@@ -31,24 +31,6 @@ import type {
 import type { JobPosition, CreatePositionPayload } from "@/types/job-position";
 
 // ════════════════════════════════════════════
-// TAB TYPES
-// ════════════════════════════════════════════
-
-type TabKey = "departments" | "positions" | "employees";
-
-interface TabDef {
-  key: TabKey;
-  label: string;
-  icon: React.ElementType;
-}
-
-const TABS: TabDef[] = [
-  { key: "departments", label: "Departemen", icon: Network },
-  { key: "positions", label: "Jabatan", icon: Briefcase },
-  { key: "employees", label: "Pegawai", icon: Users },
-];
-
-// ════════════════════════════════════════════
 // MODAL WRAPPER
 // ════════════════════════════════════════════
 
@@ -446,776 +428,222 @@ function SkeletonTable({ cols = 6 }: { cols?: number }) {
 }
 
 // ════════════════════════════════════════════
-// DEPARTMENT TAB CONTENT
+// UNIFIED DEPARTMENT ACCORDION
 // ════════════════════════════════════════════
 
-function DepartmentTab() {
+import { ChevronDown, ChevronRight, User } from "lucide-react";
+
+function DepartmentAccordion() {
   const { data: branches } = useBranchList();
+  const { data: departments, loading: deptLoading, refetch: refetchDept } = useDepartmentList({ is_active: true });
+  const { data: positions, loading: posLoading, refetch: refetchPos } = usePositionList();
+  const { data: employees, loading: empLoading } = useEmployeeList({ is_active: true });
 
-  const [filterBranch, setFilterBranch] = useState("");
-  const [filterStatus, setFilterStatus] = useState<"" | "active" | "inactive">(
-    "",
-  );
-  const [searchQuery, setSearchQuery] = useState("");
+  const { createDepartment, updateDepartment, deleteDepartment, loading: deptMutLoading } = useDepartmentMutations(refetchDept);
+  const { createPosition, updatePosition, deletePosition, loading: posMutLoading } = usePositionMutations(refetchPos);
 
-  const params = {
-    branch_id: filterBranch ? parseInt(filterBranch) : undefined,
-    is_active:
-      filterStatus === "active"
-        ? true
-        : filterStatus === "inactive"
-          ? false
-          : undefined,
+  const [expandedDepts, setExpandedDepts] = useState<Set<number>>(new Set());
+  const [expandedPos, setExpandedPos] = useState<Set<number>>(new Set());
+
+  // Forms states
+  const [showDeptForm, setShowDeptForm] = useState(false);
+  const [editDept, setEditDept] = useState<Department | null>(null);
+  const [deleteDept, setDeleteDept] = useState<Department | null>(null);
+
+  const [showPosForm, setShowPosForm] = useState<{deptId?: number} | false>(false);
+  const [editPos, setEditPos] = useState<JobPosition | null>(null);
+  const [deletePosTarget, setDeletePosTarget] = useState<JobPosition | null>(null);
+
+  const toggleDept = (id: number) => {
+    setExpandedDepts((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   };
 
-  const { data: departments, loading, refetch } = useDepartmentList(params);
-  const {
-    loading: mutationLoading,
-    createDepartment,
-    updateDepartment,
-    deleteDepartment,
-  } = useDepartmentMutations(refetch);
-
-  const [showForm, setShowForm] = useState(false);
-  const [editDepartment, setEditDepartment] = useState<Department | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<Department | null>(null);
-
-  const filtered =
-    departments?.filter((d) => {
-      if (!searchQuery) return true;
-      const q = searchQuery.toLowerCase();
-      return (
-        d.code.toLowerCase().includes(q) ||
-        d.name.toLowerCase().includes(q) ||
-        (d.description?.toLowerCase().includes(q) ?? false)
-      );
-    }) ?? [];
-
-  const handleCreate = async (
-    payload: CreateDepartmentPayload | UpdateDepartmentPayload,
-  ) => {
-    const result = await createDepartment(payload as CreateDepartmentPayload);
-    if (result) setShowForm(false);
+  const togglePos = (id: number) => {
+    setExpandedPos((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   };
 
-  const handleUpdate = async (
-    payload: CreateDepartmentPayload | UpdateDepartmentPayload,
-  ) => {
-    if (!editDepartment) return;
-    const result = await updateDepartment(
-      editDepartment.id,
-      payload as UpdateDepartmentPayload,
-    );
-    if (result) setEditDepartment(null);
+  const positionsByDept = useMemo(() => {
+    const map = new Map<number, JobPosition[]>();
+    positions?.forEach((p) => {
+      if (p.department_id) {
+        const list = map.get(p.department_id) || [];
+        list.push(p);
+        map.set(p.department_id, list);
+      }
+    });
+    return map;
+  }, [positions]);
+
+  const employeesByPos = useMemo(() => {
+    const map = new Map<number, any[]>();
+    employees?.forEach((e) => {
+      if (e.job_positions_id) {
+        const list = map.get(e.job_positions_id) || [];
+        list.push(e);
+        map.set(e.job_positions_id, list);
+      }
+    });
+    return map;
+  }, [employees]);
+
+  // Submit Handlers
+  const handleDeptSubmit = async (payload: any) => {
+    if (editDept) {
+      await updateDepartment(editDept.id, payload);
+      setEditDept(null);
+    } else {
+      await createDepartment(payload);
+      setShowDeptForm(false);
+    }
   };
 
-  const handleDelete = async () => {
-    if (!deleteTarget) return;
-    const result = await deleteDepartment(deleteTarget.id);
-    if (result) setDeleteTarget(null);
+  const handlePosSubmit = async (payload: any) => {
+    if (editPos) {
+      await updatePosition(editPos.id, payload);
+      setEditPos(null);
+    } else {
+      await createPosition(payload);
+      setShowPosForm(false);
+    }
   };
 
-  const branchOptions =
-    branches?.map((b) => ({ id: b.id, name: b.name })) || [];
+  if (deptLoading || posLoading || empLoading) return <SkeletonTable cols={3} />;
 
   return (
-    <>
-      {/* Action Bar */}
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center flex-1">
-          <div className="relative flex-1 max-w-sm">
-            <Search
-              size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-(--muted-foreground)"
-            />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari departemen..."
-              className={cn(
-                "w-full rounded-lg border bg-(--input) pl-9 pr-4 py-2 text-sm text-(--foreground)",
-                "border-(--border) placeholder:text-(--muted-foreground)",
-                "transition-colors duration-200",
-                "focus:border-(--ring) focus:outline-none focus:ring-1 focus:ring-(--ring)",
-              )}
-            />
-          </div>
-
-          <SearchableSelect
-            value={filterBranch}
-            onChange={(val) => setFilterBranch(val)}
-            options={[
-              { value: "", label: "Semua Cabang" },
-              ...(branches?.map((b) => ({
-                value: String(b.id),
-                label: b.name,
-              })) || []),
-            ]}
-            placeholder="Filter cabang..."
-            searchPlaceholder="Cari cabang..."
-          />
-
-          <SearchableSelect
-            value={filterStatus}
-            onChange={(val) =>
-              setFilterStatus(val as "" | "active" | "inactive")
-            }
-            options={[
-              { value: "", label: "Semua Status" },
-              { value: "active", label: "Aktif" },
-              { value: "inactive", label: "Nonaktif" },
-            ]}
-            placeholder="Filter status..."
-          />
-        </div>
-
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={() => setShowForm(true)}
-          className="self-start sm:self-auto shrink-0"
-        >
-          <Plus size={16} />
-          Tambah
+    <div className="space-y-4">
+      <div className="flex justify-end gap-2 mb-4">
+        <Button variant="outline" size="sm" onClick={() => setShowPosForm({})}>
+          <Plus size={16} /> Jabatan
+        </Button>
+        <Button variant="primary" size="sm" onClick={() => setShowDeptForm(true)}>
+          <Plus size={16} /> Departemen
         </Button>
       </div>
 
-      {/* Content */}
-      {loading ? (
-        <SkeletonTable cols={6} />
-      ) : !filtered || filtered.length === 0 ? (
-        <EmptyState
-          title={
-            searchQuery
-              ? "Departemen tidak ditemukan"
-              : "Belum ada data departemen"
-          }
-          description={
-            searchQuery
-              ? "Coba ubah kata kunci pencarian"
-              : "Tambahkan departemen baru untuk memulai"
-          }
-          icon={<Network className="h-12 w-12" />}
-          action={
-            !searchQuery && (
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => setShowForm(true)}
-              >
-                <Plus size={16} />
-                Tambah Departemen
-              </Button>
-            )
-          }
-        />
-      ) : (
-        <>
-          {/* Desktop Table */}
-          <div className="hidden md:block overflow-hidden rounded-xl border border-(--border)">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-(--border) bg-(--muted)/50">
-                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-(--muted-foreground)">
-                      Kode
-                    </th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-(--muted-foreground)">
-                      Nama
-                    </th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-(--muted-foreground)">
-                      Cabang
-                    </th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-(--muted-foreground)">
-                      Deskripsi
-                    </th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-(--muted-foreground)">
-                      Status
-                    </th>
-                    <th className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wider text-(--muted-foreground)">
-                      Aksi
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((dept, index) => (
-                    <tr
-                      key={dept.id}
-                      className={cn(
-                        "border-b border-(--border) last:border-b-0",
-                        index % 2 === 0 ? "bg-(--card)" : "bg-(--muted)/20",
-                      )}
-                    >
-                      <td className="px-5 py-4">
-                        <span className="inline-flex items-center rounded-md bg-(--primary)/10 px-2 py-0.5 text-xs font-bold text-(--primary)">
-                          {dept.code}
-                        </span>
-                      </td>
-                      <td className="px-5 py-4">
-                        <span className="font-medium text-(--foreground)">
-                          {dept.name}
-                        </span>
-                      </td>
-                      <td className="px-5 py-4 text-sm text-(--muted-foreground)">
-                        {dept.branch_name || (
-                          <span className="italic text-(--muted-foreground)">
-                            Semua Cabang
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-5 py-4 text-sm text-(--muted-foreground) max-w-xs truncate">
-                        {dept.description || "-"}
-                      </td>
-                      <td className="px-5 py-4">
-                        <span
-                          className={cn(
-                            "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
-                            dept.is_active
-                              ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                              : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",
-                          )}
-                        >
-                          {dept.is_active ? "Aktif" : "Nonaktif"}
-                        </span>
-                      </td>
-                      <td className="px-5 py-4">
-                        <div className="flex justify-end gap-1">
-                          <button
-                            onClick={() => setEditDepartment(dept)}
-                            className="rounded-lg p-2 text-(--muted-foreground) transition hover:bg-(--muted) hover:text-(--foreground)"
-                            title="Edit"
-                          >
-                            <Pencil size={16} />
-                          </button>
-                          <button
-                            onClick={() => setDeleteTarget(dept)}
-                            className="rounded-lg p-2 text-(--muted-foreground) transition hover:bg-red-500/10 hover:text-red-500"
-                            title="Hapus"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Mobile Cards */}
-          <div className="flex flex-col gap-3 md:hidden">
-            {filtered.map((dept) => (
-              <div
-                key={dept.id}
-                className="rounded-xl border border-(--border) bg-(--card) p-4"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="inline-flex items-center rounded-md bg-(--primary)/10 px-2 py-0.5 text-xs font-bold text-(--primary)">
-                        {dept.code}
-                      </span>
-                      <span
-                        className={cn(
-                          "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
-                          dept.is_active
-                            ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                            : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",
-                        )}
-                      >
-                        {dept.is_active ? "Aktif" : "Nonaktif"}
-                      </span>
-                    </div>
-                    <p className="font-semibold text-(--foreground)">
-                      {dept.name}
-                    </p>
-                    <div className="mt-1 flex items-center gap-1 text-xs text-(--muted-foreground)">
-                      <Building2 size={12} />
-                      {dept.branch_name || "Semua Cabang"}
-                    </div>
-                    {dept.description && (
-                      <p className="mt-1 text-xs text-(--muted-foreground) line-clamp-2">
-                        {dept.description}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex gap-1">
-                    <button
-                      onClick={() => setEditDepartment(dept)}
-                      className="rounded-lg p-2 text-(--muted-foreground) transition hover:bg-(--muted) hover:text-(--foreground)"
-                    >
-                      <Pencil size={16} />
-                    </button>
-                    <button
-                      onClick={() => setDeleteTarget(dept)}
-                      className="rounded-lg p-2 text-(--muted-foreground) transition hover:bg-red-500/10 hover:text-red-500"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </>
+      {(!departments || departments.length === 0) && (
+        <EmptyState title="Belum ada data" description="Tambahkan departemen pertama Anda" icon={<Network className="h-12 w-12" />} />
       )}
 
-      {/* Create Modal */}
-      <Modal
-        open={showForm}
-        title="Tambah Departemen"
-        onClose={() => setShowForm(false)}
-      >
-        <DepartmentForm
-          onClose={() => setShowForm(false)}
-          onSubmit={handleCreate}
-          branches={branchOptions}
-          isLoading={mutationLoading}
-        />
-      </Modal>
+      {departments?.map((dept) => {
+        const isDeptExpanded = expandedDepts.has(dept.id);
+        const deptPositions = positionsByDept.get(dept.id) || [];
 
-      {/* Edit Modal */}
-      <Modal
-        open={!!editDepartment}
-        title="Edit Departemen"
-        onClose={() => setEditDepartment(null)}
-      >
-        {editDepartment && (
-          <DepartmentForm
-            onClose={() => setEditDepartment(null)}
-            onSubmit={handleUpdate}
-            editDepartment={editDepartment}
-            branches={branchOptions}
-            isLoading={mutationLoading}
-          />
-        )}
-      </Modal>
-
-      {/* Delete Confirmation */}
-      <ConfirmDialog
-        open={!!deleteTarget}
-        title="Hapus Departemen"
-        message={`Apakah Anda yakin ingin menghapus departemen "${deleteTarget?.name}"? Tindakan ini tidak dapat dibatalkan.`}
-        onConfirm={handleDelete}
-        onCancel={() => setDeleteTarget(null)}
-        isLoading={mutationLoading}
-      />
-    </>
-  );
-}
-
-// ════════════════════════════════════════════
-// POSITION TAB CONTENT
-// ════════════════════════════════════════════
-
-function PositionTab() {
-  const { data: departments } = useDepartmentList({ is_active: true });
-  const [filterDepartment, setFilterDepartment] = useState("");
-
-  const { data: positions, loading, refetch } = usePositionList();
-  const {
-    loading: mutationLoading,
-    createPosition,
-    updatePosition,
-    deletePosition,
-  } = usePositionMutations(refetch);
-
-  const [showForm, setShowForm] = useState(false);
-  const [editPosition, setEditPosition] = useState<JobPosition | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<JobPosition | null>(null);
-
-  const filtered = useMemo(() => {
-    if (!positions) return [];
-    if (!filterDepartment) return positions;
-    return positions.filter(
-      (p) => p.department_id === parseInt(filterDepartment),
-    );
-  }, [positions, filterDepartment]);
-
-  const handleCreate = async (payload: CreatePositionPayload) => {
-    const result = await createPosition(payload);
-    if (result) setShowForm(false);
-  };
-
-  const handleUpdate = async (payload: CreatePositionPayload) => {
-    if (!editPosition) return;
-    const result = await updatePosition(editPosition.id, payload);
-    if (result) setEditPosition(null);
-  };
-
-  const handleDelete = async () => {
-    if (!deleteTarget) return;
-    const result = await deletePosition(deleteTarget.id);
-    if (result) setDeleteTarget(null);
-  };
-
-  const departmentOptions =
-    departments?.map((d) => ({ id: d.id, name: d.name })) || [];
-
-  return (
-    <>
-      {/* Action Bar */}
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <SearchableSelect
-            value={filterDepartment}
-            onChange={(val) => setFilterDepartment(val)}
-            options={[
-              { value: "", label: "Semua Departemen" },
-              ...(departments?.map((d) => ({
-                value: String(d.id),
-                label: d.name,
-              })) || []),
-            ]}
-            placeholder="Filter departemen..."
-            searchPlaceholder="Cari departemen..."
-          />
-          {filterDepartment && (
-            <span className="text-xs text-(--muted-foreground)">
-              {filtered.length} jabatan
-            </span>
-          )}
-        </div>
-
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={() => setShowForm(true)}
-          className="self-start sm:self-auto shrink-0"
-        >
-          <Plus size={16} />
-          Tambah
-        </Button>
-      </div>
-
-      {/* Content */}
-      {loading ? (
-        <SkeletonTable cols={3} />
-      ) : !filtered || filtered.length === 0 ? (
-        <EmptyState
-          title={
-            filterDepartment
-              ? "Tidak ada jabatan di departemen ini"
-              : "Belum ada data jabatan"
-          }
-          description={
-            filterDepartment
-              ? "Coba pilih departemen lain atau hapus filter"
-              : "Tambahkan jabatan baru untuk memulai"
-          }
-          icon={<Briefcase className="h-12 w-12" />}
-          action={
-            !filterDepartment && (
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => setShowForm(true)}
-              >
-                <Plus size={16} />
-                Tambah Jabatan
-              </Button>
-            )
-          }
-        />
-      ) : (
-        <div className="overflow-hidden rounded-xl border border-(--border)">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-(--border) bg-(--muted)/50">
-                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-(--muted-foreground)">
-                  Nama Jabatan
-                </th>
-                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-(--muted-foreground)">
-                  Departemen
-                </th>
-                <th className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wider text-(--muted-foreground)">
-                  Aksi
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((position, index) => (
-                <tr
-                  key={position.id}
-                  className={cn(
-                    "border-b border-(--border) last:border-b-0",
-                    index % 2 === 0 ? "bg-(--card)" : "bg-(--muted)/20",
-                  )}
-                >
-                  <td className="px-5 py-4">
-                    <span className="font-medium text-(--foreground)">
-                      {position.title}
+        return (
+          <div key={dept.id} className="rounded-xl border border-(--border) bg-(--card) overflow-hidden transition-all">
+            <div className="flex items-center justify-between p-4 bg-(--muted)/20 hover:bg-(--muted)/40 transition cursor-pointer" onClick={() => toggleDept(dept.id)}>
+              <div className="flex items-center gap-3">
+                {isDeptExpanded ? <ChevronDown size={18} className="text-(--muted-foreground)" /> : <ChevronRight size={18} className="text-(--muted-foreground)" />}
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-(--foreground)">{dept.name}</h3>
+                    <span className="inline-flex items-center rounded-md bg-(--primary)/10 px-2 py-0.5 text-xs font-bold text-(--primary)">
+                      {dept.code}
                     </span>
-                  </td>
-                  <td className="px-5 py-4">
-                    {position.department_name ? (
-                      <span className="inline-flex items-center rounded-md border border-(--border) bg-(--secondary)/50 px-2 py-0.5 text-xs font-medium text-(--muted-foreground)">
-                        {position.department_name}
-                      </span>
-                    ) : (
-                      <span className="text-xs italic text-(--muted-foreground)">
-                        —
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-5 py-4">
-                    <div className="flex justify-end gap-2">
-                      <button
-                        onClick={() => setEditPosition(position)}
-                        className="rounded-lg p-2 text-(--muted-foreground) transition hover:bg-(--muted) hover:text-(--foreground)"
-                        title="Edit"
-                      >
-                        <Pencil size={16} />
-                      </button>
-                      <button
-                        onClick={() => setDeleteTarget(position)}
-                        className="rounded-lg p-2 text-(--muted-foreground) transition hover:bg-red-500/10 hover:text-red-500"
-                        title="Hapus"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Create Modal */}
-      <Modal
-        open={showForm}
-        title="Tambah Jabatan"
-        onClose={() => setShowForm(false)}
-      >
-        <PositionForm
-          onClose={() => setShowForm(false)}
-          onSubmit={handleCreate}
-          departments={departmentOptions}
-          isLoading={mutationLoading}
-        />
-      </Modal>
-
-      {/* Edit Modal */}
-      <Modal
-        open={!!editPosition}
-        title="Edit Jabatan"
-        onClose={() => setEditPosition(null)}
-      >
-        {editPosition && (
-          <PositionForm
-            onClose={() => setEditPosition(null)}
-            onSubmit={handleUpdate}
-            editPosition={editPosition}
-            departments={departmentOptions}
-            isLoading={mutationLoading}
-          />
-        )}
-      </Modal>
-
-      {/* Delete Confirmation */}
-      <ConfirmDialog
-        open={!!deleteTarget}
-        title="Hapus Jabatan"
-        message={`Apakah Anda yakin ingin menghapus jabatan "${deleteTarget?.title}"? Tindakan ini tidak dapat dibatalkan.`}
-        onConfirm={handleDelete}
-        onCancel={() => setDeleteTarget(null)}
-        isLoading={mutationLoading}
-      />
-    </>
-  );
-}
-
-// ════════════════════════════════════════════
-// EMPLOYEE TAB CONTENT (read-only list)
-// ════════════════════════════════════════════
-
-function EmployeeTab() {
-  const { data: departments } = useDepartmentList({ is_active: true });
-  const [filterDepartment, setFilterDepartment] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const params = {
-    department_id: filterDepartment ? parseInt(filterDepartment) : undefined,
-    search: searchQuery || undefined,
-  };
-
-  const { data: employees, loading } = useEmployeeList(params);
-
-  const filtered = useMemo(() => {
-    if (!employees) return [];
-    if (!searchQuery) return employees;
-    const q = searchQuery.toLowerCase();
-    return employees.filter(
-      (emp) =>
-        emp.full_name.toLowerCase().includes(q) ||
-        emp.employee_number.toLowerCase().includes(q) ||
-        (emp.job_position_title?.toLowerCase().includes(q) ?? false),
-    );
-  }, [employees, searchQuery]);
-
-  return (
-    <>
-      {/* Filter Bar */}
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="relative flex-1 max-w-sm">
-          <Search
-            size={16}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-(--muted-foreground)"
-          />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Cari nama atau NIP..."
-            className={cn(
-              "w-full rounded-lg border bg-(--input) pl-9 pr-4 py-2 text-sm text-(--foreground)",
-              "border-(--border) placeholder:text-(--muted-foreground)",
-              "transition-colors duration-200",
-              "focus:border-(--ring) focus:outline-none focus:ring-1 focus:ring-(--ring)",
-            )}
-          />
-        </div>
-
-        <SearchableSelect
-          value={filterDepartment}
-          onChange={(val) => setFilterDepartment(val)}
-          options={[
-            { value: "", label: "Semua Departemen" },
-            ...(departments?.map((d) => ({
-              value: String(d.id),
-              label: d.name,
-            })) || []),
-          ]}
-          placeholder="Filter departemen..."
-          searchPlaceholder="Cari departemen..."
-        />
-      </div>
-
-      {/* Content */}
-      {loading ? (
-        <SkeletonTable cols={5} />
-      ) : !filtered || filtered.length === 0 ? (
-        <EmptyState
-          title={
-            searchQuery || filterDepartment
-              ? "Pegawai tidak ditemukan"
-              : "Belum ada pegawai"
-          }
-          description={
-            searchQuery || filterDepartment
-              ? "Coba ubah filter atau kata kunci"
-              : "Belum ada pegawai yang terdaftar di departemen manapun"
-          }
-          icon={<Users className="h-12 w-12" />}
-        />
-      ) : (
-        <>
-          {/* Desktop Table */}
-          <div className="hidden md:block overflow-hidden rounded-xl border border-(--border)">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-(--border) bg-(--muted)/50">
-                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-(--muted-foreground)">
-                      NIP
-                    </th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-(--muted-foreground)">
-                      Nama
-                    </th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-(--muted-foreground)">
-                      Departemen
-                    </th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-(--muted-foreground)">
-                      Jabatan
-                    </th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-(--muted-foreground)">
-                      Status
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((emp, index) => (
-                    <tr
-                      key={emp.id}
-                      className={cn(
-                        "border-b border-(--border) last:border-b-0",
-                        index % 2 === 0 ? "bg-(--card)" : "bg-(--muted)/20",
-                      )}
-                    >
-                      <td className="px-5 py-4">
-                        <span className="text-xs font-mono text-(--muted-foreground)">
-                          {emp.employee_number}
-                        </span>
-                      </td>
-                      <td className="px-5 py-4">
-                        <span className="font-medium text-(--foreground)">
-                          {emp.full_name}
-                        </span>
-                      </td>
-                      <td className="px-5 py-4 text-sm text-(--muted-foreground)">
-                        {emp.department_name || "-"}
-                      </td>
-                      <td className="px-5 py-4 text-sm text-(--muted-foreground)">
-                        {emp.job_position_title || "-"}
-                      </td>
-                      <td className="px-5 py-4">
-                        <span
-                          className={cn(
-                            "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
-                            emp.is_active
-                              ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                              : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",
-                          )}
-                        >
-                          {emp.is_active ? "Aktif" : "Nonaktif"}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Mobile Cards */}
-          <div className="flex flex-col gap-3 md:hidden">
-            {filtered.map((emp) => (
-              <div
-                key={emp.id}
-                className="rounded-xl border border-(--border) bg-(--card) p-4"
-              >
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xs font-mono text-(--muted-foreground)">
-                    {emp.employee_number}
-                  </span>
-                  <span
-                    className={cn(
-                      "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
-                      emp.is_active
-                        ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                        : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",
-                    )}
-                  >
-                    {emp.is_active ? "Aktif" : "Nonaktif"}
-                  </span>
-                </div>
-                <p className="font-semibold text-(--foreground)">
-                  {emp.full_name}
-                </p>
-                <div className="mt-1 text-xs text-(--muted-foreground)">
-                  {emp.department_name || "-"} •{" "}
-                  {emp.job_position_title || "-"}
+                  </div>
+                  <p className="text-xs text-(--muted-foreground) mt-0.5">
+                    {dept.branch_name || "Semua Cabang"} • {deptPositions.length} Jabatan
+                  </p>
                 </div>
               </div>
-            ))}
+              <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                <button onClick={() => setEditDept(dept)} className="rounded-lg p-2 text-(--muted-foreground) hover:bg-(--muted) hover:text-(--foreground)" title="Edit">
+                  <Pencil size={16} />
+                </button>
+                <button onClick={() => setDeleteDept(dept)} className="rounded-lg p-2 text-(--muted-foreground) hover:bg-red-500/10 hover:text-red-500" title="Hapus">
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            </div>
+
+            {isDeptExpanded && (
+              <div className="border-t border-(--border) p-4 bg-(--card) space-y-3">
+                {deptPositions.length === 0 ? (
+                  <p className="text-sm text-(--muted-foreground) italic ml-7">Tidak ada jabatan dalam departemen ini.</p>
+                ) : (
+                  deptPositions.map((pos) => {
+                    const isPosExpanded = expandedPos.has(pos.id);
+                    const posEmployees = employeesByPos.get(pos.id) || [];
+
+                    return (
+                      <div key={pos.id} className="ml-7 rounded-lg border border-(--border) overflow-hidden">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 bg-(--muted)/10 hover:bg-(--muted)/30 cursor-pointer" onClick={() => togglePos(pos.id)}>
+                           <div className="flex items-center gap-2">
+                             {isPosExpanded ? <ChevronDown size={16} className="text-(--muted-foreground)" /> : <ChevronRight size={16} className="text-(--muted-foreground)" />}
+                             <Briefcase size={16} className="text-(--primary)" />
+                             <span className="font-medium text-sm text-(--foreground)">{pos.title}</span>
+                             <span className="text-xs text-(--muted-foreground) ml-2">({posEmployees.length} Pegawai)</span>
+                           </div>
+                           <div className="flex gap-1 mt-2 sm:mt-0" onClick={(e) => e.stopPropagation()}>
+                             <button onClick={() => setEditPos(pos)} className="rounded-lg p-1.5 text-(--muted-foreground) hover:bg-(--muted) hover:text-(--foreground)" title="Edit">
+                               <Pencil size={14} />
+                             </button>
+                             <button onClick={() => setDeletePosTarget(pos)} className="rounded-lg p-1.5 text-(--muted-foreground) hover:bg-red-500/10 hover:text-red-500" title="Hapus">
+                               <Trash2 size={14} />
+                             </button>
+                           </div>
+                        </div>
+
+                        {isPosExpanded && (
+                          <div className="border-t border-(--border) p-3 bg-(--card)">
+                            {posEmployees.length === 0 ? (
+                              <p className="text-xs text-(--muted-foreground) italic ml-7">Belum ada pegawai di jabatan ini.</p>
+                            ) : (
+                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 ml-7">
+                                {posEmployees.map(emp => (
+                                  <div key={emp.id} className="flex items-center gap-3 p-2 rounded border border-(--border) bg-(--muted)/5">
+                                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-(--primary)/20 text-xs font-bold text-(--primary)">
+                                      {emp.full_name.substring(0,2).toUpperCase()}
+                                    </div>
+                                    <div className="min-w-0">
+                                      <p className="text-sm font-medium text-(--foreground) truncate">{emp.full_name}</p>
+                                      <p className="text-xs text-(--muted-foreground) font-mono">{emp.employee_number}</p>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+                
+                <div className="ml-7 pt-2">
+                   <Button variant="ghost" size="sm" onClick={() => setShowPosForm({ deptId: dept.id })} className="text-xs text-(--primary) hover:text-(--primary)/80 hover:bg-(--primary)/10">
+                     <Plus size={14} className="mr-1" /> Tambah Jabatan ke {dept.name}
+                   </Button>
+                </div>
+              </div>
+            )}
           </div>
-        </>
-      )}
-    </>
+        );
+      })}
+
+      {/* Forms */}
+      <Modal open={showDeptForm || !!editDept} title={editDept ? "Edit Departemen" : "Tambah Departemen"} onClose={() => { setShowDeptForm(false); setEditDept(null); }}>
+        <DepartmentForm onClose={() => { setShowDeptForm(false); setEditDept(null); }} onSubmit={handleDeptSubmit} editDepartment={editDept || undefined} branches={branches?.map(b=>({id:b.id,name:b.name})) || []} isLoading={deptMutLoading} />
+      </Modal>
+
+      <Modal open={!!showPosForm || !!editPos} title={editPos ? "Edit Jabatan" : "Tambah Jabatan"} onClose={() => { setShowPosForm(false); setEditPos(null); }}>
+        <PositionForm onClose={() => { setShowPosForm(false); setEditPos(null); }} onSubmit={handlePosSubmit} editPosition={editPos || undefined} departments={departments?.map(d=>({id:d.id,name:d.name})) || []} isLoading={posMutLoading} />
+      </Modal>
+
+      {/* Confirms */}
+      <ConfirmDialog open={!!deleteDept} title="Hapus Departemen" message="Yakin ingin menghapus departemen ini?" onConfirm={async () => { if (deleteDept) await deleteDepartment(deleteDept.id); setDeleteDept(null); }} onCancel={() => setDeleteDept(null)} isLoading={deptMutLoading} />
+      <ConfirmDialog open={!!deletePosTarget} title="Hapus Jabatan" message="Yakin ingin menghapus jabatan ini?" onConfirm={async () => { if (deletePosTarget) await deletePosition(deletePosTarget.id); setDeletePosTarget(null); }} onCancel={() => setDeletePosTarget(null)} isLoading={posMutLoading} />
+
+    </div>
   );
 }
 
@@ -1224,51 +652,21 @@ function EmployeeTab() {
 // ════════════════════════════════════════════
 
 export function DepartmentPage() {
-  const [activeTab, setActiveTab] = useState<TabKey>("departments");
-
   return (
     <MainLayout>
-      {/* Sticky Header */}
       <header className="sticky top-0 z-40 border-b border-(--border) bg-(--card) px-4 py-3 sm:px-6 sm:py-3.5">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h1 className="text-sm font-bold tracking-wide text-(--foreground) md:text-lg">
-              Departemen & Jabatan
-            </h1>
-            <p className="text-[10px] text-(--muted-foreground) md:text-xs">
-              Kelola unit organisasi, jabatan, dan daftar pegawai
-            </p>
-          </div>
-        </div>
-
-        {/* Tab Bar */}
-        <div className="mt-3 flex gap-1 overflow-x-auto border-b border-(--border) -mb-3 sm:-mb-3.5 px-0">
-          {TABS.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.key;
-            return (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={cn(
-                  "flex items-center gap-2 whitespace-nowrap border-b-2 px-4 py-2.5 text-sm font-medium transition-colors",
-                  isActive
-                    ? "border-(--primary) text-(--primary)"
-                    : "border-transparent text-(--muted-foreground) hover:text-(--foreground) hover:border-(--border)",
-                )}
-              >
-                <Icon size={16} />
-                {tab.label}
-              </button>
-            );
-          })}
+        <div>
+          <h1 className="text-sm font-bold tracking-wide text-(--foreground) md:text-lg">
+            Departemen & Jabatan
+          </h1>
+          <p className="text-[10px] text-(--muted-foreground) md:text-xs">
+            Kelola unit organisasi, jabatan, dan daftar pegawai secara terpadu
+          </p>
         </div>
       </header>
 
       <div className="mx-auto max-w-350 p-3 sm:p-5">
-        {activeTab === "departments" && <DepartmentTab />}
-        {activeTab === "positions" && <PositionTab />}
-        {activeTab === "employees" && <EmployeeTab />}
+        <DepartmentAccordion />
       </div>
     </MainLayout>
   );

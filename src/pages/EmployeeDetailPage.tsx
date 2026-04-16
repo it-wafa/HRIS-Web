@@ -32,22 +32,16 @@ import { useBranchList } from "@/hooks/useBranch";
 import { useDepartmentList } from "@/hooks/useDepartment";
 import { usePositionList } from "@/hooks/usePosition";
 import { useRoleList } from "@/hooks/useRole";
-import {
-  GENDER_LABELS,
-  MARITAL_STATUS_LABELS,
-  CONTACT_TYPE_LABELS,
-  RELIGION_OPTIONS,
-  BLOOD_TYPE_OPTIONS,
-} from "@/types/employee";
+import { CONTACT_TYPE_LABELS } from "@/types/employee";
 import { CONTRACT_TYPE_LABELS, CONTRACT_TYPE_COLORS } from "@/types/contract";
 import type {
   Employee,
   EmployeeContact,
   CreateContactPayload,
   ContactType,
-  Gender,
   MaritalStatus,
   UpdateEmployeePayload,
+  EmployeeMetadata,
 } from "@/types/employee";
 import type {
   EmploymentContract,
@@ -58,6 +52,7 @@ import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import { useDemo } from "@/contexts/DemoContext";
 import { resetEmployeePassword } from "@/lib/employee-api";
 import { useAuth } from "@/contexts/AuthContext";
+import { useEmployeeMetadata } from "@/hooks/useMetadata";
 
 // ════════════════════════════════════════════
 // CONFIRM DIALOG
@@ -381,6 +376,7 @@ function EmployeeForm({
   departments: { id: number; name: string }[];
   positions: { id: number; title: string }[];
   roles: { id: number; name: string }[];
+  metadata: EmployeeMetadata | null;
 }) {
   const [formData, setFormData] = useState({
     employee_number: initialData.employee_number || "",
@@ -507,10 +503,12 @@ function EmployeeForm({
             label="Jenis Kelamin *"
             value={formData.gender}
             onChange={(val) => handleChange("gender", val)}
-            options={Object.entries(GENDER_LABELS).map(([value, label]) => ({
-              value,
-              label,
-            }))}
+            options={
+              metadata?.gender_meta.map((g) => ({
+                value: g.id,
+                label: g.name,
+              })) || []
+            }
             placeholder="Pilih jenis kelamin"
             searchPlaceholder="Cari..."
           />
@@ -605,7 +603,12 @@ function EmployeeForm({
             label="Agama"
             value={formData.religion}
             onChange={(val) => handleChange("religion", val)}
-            options={RELIGION_OPTIONS.map((r) => ({ value: r, label: r }))}
+            options={
+              metadata?.religion_meta.map((r) => ({
+                value: r.id,
+                label: r.name,
+              })) || []
+            }
             placeholder="Pilih agama"
             searchPlaceholder="Cari agama..."
           />
@@ -613,12 +616,12 @@ function EmployeeForm({
             label="Status Pernikahan"
             value={formData.marital_status}
             onChange={(val) => handleChange("marital_status", val)}
-            options={Object.entries(MARITAL_STATUS_LABELS).map(
-              ([value, label]) => ({
-                value,
-                label,
-              }),
-            )}
+            options={
+              metadata?.marital_status_meta.map((m) => ({
+                value: m.id,
+                label: m.name,
+              })) || []
+            }
             placeholder="Pilih status"
             searchPlaceholder="Cari..."
           />
@@ -628,7 +631,12 @@ function EmployeeForm({
             label="Golongan Darah"
             value={formData.blood_type}
             onChange={(val) => handleChange("blood_type", val)}
-            options={BLOOD_TYPE_OPTIONS.map((b) => ({ value: b, label: b }))}
+            options={
+              metadata?.blood_type_meta.map((b) => ({
+                value: b.id,
+                label: b.name,
+              })) || []
+            }
             placeholder="Pilih"
             searchPlaceholder="Cari..."
           />
@@ -924,6 +932,7 @@ export function EmployeeDetailPage() {
     useEmployeeContacts(employeeId);
   const { data: contracts, refetch: refetchContracts } =
     useContractList(employeeId);
+  const { data: metadata } = useEmployeeMetadata();
 
   // Fetch reference data for employee form
   const { data: branches } = useBranchList();
@@ -1187,7 +1196,7 @@ export function EmployeeDetailPage() {
                     label="Jenis Kelamin"
                     value={
                       employee.gender
-                        ? GENDER_LABELS[employee.gender]
+                        ? metadata?.gender_meta.find((g) => g.id === employee.gender)?.name
                         : undefined
                     }
                   />
@@ -1218,7 +1227,7 @@ export function EmployeeDetailPage() {
                     label="Status Pernikahan"
                     value={
                       employee.marital_status
-                        ? MARITAL_STATUS_LABELS[employee.marital_status]
+                        ? metadata?.marital_status_meta.find((m) => m.id === employee.marital_status)?.name
                         : undefined
                     }
                   />
@@ -1529,6 +1538,7 @@ export function EmployeeDetailPage() {
             departments={departments || []}
             positions={positions || []}
             roles={roles || []}
+            metadata={metadata}
           />
         )}
       </Modal>

@@ -33,10 +33,9 @@ import { useShiftList, useScheduleList } from "@/hooks/useShift";
 import { useContractList } from "@/hooks/useContract";
 import { useDemo } from "@/contexts/DemoContext";
 import {
-  GENDER_LABELS,
-  MARITAL_STATUS_LABELS,
   CONTACT_TYPE_LABELS,
 } from "@/types/employee";
+import { useEmployeeMetadata } from "@/hooks/useMetadata";
 import { DAY_OF_WEEK_OPTIONS } from "@/types/shift";
 import { CONTRACT_TYPE_LABELS, CONTRACT_TYPE_COLORS } from "@/types/contract";
 import { MUTABAAH_TARGET } from "@/types/mutabaah";
@@ -617,6 +616,7 @@ export function ProfilePage() {
   const { data: profile, loading: profileLoading } = useEmployeeProfile();
   const { data: contacts, loading: contactsLoading } =
     useEmployeeProfileContacts();
+  const { data: metadata } = useEmployeeMetadata();
 
   const [activeTab, setActiveTab] = useState(0);
   const loading = profileLoading || contactsLoading;
@@ -801,7 +801,7 @@ export function ProfilePage() {
                   <InfoItem
                     label="Jenis Kelamin"
                     value={
-                      profile.gender ? GENDER_LABELS[profile.gender] : undefined
+                      profile.gender ? metadata?.gender_meta.find((g) => g.id === profile.gender)?.name : undefined
                     }
                   />
                   <InfoItem label="Agama" value={profile.religion} />
@@ -823,7 +823,7 @@ export function ProfilePage() {
                     label="Status Pernikahan"
                     value={
                       profile.marital_status
-                        ? MARITAL_STATUS_LABELS[profile.marital_status]
+                        ? metadata?.marital_status_meta.find((m) => m.id === profile.marital_status)?.name
                         : undefined
                     }
                   />

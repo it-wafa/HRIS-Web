@@ -2,6 +2,8 @@
 // EMPLOYEE TYPES
 // ════════════════════════════════════════════
 
+import type { MetaItem } from "./meta";
+
 export type Gender = "male" | "female" | "other";
 export type MaritalStatus = "single" | "married" | "widowed" | "divorced";
 export type ContactType = "phone" | "email" | "address";
@@ -73,6 +75,14 @@ export interface CreateEmployeePayload {
   job_positions_id?: number;
 }
 
+export interface CreateEmployeeResponse {
+  credentials: {
+    email: string;
+    password: string;
+  };
+  employee: Employee;
+}
+
 export interface UpdateEmployeePayload {
   employee_number?: string;
   full_name?: string;
@@ -117,47 +127,17 @@ export interface EmployeeListParams {
   search?: string;
 }
 
-// Gender labels for display
-export const GENDER_LABELS: Record<Gender, string> = {
-  male: "Laki-laki",
-  female: "Perempuan",
-  other: "Lainnya",
-};
-
-// Marital status labels for display
-export const MARITAL_STATUS_LABELS: Record<MaritalStatus, string> = {
-  single: "Belum Menikah",
-  married: "Menikah",
-  widowed: "Duda/Janda",
-  divorced: "Cerai",
-};
-
-// Religion options
-export const RELIGION_OPTIONS = [
-  "Islam",
-  "Kristen",
-  "Katolik",
-  "Hindu",
-  "Buddha",
-  "Konghucu",
-  "Lainnya",
-];
-
-// Blood type options
-export const BLOOD_TYPE_OPTIONS = [
-  "A",
-  "B",
-  "AB",
-  "O",
-  "A+",
-  "A-",
-  "B+",
-  "B-",
-  "AB+",
-  "AB-",
-  "O+",
-  "O-",
-];
+export interface EmployeeMetadata {
+  branch_meta: MetaItem[];
+  department_meta: MetaItem[];
+  role_meta: MetaItem[];
+  job_position_meta: MetaItem[];
+  gender_meta: MetaItem[];
+  religion_meta: MetaItem[];
+  marital_status_meta: MetaItem[];
+  blood_type_meta: MetaItem[];
+  status_meta: MetaItem[];
+}
 
 // Contact type labels for display
 export const CONTACT_TYPE_LABELS: Record<ContactType, string> = {

@@ -1,4 +1,9 @@
-import type { Role, Permission, RolePermission } from "@/types/role";
+import type {
+  Role,
+  Permission,
+  RolePermission,
+  RoleMetadata,
+} from "@/types/role";
 
 // ════════════════════════════════════════════
 // ROLE DUMMY DATA
@@ -521,3 +526,23 @@ export function getDummyRolePermissions(roleId: number): number[] {
     (rp) => rp.permission_id,
   );
 }
+
+export function getDummyRoleMetadata(): RoleMetadata {
+  return {
+    module_meta: [
+      { id: "dashboard", name: "Dashboard" },
+      { id: "employee", name: "Pegawai" },
+      { id: "branch", name: "Cabang" },
+      { id: "position", name: "Jabatan" },
+      { id: "role", name: "Role" },
+    ],
+    action_meta: [
+      { id: "view", name: "Lihat" },
+      { id: "create", name: "Tambah" },
+      { id: "edit", name: "Edit" },
+      { id: "delete", name: "Hapus" },
+      { id: "approve", name: "Approve" },
+    ],
+  };
+}
+

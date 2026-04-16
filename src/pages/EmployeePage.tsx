@@ -12,16 +12,12 @@ import { useBranchList } from "@/hooks/useBranch";
 import { usePositionList } from "@/hooks/usePosition";
 import { useRoleList } from "@/hooks/useRole";
 import { useDepartmentList } from "@/hooks/useDepartment";
-import {
-  GENDER_LABELS,
-  MARITAL_STATUS_LABELS,
-  RELIGION_OPTIONS,
-  BLOOD_TYPE_OPTIONS,
-} from "@/types/employee";
+import { useEmployeeMetadata } from "@/hooks/useMetadata";
 import type {
   CreateEmployeePayload,
   Gender,
   MaritalStatus,
+  EmployeeMetadata,
 } from "@/types/employee";
 
 // ════════════════════════════════════════════
@@ -74,6 +70,47 @@ function Modal({
 }
 
 // ════════════════════════════════════════════
+// CREDENTIAL MODAL
+// ════════════════════════════════════════════
+
+function CredentialModal({
+  open,
+  onClose,
+  credentials,
+}: {
+  open: boolean;
+  onClose: () => void;
+  credentials: { email: string; password: string } | null;
+}) {
+  if (!open || !credentials) return null;
+  return (
+    <Modal open={open} title="Kredensial Pegawai" onClose={onClose} maxWidth="max-w-md">
+      <div className="space-y-4">
+        <p className="text-sm text-(--muted-foreground)">
+          Pegawai berhasil ditambahkan. Berikut adalah kredensial untuk login:
+        </p>
+        <div className="rounded-lg bg-(--muted)/50 p-4 space-y-2">
+          <div>
+            <label className="text-xs text-(--muted-foreground)">Email</label>
+            <div className="font-mono text-sm text-(--foreground)">{credentials.email}</div>
+          </div>
+          <div>
+            <label className="text-xs text-(--muted-foreground)">Password</label>
+            <div className="font-mono text-sm text-(--foreground)">{credentials.password}</div>
+          </div>
+        </div>
+        <p className="text-xs text-amber-500">
+          * Harap simpan kredensial ini karena sistem tidak menampilkannya lagi.
+        </p>
+        <div className="flex justify-end pt-4 border-t border-(--border)">
+          <Button onClick={onClose} variant="primary">Tutup</Button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+// ════════════════════════════════════════════
 // EMPLOYEE FORM
 // ════════════════════════════════════════════
 
@@ -92,6 +129,7 @@ function EmployeeForm({
   departments: { id: number; name: string }[];
   positions: { id: number; title: string; department_id: number | null }[];
   roles: { id: number; name: string }[];
+  metadata: EmployeeMetadata | null;
   isLoading?: boolean;
 }) {
   const [activeTab, setActiveTab] = useState(0);
@@ -249,12 +287,12 @@ function EmployeeForm({
                 label="Jenis Kelamin *"
                 value={formData.gender}
                 onChange={(val) => handleChange("gender", val)}
-                options={Object.entries(GENDER_LABELS).map(
-                  ([value, label]) => ({
-                    value,
-                    label,
-                  }),
-                )}
+                options={
+                  metadata?.gender_meta.map((g) => ({
+                    value: g.id,
+                    label: g.name,
+                  })) || []
+                }
                 placeholder="Pilih jenis kelamin"
               />
               {errors.gender && (
@@ -411,26 +449,36 @@ function EmployeeForm({
               label="Agama"
               value={formData.religion}
               onChange={(val) => handleChange("religion", val)}
-              options={RELIGION_OPTIONS.map((r) => ({ value: r, label: r }))}
+              options={
+                metadata?.religion_meta.map((r) => ({
+                  value: r.id,
+                  label: r.name,
+                })) || []
+              }
               placeholder="Pilih agama"
             />
             <SearchableSelect
               label="Status Pernikahan"
               value={formData.marital_status}
               onChange={(val) => handleChange("marital_status", val)}
-              options={Object.entries(MARITAL_STATUS_LABELS).map(
-                ([value, label]) => ({ value, label }),
-              )}
+              options={
+                metadata?.marital_status_meta.map((m) => ({
+                  value: m.id,
+                  label: m.name,
+                })) || []
+              }
               placeholder="Pilih status"
             />
             <SearchableSelect
               label="Golongan Darah"
               value={formData.blood_type}
               onChange={(val) => handleChange("blood_type", val)}
-              options={BLOOD_TYPE_OPTIONS.map((bt) => ({
-                value: bt,
-                label: bt,
-              }))}
+              options={
+                metadata?.blood_type_meta.map((b) => ({
+                  value: b.id,
+                  label: b.name,
+                })) || []
+              }
               placeholder="Pilih gol. darah"
             />
           </div>
@@ -541,6 +589,7 @@ export function EmployeePage() {
   );
 
   const { data: employees, loading, refetch } = useEmployeeList(params);
+  const { data: metadata } = useEmployeeMetadata();
   const { data: branches } = useBranchList();
   const { data: departments } = useDepartmentList({ is_active: true });
   const { data: positions } = usePositionList();
@@ -549,10 +598,16 @@ export function EmployeePage() {
     useEmployeeMutations(refetch);
 
   const [showForm, setShowForm] = useState(false);
+  const [credentials, setCredentials] = useState<{ email: string; password: string } | null>(null);
 
   const handleCreate = async (payload: CreateEmployeePayload) => {
     const result = await createEmployee(payload);
-    if (result) setShowForm(false);
+    if (result) {
+      setShowForm(false);
+      if (result.credentials) {
+        setCredentials(result.credentials);
+      }
+    }
   };
 
   return (
@@ -711,7 +766,7 @@ export function EmployeePage() {
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
                           <div
-                            className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold text-white"
+                            className="flex h-10 w-10 aspect-square items-center justify-center rounded-full text-sm font-bold text-white"
                             style={{
                               background:
                                 "linear-gradient(135deg, #9d167c 0%, #d10071 60%, #dd0d89 100%)",
@@ -752,7 +807,7 @@ export function EmployeePage() {
                       <td className="px-5 py-4">
                         <span
                           className={cn(
-                            "inline-flex rounded-full px-2 py-0.5 text-xs font-medium",
+                            "inline-flex rounded-full px-2 py-0.5 text-xs font-medium text-nowrap",
                             employee.is_trainer
                               ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
                               : "bg-gray-100 text-gray-600 dark:bg-gray-800/50 dark:text-gray-400",
@@ -821,6 +876,12 @@ export function EmployeePage() {
         )}
       </div>
 
+      <CredentialModal
+        open={!!credentials}
+        credentials={credentials}
+        onClose={() => setCredentials(null)}
+      />
+
       {/* Create Modal */}
       <Modal
         open={showForm}
@@ -843,6 +904,7 @@ export function EmployeePage() {
             })) || []
           }
           roles={roles?.map((r) => ({ id: r.id, name: r.name })) || []}
+          metadata={metadata || null}
           isLoading={mutationLoading}
         />
       </Modal>

@@ -6,12 +6,19 @@ import type {
   UpdateEmployeePayload,
   CreateContactPayload,
   UpdateContactPayload,
+  EmployeeMetadata,
+  CreateEmployeeResponse,
 } from "@/types/employee";
 import { apiCall } from "@/lib/api";
 
 // ════════════════════════════════════════════
 // EMPLOYEE API
 // ════════════════════════════════════════════
+
+/** GET /employees/metadata — Fetch user metadata map */
+export async function fetchEmployeeMetadata() {
+  return apiCall<EmployeeMetadata>("/employees/metadata");
+}
 
 /** GET /employees — List all employees with optional filters */
 export async function fetchEmployees(
@@ -34,11 +41,10 @@ export async function fetchEmployeeById(id: number) {
   return apiCall<Employee>(`/employees/${id}`);
 }
 
-/** POST /employees — Create a new employee */
 export async function createEmployee(
   payload: CreateEmployeePayload,
 ) {
-  return apiCall<Employee>("/employees", {
+  return apiCall<CreateEmployeeResponse>("/employees", {
     method: "POST",
     body: JSON.stringify(payload),
   });

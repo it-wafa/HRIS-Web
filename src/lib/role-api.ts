@@ -4,12 +4,17 @@ import type {
   CreateRolePayload,
   UpdateRolePayload,
   UpdateRolePermissionsPayload,
+  RoleMetadata,
 } from "@/types/role";
 import { apiCall } from "@/lib/api";
 
 // ════════════════════════════════════════════
 // ROLE API
 // ════════════════════════════════════════════
+
+export async function fetchRoleMetadata() {
+  return apiCall<RoleMetadata>("/roles/metadata");
+}
 
 /** GET /roles — List all roles */
 export async function fetchRoles() {

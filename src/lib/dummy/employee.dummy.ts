@@ -2,6 +2,7 @@ import type {
   Employee,
   EmployeeContact,
   EmployeeListParams,
+  EmployeeMetadata,
 } from "@/types/employee";
 
 // ════════════════════════════════════════════
@@ -649,4 +650,27 @@ export function getDummyEmployeesByDepartment(
   departmentId: number,
 ): Employee[] {
   return DUMMY_EMPLOYEES.filter((e) => e.department_id === departmentId);
+}
+
+export function getDummyEmployeeMetadata(): EmployeeMetadata {
+  return {
+    branch_meta: [{ id: "1", name: "Kantor Pusat Surabaya" }],
+    department_meta: [{ id: "1", name: "HRGA" }],
+    role_meta: [{ id: "1", name: "Super Admin" }],
+    job_position_meta: [{ id: "1", name: "Direktur" }],
+    gender_meta: [
+      { id: "male", name: "Laki-laki" },
+      { id: "female", name: "Perempuan" },
+    ],
+    religion_meta: [{ id: "Islam", name: "Islam" }],
+    marital_status_meta: [
+      { id: "married", name: "Menikah" },
+      { id: "single", name: "Belum Menikah" },
+    ],
+    blood_type_meta: [
+      { id: "A", name: "A" },
+      { id: "O", name: "O" },
+    ],
+    status_meta: [{ id: "active", name: "Aktif" }],
+  };
 }

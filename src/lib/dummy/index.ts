@@ -33,6 +33,7 @@ export {
   getDummyRoleById,
   getDummyPermissions,
   getDummyRolePermissions,
+  getDummyRoleMetadata,
 } from "./role.dummy";
 
 // Contract
@@ -52,6 +53,7 @@ export {
   getDummyEmployeeContacts,
   getDummyEmployeeContactById,
   getDummyEmployeesByDepartment,
+  getDummyEmployeeMetadata,
 } from "./employee.dummy";
 
 // Shift & Schedule
