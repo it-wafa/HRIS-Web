@@ -17,7 +17,7 @@ export interface Role {
 }
 
 export interface Permission {
-  id: number;
+  code: string;
   module: string;
   action: string;
   description: string | null;
@@ -29,7 +29,7 @@ export interface Permission {
 export interface RolePermission {
   id: number;
   role_id: number;
-  permission_id: number;
+  permission_code: string;
   created_at: string;
 }
 

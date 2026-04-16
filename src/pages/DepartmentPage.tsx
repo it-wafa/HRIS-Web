@@ -5,10 +5,9 @@ import {
   Trash2,
   X,
   Network,
-  Building2,
-  Search,
   Briefcase,
-  Users,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -20,7 +19,7 @@ import {
   useDepartmentList,
   useDepartmentMutations,
 } from "@/hooks/useDepartment";
-import { useBranchList } from "@/hooks/useBranch";
+import { useDepartmentMetadata } from "@/hooks/useMetadata";
 import { usePositionList, usePositionMutations } from "@/hooks/usePosition";
 import { useEmployeeList } from "@/hooks/useEmployee";
 import type {
@@ -428,13 +427,12 @@ function SkeletonTable({ cols = 6 }: { cols?: number }) {
 }
 
 // ════════════════════════════════════════════
-// UNIFIED DEPARTMENT ACCORDION
+// UNIFIED DEPARTMENT CONTENT
 // ════════════════════════════════════════════
 
-import { ChevronDown, ChevronRight, User } from "lucide-react";
 
-function DepartmentAccordion() {
-  const { data: branches } = useBranchList();
+function DepartmentContent() {
+  const { data: metadata } = useDepartmentMetadata();
   const { data: departments, loading: deptLoading, refetch: refetchDept } = useDepartmentList({ is_active: true });
   const { data: positions, loading: posLoading, refetch: refetchPos } = usePositionList();
   const { data: employees, loading: empLoading } = useEmployeeList({ is_active: true });
@@ -517,22 +515,40 @@ function DepartmentAccordion() {
     }
   };
 
-  if (deptLoading || posLoading || empLoading) return <SkeletonTable cols={3} />;
+  if (deptLoading || posLoading || empLoading) {
+    return (
+      <div className="p-5">
+        <SkeletonTable cols={3} />
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-end gap-2 mb-4">
-        <Button variant="outline" size="sm" onClick={() => setShowPosForm({})}>
-          <Plus size={16} /> Jabatan
-        </Button>
-        <Button variant="primary" size="sm" onClick={() => setShowDeptForm(true)}>
-          <Plus size={16} /> Departemen
-        </Button>
-      </div>
+    <>
+      <header className="sticky top-0 z-40 flex items-center justify-between border-b border-(--border) bg-(--card) px-4 py-3 sm:px-6 sm:py-3.5">
+        <div>
+          <h1 className="text-sm font-bold tracking-wide text-(--foreground) md:text-lg">
+            Departemen & Jabatan
+          </h1>
+          <p className="text-[10px] text-(--muted-foreground) md:text-xs">
+            Kelola unit organisasi, jabatan, dan daftar pegawai secara terpadu
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowPosForm({})}>
+            <Plus size={16} /> <span className="hidden sm:inline ml-1">Jabatan</span>
+          </Button>
+          <Button variant="primary" size="sm" onClick={() => setShowDeptForm(true)}>
+            <Plus size={16} /> <span className="hidden sm:inline ml-1">Departemen</span>
+          </Button>
+        </div>
+      </header>
 
+      <div className="mx-auto max-w-350 p-3 sm:p-5 space-y-4">
       {(!departments || departments.length === 0) && (
         <EmptyState title="Belum ada data" description="Tambahkan departemen pertama Anda" icon={<Network className="h-12 w-12" />} />
       )}
+
 
       {departments?.map((dept) => {
         const isDeptExpanded = expandedDepts.has(dept.id);
@@ -632,7 +648,7 @@ function DepartmentAccordion() {
 
       {/* Forms */}
       <Modal open={showDeptForm || !!editDept} title={editDept ? "Edit Departemen" : "Tambah Departemen"} onClose={() => { setShowDeptForm(false); setEditDept(null); }}>
-        <DepartmentForm onClose={() => { setShowDeptForm(false); setEditDept(null); }} onSubmit={handleDeptSubmit} editDepartment={editDept || undefined} branches={branches?.map(b=>({id:b.id,name:b.name})) || []} isLoading={deptMutLoading} />
+        <DepartmentForm onClose={() => { setShowDeptForm(false); setEditDept(null); }} onSubmit={handleDeptSubmit} editDepartment={editDept || undefined} branches={metadata?.branch_meta.map(b=>({id: Number(b.id), name: b.name})) || []} isLoading={deptMutLoading} />
       </Modal>
 
       <Modal open={!!showPosForm || !!editPos} title={editPos ? "Edit Jabatan" : "Tambah Jabatan"} onClose={() => { setShowPosForm(false); setEditPos(null); }}>
@@ -643,7 +659,8 @@ function DepartmentAccordion() {
       <ConfirmDialog open={!!deleteDept} title="Hapus Departemen" message="Yakin ingin menghapus departemen ini?" onConfirm={async () => { if (deleteDept) await deleteDepartment(deleteDept.id); setDeleteDept(null); }} onCancel={() => setDeleteDept(null)} isLoading={deptMutLoading} />
       <ConfirmDialog open={!!deletePosTarget} title="Hapus Jabatan" message="Yakin ingin menghapus jabatan ini?" onConfirm={async () => { if (deletePosTarget) await deletePosition(deletePosTarget.id); setDeletePosTarget(null); }} onCancel={() => setDeletePosTarget(null)} isLoading={posMutLoading} />
 
-    </div>
+      </div>
+    </>
   );
 }
 
@@ -654,20 +671,7 @@ function DepartmentAccordion() {
 export function DepartmentPage() {
   return (
     <MainLayout>
-      <header className="sticky top-0 z-40 border-b border-(--border) bg-(--card) px-4 py-3 sm:px-6 sm:py-3.5">
-        <div>
-          <h1 className="text-sm font-bold tracking-wide text-(--foreground) md:text-lg">
-            Departemen & Jabatan
-          </h1>
-          <p className="text-[10px] text-(--muted-foreground) md:text-xs">
-            Kelola unit organisasi, jabatan, dan daftar pegawai secara terpadu
-          </p>
-        </div>
-      </header>
-
-      <div className="mx-auto max-w-350 p-3 sm:p-5">
-        <DepartmentAccordion />
-      </div>
+      <DepartmentContent />
     </MainLayout>
   );
 }

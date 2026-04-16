@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Search, Users, ChevronRight, X } from "lucide-react";
+import { Plus, Search, Users, ChevronRight, X, Copy, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -8,10 +8,6 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Input, Button } from "@/components/ui/FormElements";
 import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import { useEmployeeList, useEmployeeMutations } from "@/hooks/useEmployee";
-import { useBranchList } from "@/hooks/useBranch";
-import { usePositionList } from "@/hooks/usePosition";
-import { useRoleList } from "@/hooks/useRole";
-import { useDepartmentList } from "@/hooks/useDepartment";
 import { useEmployeeMetadata } from "@/hooks/useMetadata";
 import type {
   CreateEmployeePayload,
@@ -82,6 +78,18 @@ function CredentialModal({
   onClose: () => void;
   credentials: { email: string; password: string } | null;
 }) {
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  const handleCopy = async (value: string, field: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiedField(field);
+      setTimeout(() => setCopiedField(null), 2000);
+    } catch {
+      // fallback
+    }
+  };
+
   if (!open || !credentials) return null;
   return (
     <Modal open={open} title="Kredensial Pegawai" onClose={onClose} maxWidth="max-w-md">
@@ -92,11 +100,29 @@ function CredentialModal({
         <div className="rounded-lg bg-(--muted)/50 p-4 space-y-2">
           <div>
             <label className="text-xs text-(--muted-foreground)">Email</label>
-            <div className="font-mono text-sm text-(--foreground)">{credentials.email}</div>
+            <div className="flex items-center justify-between gap-2">
+              <div className="font-mono text-sm text-(--foreground)">{credentials.email}</div>
+              <button
+                onClick={() => handleCopy(credentials.email, "email")}
+                className="rounded-md p-1 text-(--muted-foreground) transition hover:bg-(--muted) hover:text-(--foreground)"
+                title="Salin email"
+              >
+                {copiedField === "email" ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
+              </button>
+            </div>
           </div>
           <div>
             <label className="text-xs text-(--muted-foreground)">Password</label>
-            <div className="font-mono text-sm text-(--foreground)">{credentials.password}</div>
+            <div className="flex items-center justify-between gap-2">
+              <div className="font-mono text-sm text-(--foreground)">{credentials.password}</div>
+              <button
+                onClick={() => handleCopy(credentials.password, "password")}
+                className="rounded-md p-1 text-(--muted-foreground) transition hover:bg-(--muted) hover:text-(--foreground)"
+                title="Salin password"
+              >
+                {copiedField === "password" ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
+              </button>
+            </div>
           </div>
         </div>
         <p className="text-xs text-amber-500">
@@ -117,18 +143,11 @@ function CredentialModal({
 function EmployeeForm({
   onClose,
   onSubmit,
-  branches,
-  departments,
-  positions,
-  roles,
+  metadata,
   isLoading,
 }: {
   onClose: () => void;
   onSubmit: (payload: CreateEmployeePayload) => void;
-  branches: { id: number; name: string }[];
-  departments: { id: number; name: string }[];
-  positions: { id: number; title: string; department_id: number | null }[];
-  roles: { id: number; name: string }[];
   metadata: EmployeeMetadata | null;
   isLoading?: boolean;
 }) {
@@ -164,11 +183,12 @@ function EmployeeForm({
 
   // Cascading: filter positions by selected department
   const filteredPositions = useMemo(() => {
-    if (!formData.department_id) return positions;
-    return positions.filter(
-      (p) => p.department_id === parseInt(formData.department_id),
+    if (!metadata?.job_position_meta) return [];
+    if (!formData.department_id) return metadata.job_position_meta;
+    return metadata.job_position_meta.filter(
+      (p) => p.parent_id === formData.department_id,
     );
-  }, [positions, formData.department_id]);
+  }, [metadata?.job_position_meta, formData.department_id]);
 
   // Reset jabatan when department changes
   const handleDepartmentChange = (val: string) => {
@@ -306,10 +326,12 @@ function EmployeeForm({
             label="Cabang"
             value={formData.branch_id}
             onChange={(val) => handleChange("branch_id", val)}
-            options={branches.map((b) => ({
-              value: String(b.id),
-              label: b.name,
-            }))}
+            options={
+              metadata?.branch_meta.map((b) => ({
+                value: b.id,
+                label: b.name,
+              })) || []
+            }
             placeholder="Pilih cabang"
           />
 
@@ -318,10 +340,12 @@ function EmployeeForm({
             label="Departemen"
             value={formData.department_id}
             onChange={handleDepartmentChange}
-            options={departments.map((d) => ({
-              value: String(d.id),
-              label: d.name,
-            }))}
+            options={
+              metadata?.department_meta.map((d) => ({
+                value: d.id,
+                label: d.name,
+              })) || []
+            }
             placeholder="Pilih departemen"
           />
 
@@ -332,8 +356,8 @@ function EmployeeForm({
               value={formData.job_positions_id}
               onChange={(val) => handleChange("job_positions_id", val)}
               options={filteredPositions.map((p) => ({
-                value: String(p.id),
-                label: p.title,
+                value: p.id,
+                label: p.name,
               }))}
               placeholder={
                 formData.department_id
@@ -347,10 +371,12 @@ function EmployeeForm({
               label="Role"
               value={formData.role_id}
               onChange={(val) => handleChange("role_id", val)}
-              options={roles.map((r) => ({
-                value: String(r.id),
-                label: r.name,
-              }))}
+              options={
+                metadata?.role_meta.map((r) => ({
+                  value: r.id,
+                  label: r.name,
+                })) || []
+              }
               placeholder="Pilih role"
             />
           </div>
@@ -590,10 +616,6 @@ export function EmployeePage() {
 
   const { data: employees, loading, refetch } = useEmployeeList(params);
   const { data: metadata } = useEmployeeMetadata();
-  const { data: branches } = useBranchList();
-  const { data: departments } = useDepartmentList({ is_active: true });
-  const { data: positions } = usePositionList();
-  const { data: roles } = useRoleList();
   const { loading: mutationLoading, createEmployee } =
     useEmployeeMutations(refetch);
 
@@ -660,9 +682,9 @@ export function EmployeePage() {
             onChange={(val) => setFilterBranch(val)}
             options={[
               { value: "", label: "Semua Cabang" },
-              ...(branches?.map((branch) => ({
-                value: String(branch.id),
-                label: branch.name,
+              ...(metadata?.branch_meta.map((b) => ({
+                value: b.id,
+                label: b.name,
               })) || []),
             ]}
             placeholder="Filter cabang..."
@@ -674,9 +696,9 @@ export function EmployeePage() {
             onChange={(val) => setFilterDepartment(val)}
             options={[
               { value: "", label: "Semua Departemen" },
-              ...(departments?.map((dept) => ({
-                value: String(dept.id),
-                label: dept.name,
+              ...(metadata?.department_meta.map((d) => ({
+                value: d.id,
+                label: d.name,
               })) || []),
             ]}
             placeholder="Filter departemen..."
@@ -690,8 +712,10 @@ export function EmployeePage() {
             }
             options={[
               { value: "", label: "Semua Status" },
-              { value: "active", label: "Aktif" },
-              { value: "inactive", label: "Nonaktif" },
+              ...(metadata?.status_meta.map((s) => ({
+                value: s.id,
+                label: s.name,
+              })) || []),
             ]}
             placeholder="Filter status..."
           />
@@ -892,18 +916,6 @@ export function EmployeePage() {
         <EmployeeForm
           onClose={() => setShowForm(false)}
           onSubmit={handleCreate}
-          branches={branches?.map((b) => ({ id: b.id, name: b.name })) || []}
-          departments={
-            departments?.map((d) => ({ id: d.id, name: d.name })) || []
-          }
-          positions={
-            positions?.map((p) => ({
-              id: p.id,
-              title: p.title,
-              department_id: p.department_id,
-            })) || []
-          }
-          roles={roles?.map((r) => ({ id: r.id, name: r.name })) || []}
           metadata={metadata || null}
           isLoading={mutationLoading}
         />

@@ -58,13 +58,13 @@ export const DUMMY_ROLES: Role[] = [
 ];
 
 // ════════════════════════════════════════════
-// PERMISSION DUMMY DATA
+// PERMISSION DUMMY DATA (code-based)
 // ════════════════════════════════════════════
 
 export const DUMMY_PERMISSIONS: Permission[] = [
   // Dashboard
   {
-    id: 1,
+    code: "dashboard.view",
     module: "dashboard",
     action: "view",
     description: "Melihat dashboard",
@@ -75,7 +75,7 @@ export const DUMMY_PERMISSIONS: Permission[] = [
 
   // Employee
   {
-    id: 2,
+    code: "employee.view",
     module: "employee",
     action: "view",
     description: "Melihat data pegawai",
@@ -84,7 +84,7 @@ export const DUMMY_PERMISSIONS: Permission[] = [
     deleted_at: null,
   },
   {
-    id: 3,
+    code: "employee.create",
     module: "employee",
     action: "create",
     description: "Menambah pegawai baru",
@@ -93,7 +93,7 @@ export const DUMMY_PERMISSIONS: Permission[] = [
     deleted_at: null,
   },
   {
-    id: 4,
+    code: "employee.edit",
     module: "employee",
     action: "edit",
     description: "Mengubah data pegawai",
@@ -102,7 +102,7 @@ export const DUMMY_PERMISSIONS: Permission[] = [
     deleted_at: null,
   },
   {
-    id: 5,
+    code: "employee.delete",
     module: "employee",
     action: "delete",
     description: "Menghapus pegawai",
@@ -113,7 +113,7 @@ export const DUMMY_PERMISSIONS: Permission[] = [
 
   // Branch
   {
-    id: 6,
+    code: "branch.view",
     module: "branch",
     action: "view",
     description: "Melihat data cabang",
@@ -122,7 +122,7 @@ export const DUMMY_PERMISSIONS: Permission[] = [
     deleted_at: null,
   },
   {
-    id: 7,
+    code: "branch.create",
     module: "branch",
     action: "create",
     description: "Menambah cabang baru",
@@ -131,7 +131,7 @@ export const DUMMY_PERMISSIONS: Permission[] = [
     deleted_at: null,
   },
   {
-    id: 8,
+    code: "branch.edit",
     module: "branch",
     action: "edit",
     description: "Mengubah data cabang",
@@ -140,7 +140,7 @@ export const DUMMY_PERMISSIONS: Permission[] = [
     deleted_at: null,
   },
   {
-    id: 9,
+    code: "branch.delete",
     module: "branch",
     action: "delete",
     description: "Menghapus cabang",
@@ -151,7 +151,7 @@ export const DUMMY_PERMISSIONS: Permission[] = [
 
   // Position
   {
-    id: 10,
+    code: "position.view",
     module: "position",
     action: "view",
     description: "Melihat data jabatan",
@@ -160,7 +160,7 @@ export const DUMMY_PERMISSIONS: Permission[] = [
     deleted_at: null,
   },
   {
-    id: 11,
+    code: "position.create",
     module: "position",
     action: "create",
     description: "Menambah jabatan baru",
@@ -169,7 +169,7 @@ export const DUMMY_PERMISSIONS: Permission[] = [
     deleted_at: null,
   },
   {
-    id: 12,
+    code: "position.edit",
     module: "position",
     action: "edit",
     description: "Mengubah data jabatan",
@@ -178,7 +178,7 @@ export const DUMMY_PERMISSIONS: Permission[] = [
     deleted_at: null,
   },
   {
-    id: 13,
+    code: "position.delete",
     module: "position",
     action: "delete",
     description: "Menghapus jabatan",
@@ -189,7 +189,7 @@ export const DUMMY_PERMISSIONS: Permission[] = [
 
   // Role
   {
-    id: 14,
+    code: "role.view",
     module: "role",
     action: "view",
     description: "Melihat data role",
@@ -198,7 +198,7 @@ export const DUMMY_PERMISSIONS: Permission[] = [
     deleted_at: null,
   },
   {
-    id: 15,
+    code: "role.create",
     module: "role",
     action: "create",
     description: "Menambah role baru",
@@ -207,7 +207,7 @@ export const DUMMY_PERMISSIONS: Permission[] = [
     deleted_at: null,
   },
   {
-    id: 16,
+    code: "role.edit",
     module: "role",
     action: "edit",
     description: "Mengubah data role",
@@ -216,7 +216,7 @@ export const DUMMY_PERMISSIONS: Permission[] = [
     deleted_at: null,
   },
   {
-    id: 17,
+    code: "role.delete",
     module: "role",
     action: "delete",
     description: "Menghapus role",
@@ -227,7 +227,7 @@ export const DUMMY_PERMISSIONS: Permission[] = [
 
   // Attendance
   {
-    id: 18,
+    code: "attendance.view",
     module: "attendance",
     action: "view",
     description: "Melihat data kehadiran",
@@ -236,7 +236,7 @@ export const DUMMY_PERMISSIONS: Permission[] = [
     deleted_at: null,
   },
   {
-    id: 19,
+    code: "attendance.create",
     module: "attendance",
     action: "create",
     description: "Input kehadiran manual",
@@ -245,7 +245,7 @@ export const DUMMY_PERMISSIONS: Permission[] = [
     deleted_at: null,
   },
   {
-    id: 20,
+    code: "attendance.edit",
     module: "attendance",
     action: "edit",
     description: "Mengubah data kehadiran",
@@ -254,7 +254,7 @@ export const DUMMY_PERMISSIONS: Permission[] = [
     deleted_at: null,
   },
   {
-    id: 21,
+    code: "attendance.delete",
     module: "attendance",
     action: "delete",
     description: "Menghapus data kehadiran",
@@ -263,7 +263,7 @@ export const DUMMY_PERMISSIONS: Permission[] = [
     deleted_at: null,
   },
   {
-    id: 22,
+    code: "attendance.approve",
     module: "attendance",
     action: "approve",
     description: "Menyetujui kehadiran",
@@ -274,7 +274,7 @@ export const DUMMY_PERMISSIONS: Permission[] = [
 
   // Leave
   {
-    id: 23,
+    code: "leave.view",
     module: "leave",
     action: "view",
     description: "Melihat data cuti",
@@ -283,7 +283,7 @@ export const DUMMY_PERMISSIONS: Permission[] = [
     deleted_at: null,
   },
   {
-    id: 24,
+    code: "leave.create",
     module: "leave",
     action: "create",
     description: "Mengajukan cuti",
@@ -292,7 +292,7 @@ export const DUMMY_PERMISSIONS: Permission[] = [
     deleted_at: null,
   },
   {
-    id: 25,
+    code: "leave.edit",
     module: "leave",
     action: "edit",
     description: "Mengubah pengajuan cuti",
@@ -301,7 +301,7 @@ export const DUMMY_PERMISSIONS: Permission[] = [
     deleted_at: null,
   },
   {
-    id: 26,
+    code: "leave.delete",
     module: "leave",
     action: "delete",
     description: "Membatalkan cuti",
@@ -310,7 +310,7 @@ export const DUMMY_PERMISSIONS: Permission[] = [
     deleted_at: null,
   },
   {
-    id: 27,
+    code: "leave.approve",
     module: "leave",
     action: "approve",
     description: "Menyetujui cuti",
@@ -321,7 +321,7 @@ export const DUMMY_PERMISSIONS: Permission[] = [
 
   // Report
   {
-    id: 28,
+    code: "report.view",
     module: "report",
     action: "view",
     description: "Melihat laporan",
@@ -330,7 +330,7 @@ export const DUMMY_PERMISSIONS: Permission[] = [
     deleted_at: null,
   },
   {
-    id: 29,
+    code: "report.create",
     module: "report",
     action: "create",
     description: "Membuat laporan",
@@ -341,7 +341,7 @@ export const DUMMY_PERMISSIONS: Permission[] = [
 
   // Mutaba'ah
   {
-    id: 30,
+    code: "mutabaah.view",
     module: "mutabaah",
     action: "view",
     description: "Melihat laporan Mutaba'ah tilawah",
@@ -352,7 +352,7 @@ export const DUMMY_PERMISSIONS: Permission[] = [
 ];
 
 // ════════════════════════════════════════════
-// ROLE PERMISSIONS (MAPPING)
+// ROLE PERMISSIONS (MAPPING) — code-based
 // ════════════════════════════════════════════
 
 export const DUMMY_ROLE_PERMISSIONS: RolePermission[] = [
@@ -360,143 +360,48 @@ export const DUMMY_ROLE_PERMISSIONS: RolePermission[] = [
   ...DUMMY_PERMISSIONS.map((p, idx) => ({
     id: idx + 1,
     role_id: 1,
-    permission_id: p.id,
+    permission_code: p.code,
     created_at: "2024-01-01T00:00:00Z",
   })),
 
   // HRD Admin - employee, attendance, leave, report, dashboard
-  { id: 100, role_id: 2, permission_id: 1, created_at: "2024-01-01T00:00:00Z" }, // dashboard view
-  { id: 101, role_id: 2, permission_id: 2, created_at: "2024-01-01T00:00:00Z" }, // employee view
-  { id: 102, role_id: 2, permission_id: 3, created_at: "2024-01-01T00:00:00Z" }, // employee create
-  { id: 103, role_id: 2, permission_id: 4, created_at: "2024-01-01T00:00:00Z" }, // employee edit
-  { id: 104, role_id: 2, permission_id: 5, created_at: "2024-01-01T00:00:00Z" }, // employee delete
-  {
-    id: 105,
-    role_id: 2,
-    permission_id: 18,
-    created_at: "2024-01-01T00:00:00Z",
-  }, // attendance view
-  {
-    id: 106,
-    role_id: 2,
-    permission_id: 19,
-    created_at: "2024-01-01T00:00:00Z",
-  }, // attendance create
-  {
-    id: 107,
-    role_id: 2,
-    permission_id: 20,
-    created_at: "2024-01-01T00:00:00Z",
-  }, // attendance edit
-  {
-    id: 108,
-    role_id: 2,
-    permission_id: 22,
-    created_at: "2024-01-01T00:00:00Z",
-  }, // attendance approve
-  {
-    id: 109,
-    role_id: 2,
-    permission_id: 23,
-    created_at: "2024-01-01T00:00:00Z",
-  }, // leave view
-  {
-    id: 110,
-    role_id: 2,
-    permission_id: 27,
-    created_at: "2024-01-01T00:00:00Z",
-  }, // leave approve
-  {
-    id: 111,
-    role_id: 2,
-    permission_id: 28,
-    created_at: "2024-01-01T00:00:00Z",
-  }, // report view
-  {
-    id: 112,
-    role_id: 2,
-    permission_id: 29,
-    created_at: "2024-01-01T00:00:00Z",
-  }, // report create
-  {
-    id: 113,
-    role_id: 2,
-    permission_id: 30,
-    created_at: "2024-01-01T00:00:00Z",
-  }, // mutabaah view
+  { id: 100, role_id: 2, permission_code: "dashboard.view", created_at: "2024-01-01T00:00:00Z" },
+  { id: 101, role_id: 2, permission_code: "employee.view", created_at: "2024-01-01T00:00:00Z" },
+  { id: 102, role_id: 2, permission_code: "employee.create", created_at: "2024-01-01T00:00:00Z" },
+  { id: 103, role_id: 2, permission_code: "employee.edit", created_at: "2024-01-01T00:00:00Z" },
+  { id: 104, role_id: 2, permission_code: "employee.delete", created_at: "2024-01-01T00:00:00Z" },
+  { id: 105, role_id: 2, permission_code: "attendance.view", created_at: "2024-01-01T00:00:00Z" },
+  { id: 106, role_id: 2, permission_code: "attendance.create", created_at: "2024-01-01T00:00:00Z" },
+  { id: 107, role_id: 2, permission_code: "attendance.edit", created_at: "2024-01-01T00:00:00Z" },
+  { id: 108, role_id: 2, permission_code: "attendance.approve", created_at: "2024-01-01T00:00:00Z" },
+  { id: 109, role_id: 2, permission_code: "leave.view", created_at: "2024-01-01T00:00:00Z" },
+  { id: 110, role_id: 2, permission_code: "leave.approve", created_at: "2024-01-01T00:00:00Z" },
+  { id: 111, role_id: 2, permission_code: "report.view", created_at: "2024-01-01T00:00:00Z" },
+  { id: 112, role_id: 2, permission_code: "report.create", created_at: "2024-01-01T00:00:00Z" },
+  { id: 113, role_id: 2, permission_code: "mutabaah.view", created_at: "2024-01-01T00:00:00Z" },
 
   // Branch Admin
-  { id: 200, role_id: 3, permission_id: 1, created_at: "2024-01-01T00:00:00Z" }, // dashboard view
-  { id: 201, role_id: 3, permission_id: 2, created_at: "2024-01-01T00:00:00Z" }, // employee view
-  { id: 202, role_id: 3, permission_id: 6, created_at: "2024-01-01T00:00:00Z" }, // branch view
-  { id: 203, role_id: 3, permission_id: 8, created_at: "2024-01-01T00:00:00Z" }, // branch edit
-  {
-    id: 204,
-    role_id: 3,
-    permission_id: 18,
-    created_at: "2024-01-01T00:00:00Z",
-  }, // attendance view
-  {
-    id: 205,
-    role_id: 3,
-    permission_id: 22,
-    created_at: "2024-01-01T00:00:00Z",
-  }, // attendance approve
+  { id: 200, role_id: 3, permission_code: "dashboard.view", created_at: "2024-01-01T00:00:00Z" },
+  { id: 201, role_id: 3, permission_code: "employee.view", created_at: "2024-01-01T00:00:00Z" },
+  { id: 202, role_id: 3, permission_code: "branch.view", created_at: "2024-01-01T00:00:00Z" },
+  { id: 203, role_id: 3, permission_code: "branch.edit", created_at: "2024-01-01T00:00:00Z" },
+  { id: 204, role_id: 3, permission_code: "attendance.view", created_at: "2024-01-01T00:00:00Z" },
+  { id: 205, role_id: 3, permission_code: "attendance.approve", created_at: "2024-01-01T00:00:00Z" },
 
   // Supervisor
-  { id: 300, role_id: 4, permission_id: 1, created_at: "2024-01-01T00:00:00Z" }, // dashboard view
-  { id: 301, role_id: 4, permission_id: 2, created_at: "2024-01-01T00:00:00Z" }, // employee view
-  {
-    id: 302,
-    role_id: 4,
-    permission_id: 18,
-    created_at: "2024-01-01T00:00:00Z",
-  }, // attendance view
-  {
-    id: 303,
-    role_id: 4,
-    permission_id: 22,
-    created_at: "2024-01-01T00:00:00Z",
-  }, // attendance approve
-  {
-    id: 304,
-    role_id: 4,
-    permission_id: 23,
-    created_at: "2024-01-01T00:00:00Z",
-  }, // leave view
-  {
-    id: 305,
-    role_id: 4,
-    permission_id: 27,
-    created_at: "2024-01-01T00:00:00Z",
-  }, // leave approve
-  {
-    id: 306,
-    role_id: 4,
-    permission_id: 30,
-    created_at: "2024-01-01T00:00:00Z",
-  }, // mutabaah view
+  { id: 300, role_id: 4, permission_code: "dashboard.view", created_at: "2024-01-01T00:00:00Z" },
+  { id: 301, role_id: 4, permission_code: "employee.view", created_at: "2024-01-01T00:00:00Z" },
+  { id: 302, role_id: 4, permission_code: "attendance.view", created_at: "2024-01-01T00:00:00Z" },
+  { id: 303, role_id: 4, permission_code: "attendance.approve", created_at: "2024-01-01T00:00:00Z" },
+  { id: 304, role_id: 4, permission_code: "leave.view", created_at: "2024-01-01T00:00:00Z" },
+  { id: 305, role_id: 4, permission_code: "leave.approve", created_at: "2024-01-01T00:00:00Z" },
+  { id: 306, role_id: 4, permission_code: "mutabaah.view", created_at: "2024-01-01T00:00:00Z" },
 
   // Staff
-  { id: 400, role_id: 5, permission_id: 1, created_at: "2024-01-01T00:00:00Z" }, // dashboard view
-  {
-    id: 401,
-    role_id: 5,
-    permission_id: 18,
-    created_at: "2024-01-01T00:00:00Z",
-  }, // attendance view
-  {
-    id: 402,
-    role_id: 5,
-    permission_id: 23,
-    created_at: "2024-01-01T00:00:00Z",
-  }, // leave view
-  {
-    id: 403,
-    role_id: 5,
-    permission_id: 24,
-    created_at: "2024-01-01T00:00:00Z",
-  }, // leave create
+  { id: 400, role_id: 5, permission_code: "dashboard.view", created_at: "2024-01-01T00:00:00Z" },
+  { id: 401, role_id: 5, permission_code: "attendance.view", created_at: "2024-01-01T00:00:00Z" },
+  { id: 402, role_id: 5, permission_code: "leave.view", created_at: "2024-01-01T00:00:00Z" },
+  { id: 403, role_id: 5, permission_code: "leave.create", created_at: "2024-01-01T00:00:00Z" },
 ];
 
 export function getDummyRoles(): Role[] {
@@ -506,11 +411,11 @@ export function getDummyRoles(): Role[] {
 export function getDummyRoleById(id: number): Role | undefined {
   const role = DUMMY_ROLES.find((r) => r.id === id);
   if (role) {
-    const rolePermissionIds = DUMMY_ROLE_PERMISSIONS.filter(
+    const rolePermissionCodes = DUMMY_ROLE_PERMISSIONS.filter(
       (rp) => rp.role_id === id,
-    ).map((rp) => rp.permission_id);
+    ).map((rp) => rp.permission_code);
     const permissions = DUMMY_PERMISSIONS.filter((p) =>
-      rolePermissionIds.includes(p.id),
+      rolePermissionCodes.includes(p.code),
     );
     return { ...role, permissions };
   }
@@ -521,9 +426,9 @@ export function getDummyPermissions(): Permission[] {
   return DUMMY_PERMISSIONS;
 }
 
-export function getDummyRolePermissions(roleId: number): number[] {
+export function getDummyRolePermissions(roleId: number): string[] {
   return DUMMY_ROLE_PERMISSIONS.filter((rp) => rp.role_id === roleId).map(
-    (rp) => rp.permission_id,
+    (rp) => rp.permission_code,
   );
 }
 
@@ -535,6 +440,10 @@ export function getDummyRoleMetadata(): RoleMetadata {
       { id: "branch", name: "Cabang" },
       { id: "position", name: "Jabatan" },
       { id: "role", name: "Role" },
+      { id: "attendance", name: "Kehadiran" },
+      { id: "leave", name: "Cuti" },
+      { id: "report", name: "Laporan" },
+      { id: "mutabaah", name: "Mutaba'ah" },
     ],
     action_meta: [
       { id: "view", name: "Lihat" },
@@ -545,4 +454,3 @@ export function getDummyRoleMetadata(): RoleMetadata {
     ],
   };
 }
-

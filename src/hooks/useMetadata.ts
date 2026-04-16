@@ -2,26 +2,45 @@ import { useState, useEffect, useCallback } from "react";
 import { useDemo } from "@/contexts/DemoContext";
 import { fetchEmployeeMetadata } from "@/lib/employee-api";
 import { fetchRoleMetadata } from "@/lib/role-api";
+import { fetchDepartmentMetadata } from "@/lib/department-api";
+import { fetchLeaveTypeMetadata } from "@/lib/leave-type-api";
+import { fetchShiftMetadata } from "@/lib/shift-api";
+import { fetchHolidayMetadata } from "@/lib/holiday-api";
 import { getDummyEmployeeMetadata } from "@/lib/dummy/employee.dummy";
 import { getDummyRoleMetadata } from "@/lib/dummy/role.dummy";
+import { getDummyDepartmentMetadata } from "@/lib/dummy/department.dummy";
+import { getDummyLeaveTypeMetadata } from "@/lib/dummy/leave.dummy";
+import { getDummyShiftMetadata } from "@/lib/dummy/shift.dummy";
+import { getDummyHolidayMetadata } from "@/lib/dummy/holiday.dummy";
 import type { EmployeeMetadata } from "@/types/employee";
 import type { RoleMetadata } from "@/types/role";
+import type { DepartmentMetadata } from "@/types/department";
+import type { LeaveTypeMetadata } from "@/types/leave";
+import type { ShiftMetadata } from "@/types/shift";
+import type { HolidayMetadata } from "@/types/holiday";
 
-export function useEmployeeMetadata() {
-  const { isDemo } = useDemo();
-  const [data, setData] = useState<EmployeeMetadata | null>(null);
+// ════════════════════════════════════════════
+// Generic metadata hook factory
+// ════════════════════════════════════════════
+
+function useGenericMetadata<T>(
+  isDemo: boolean,
+  dummyFn: () => T,
+  apiFn: () => Promise<{ data: T }>,
+) {
+  const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const refetch = useCallback(() => {
     if (isDemo) {
-      setData(getDummyEmployeeMetadata());
+      setData(dummyFn());
       setLoading(false);
       return;
     }
 
     setLoading(true);
-    fetchEmployeeMetadata()
+    apiFn()
       .then((res) => {
         setData(res.data);
         setError(null);
@@ -30,7 +49,7 @@ export function useEmployeeMetadata() {
         setError(err instanceof Error ? err.message : "Failed to load metadata");
       })
       .finally(() => setLoading(false));
-  }, [isDemo]);
+  }, [isDemo, dummyFn, apiFn]);
 
   useEffect(() => {
     refetch();
@@ -39,34 +58,60 @@ export function useEmployeeMetadata() {
   return { data, loading, error, refetch };
 }
 
+// ════════════════════════════════════════════
+// Exported hooks
+// ════════════════════════════════════════════
+
+export function useEmployeeMetadata() {
+  const { isDemo } = useDemo();
+  return useGenericMetadata<EmployeeMetadata>(
+    isDemo,
+    getDummyEmployeeMetadata,
+    fetchEmployeeMetadata,
+  );
+}
+
 export function useRoleMetadata() {
   const { isDemo } = useDemo();
-  const [data, setData] = useState<RoleMetadata | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  return useGenericMetadata<RoleMetadata>(
+    isDemo,
+    getDummyRoleMetadata,
+    fetchRoleMetadata,
+  );
+}
 
-  const refetch = useCallback(() => {
-    if (isDemo) {
-      setData(getDummyRoleMetadata());
-      setLoading(false);
-      return;
-    }
+export function useDepartmentMetadata() {
+  const { isDemo } = useDemo();
+  return useGenericMetadata<DepartmentMetadata>(
+    isDemo,
+    getDummyDepartmentMetadata,
+    fetchDepartmentMetadata,
+  );
+}
 
-    setLoading(true);
-    fetchRoleMetadata()
-      .then((res) => {
-        setData(res.data);
-        setError(null);
-      })
-      .catch((err) => {
-        setError(err instanceof Error ? err.message : "Failed to load metadata");
-      })
-      .finally(() => setLoading(false));
-  }, [isDemo]);
+export function useLeaveTypeMetadata() {
+  const { isDemo } = useDemo();
+  return useGenericMetadata<LeaveTypeMetadata>(
+    isDemo,
+    getDummyLeaveTypeMetadata,
+    fetchLeaveTypeMetadata,
+  );
+}
 
-  useEffect(() => {
-    refetch();
-  }, [refetch]);
+export function useShiftMetadata() {
+  const { isDemo } = useDemo();
+  return useGenericMetadata<ShiftMetadata>(
+    isDemo,
+    getDummyShiftMetadata,
+    fetchShiftMetadata,
+  );
+}
 
-  return { data, loading, error, refetch };
+export function useHolidayMetadata() {
+  const { isDemo } = useDemo();
+  return useGenericMetadata<HolidayMetadata>(
+    isDemo,
+    getDummyHolidayMetadata,
+    fetchHolidayMetadata,
+  );
 }

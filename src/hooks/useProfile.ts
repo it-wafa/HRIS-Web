@@ -19,7 +19,7 @@ interface AsyncState<T> {
 const DUMMY_PROFILE: Profile = {
   id: "demo-profile-id",
   user_id: "demo-user-id",
-  fullname: "Demo User",
+  full_name: "Demo User",
   photo_url: "",
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
@@ -56,18 +56,18 @@ export function useProfile() {
   }, [refetch]);
 
   const update = useCallback(
-    async (fullname: string) => {
+    async (full_name: string) => {
       if (isDemo) {
         setState((s) => ({
           ...s,
-          data: s.data ? { ...s.data, fullname } : null,
+          data: s.data ? { ...s.data, full_name } : null,
         }));
         return;
       }
       setState((s) => ({ ...s, loading: true, error: null }));
 
       try {
-        const res = await updateProfile({ fullname });
+        const res = await updateProfile({ full_name });
         setState({ data: res.data, loading: false, error: null });
         // Update cached profile in AuthContext
         refreshCachedProfile();

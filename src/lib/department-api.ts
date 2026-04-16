@@ -3,12 +3,18 @@ import type {
   CreateDepartmentPayload,
   UpdateDepartmentPayload,
   DepartmentListParams,
+  DepartmentMetadata,
 } from "@/types/department";
 import { apiCall } from "@/lib/api";
 
 // ════════════════════════════════════════════
 // DEPARTMENT API
 // ════════════════════════════════════════════
+
+/** GET /departments/metadata — Fetch department metadata */
+export async function fetchDepartmentMetadata() {
+  return apiCall<DepartmentMetadata>("/departments/metadata");
+}
 
 /** GET /departments — List all departments */
 export async function fetchDepartments(

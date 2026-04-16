@@ -2,6 +2,8 @@
 // DEPARTMENT TYPES
 // ════════════════════════════════════════════
 
+import type { MetaItem } from "./meta";
+
 export interface Department {
   id: number;
   code: string;
@@ -32,4 +34,8 @@ export interface UpdateDepartmentPayload {
 export interface DepartmentListParams {
   branch_id?: number;
   is_active?: boolean;
+}
+
+export interface DepartmentMetadata {
+  branch_meta: MetaItem[];
 }

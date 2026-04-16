@@ -2,12 +2,18 @@ import type {
   LeaveType,
   CreateLeaveTypePayload,
   UpdateLeaveTypePayload,
+  LeaveTypeMetadata,
 } from "@/types/leave";
 import { apiCall } from "@/lib/api";
 
 // ══════════════════════════════════════════════════════════════════════════════
 // LEAVE TYPE CRUD API (§1.5)
 // ══════════════════════════════════════════════════════════════════════════════
+
+/** GET /leave-types/metadata — Fetch leave type metadata */
+export async function fetchLeaveTypeMetadata() {
+  return apiCall<LeaveTypeMetadata>("/leave-types/metadata");
+}
 
 /** GET /leave-types — List all leave types */
 export async function fetchLeaveTypes() {

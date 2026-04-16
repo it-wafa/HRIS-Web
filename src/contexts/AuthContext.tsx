@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import { useDemo } from "@/contexts/DemoContext";
 import { fetchProfile } from "@/lib/profile-api";
-import { refreshTokenApi } from "@/lib/api";
+import { refreshTokenApi, logoutApi } from "@/lib/api";
 import type { LoginAccount, LoginResponse } from "@/types/auth";
 
 // ============================================
@@ -166,6 +166,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const logout = useCallback(() => {
+    // Call backend logout to invalidate tokens (fire-and-forget)
+    if (!isDemo) {
+      logoutApi().catch(() => {
+        // Ignore errors — we're clearing local state regardless
+      });
+    }
     processToken(null, null, null, null, false);
     if (isDemo) stopDemo();
   }, [processToken, isDemo, stopDemo]);

@@ -216,19 +216,19 @@ function RoleForm({
 function PermissionMatrix({
   roleId,
   permissions,
-  rolePermissionIds,
+  rolePermissionCodes,
   onUpdatePermissions,
   metadata,
   isLoading,
 }: {
   roleId: number;
   permissions: Permission[];
-  rolePermissionIds: number[];
-  onUpdatePermissions: (roleId: number, permissionIds: number[]) => void;
+  rolePermissionCodes: string[];
+  onUpdatePermissions: (roleId: number, permissionCodes: string[]) => void;
   metadata: RoleMetadata;
   isLoading?: boolean;
 }) {
-  const [selectedIds, setSelectedIds] = useState<number[]>(rolePermissionIds);
+  const [selectedCodes, setSelectedCodes] = useState<string[]>(rolePermissionCodes);
 
   // Group permissions by module
   const permissionsByModule = useMemo(() => {
@@ -240,22 +240,22 @@ function PermissionMatrix({
     return grouped;
   }, [permissions]);
 
-  const togglePermission = (permissionId: number) => {
-    setSelectedIds((prev) =>
-      prev.includes(permissionId)
-        ? prev.filter((id) => id !== permissionId)
-        : [...prev, permissionId],
+  const togglePermission = (code: string) => {
+    setSelectedCodes((prev) =>
+      prev.includes(code)
+        ? prev.filter((c) => c !== code)
+        : [...prev, code],
     );
   };
 
   const hasChanges = useMemo(() => {
-    const sorted1 = [...selectedIds].sort();
-    const sorted2 = [...rolePermissionIds].sort();
+    const sorted1 = [...selectedCodes].sort();
+    const sorted2 = [...rolePermissionCodes].sort();
     return JSON.stringify(sorted1) !== JSON.stringify(sorted2);
-  }, [selectedIds, rolePermissionIds]);
+  }, [selectedCodes, rolePermissionCodes]);
 
   const handleSave = () => {
-    onUpdatePermissions(roleId, selectedIds);
+    onUpdatePermissions(roleId, selectedCodes);
   };
 
   return (
@@ -291,17 +291,17 @@ function PermissionMatrix({
                     );
                     if (!permission) {
                       return (
-                        <td key={action} className="py-2 px-2 text-center">
+                        <td key={action.id} className="py-2 px-2 text-center">
                           <span className="text-(--muted-foreground)">—</span>
                         </td>
                       );
                     }
-                    const isChecked = selectedIds.includes(permission.id);
+                    const isChecked = selectedCodes.includes(permission.code);
                     return (
                       <td key={action.id} className="py-2 px-2 text-center">
                         <button
                           type="button"
-                          onClick={() => togglePermission(permission.id)}
+                          onClick={() => togglePermission(permission.code)}
                           className={cn(
                             "h-5 w-5 rounded border transition-colors inline-flex items-center justify-center",
                             isChecked
@@ -355,11 +355,11 @@ function RoleCard({
   metadata: RoleMetadata;
   onEdit: () => void;
   onDelete: () => void;
-  onUpdatePermissions: (roleId: number, permissionIds: number[]) => void;
+  onUpdatePermissions: (roleId: number, permissionCodes: string[]) => void;
   isLoading?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const rolePermissionIds = useRolePermissions(role.id);
+  const rolePermissionCodes = useRolePermissions(role.id);
 
   return (
     <div className="overflow-hidden rounded-xl border border-(--border) bg-(--card)">
@@ -381,7 +381,7 @@ function RoleCard({
             )}
           </div>
           <span className="inline-flex items-center rounded-full bg-(--muted) px-2.5 py-0.5 text-xs font-medium text-(--muted-foreground)">
-            {role.permission_count || rolePermissionIds.length} permissions
+            {role.permission_count || rolePermissionCodes.length} permissions
           </span>
         </div>
         <div className="flex items-center gap-2 ml-4">
@@ -420,7 +420,7 @@ function RoleCard({
           <PermissionMatrix
             roleId={role.id}
             permissions={permissions}
-            rolePermissionIds={rolePermissionIds}
+            rolePermissionCodes={rolePermissionCodes}
             onUpdatePermissions={onUpdatePermissions}
             metadata={metadata}
             isLoading={isLoading}
@@ -505,9 +505,9 @@ export function RolePage() {
 
   const handleUpdatePermissions = async (
     roleId: number,
-    permissionIds: number[],
+    permissionCodes: string[],
   ) => {
-    await updateRolePermissions(roleId, permissionIds);
+    await updateRolePermissions(roleId, permissionCodes);
   };
 
   return (

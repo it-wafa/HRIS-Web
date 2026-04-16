@@ -186,7 +186,7 @@ export function usePermissionList() {
 // useRolePermissions — Get permission IDs for a role (demo mode only helper)
 // ════════════════════════════════════════════
 
-export function useRolePermissions(roleId: number | null) {
+export function useRolePermissions(roleId: number | null): string[] {
   const { isDemo } = useDemo();
 
   if (!roleId || !isDemo) return [];
@@ -275,7 +275,7 @@ export function useRoleMutations(onSuccess?: () => void) {
   );
 
   const updateRolePermissions = useCallback(
-    async (roleId: number, permissionIds: number[]) => {
+    async (roleId: number, permissionCodes: string[]) => {
       if (isDemo) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return null;
@@ -283,7 +283,7 @@ export function useRoleMutations(onSuccess?: () => void) {
       setLoading(true);
       try {
         const res = await updateRolePermissionsApi(roleId, {
-          permission_ids: permissionIds,
+          permission_codes: permissionCodes,
         });
         toast.success("Permissions berhasil diperbarui");
         onSuccess?.();

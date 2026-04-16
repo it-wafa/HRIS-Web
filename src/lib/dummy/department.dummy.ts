@@ -105,3 +105,13 @@ export function getDummyDepartments(params?: {
 export function getDummyDepartmentById(id: number): Department | undefined {
   return DUMMY_DEPARTMENTS.find((department) => department.id === id);
 }
+
+export function getDummyDepartmentMetadata() {
+  return {
+    branch_meta: [
+      { id: "1", name: "Pusat" },
+      { id: "2", name: "Cabang Jakarta" },
+      { id: "3", name: "Cabang Bandung" },
+    ],
+  };
+}

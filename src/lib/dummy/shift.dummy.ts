@@ -404,3 +404,17 @@ export function getDummyEmployeeScheduleById(
 ): EmployeeSchedule | undefined {
   return DUMMY_EMPLOYEE_SCHEDULES.find((schedule) => schedule.id === id);
 }
+
+export function getDummyShiftMetadata() {
+  return {
+    day_of_week_meta: [
+      { id: "monday", name: "Senin" },
+      { id: "tuesday", name: "Selasa" },
+      { id: "wednesday", name: "Rabu" },
+      { id: "thursday", name: "Kamis" },
+      { id: "friday", name: "Jum'at" },
+      { id: "saturday", name: "Sabtu" },
+      { id: "sunday", name: "Minggu" },
+    ],
+  };
+}

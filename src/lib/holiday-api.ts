@@ -3,8 +3,18 @@ import type {
   CreateHolidayPayload,
   UpdateHolidayPayload,
   HolidayListParams,
+  HolidayMetadata,
 } from "@/types/holiday";
 import { apiCall } from "@/lib/api";
+
+// ════════════════════════════════════════════
+// HOLIDAY METADATA
+// ════════════════════════════════════════════
+
+/** GET /holidays/metadata — Fetch holiday metadata */
+export async function fetchHolidayMetadata() {
+  return apiCall<HolidayMetadata>("/holidays/metadata");
+}
 
 // ════════════════════════════════════════════
 // HOLIDAY API

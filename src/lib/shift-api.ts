@@ -7,8 +7,18 @@ import type {
   CreateSchedulePayload,
   UpdateSchedulePayload,
   ScheduleListParams,
+  ShiftMetadata,
 } from "@/types/shift";
 import { apiCall } from "@/lib/api";
+
+// ════════════════════════════════════════════
+// SHIFT METADATA
+// ════════════════════════════════════════════
+
+/** GET /shifts/metadata — Fetch shift metadata */
+export async function fetchShiftMetadata() {
+  return apiCall<ShiftMetadata>("/shifts/metadata");
+}
 
 // ════════════════════════════════════════════
 // SHIFT TEMPLATE API

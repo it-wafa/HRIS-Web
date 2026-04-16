@@ -105,3 +105,13 @@ export interface ScheduleListParams {
   shift_template_id?: number;
   is_active?: boolean;
 }
+
+// ════════════════════════════════════════════
+// SHIFT METADATA
+// ════════════════════════════════════════════
+
+import type { MetaItem } from "./meta";
+
+export interface ShiftMetadata {
+  day_of_week_meta: MetaItem[];
+}

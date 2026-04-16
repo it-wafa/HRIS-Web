@@ -148,3 +148,14 @@ export interface CreateLeaveTypePayload {
 }
 
 export interface UpdateLeaveTypePayload extends Partial<CreateLeaveTypePayload> {}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// Leave Type Metadata
+// ══════════════════════════════════════════════════════════════════════════════
+
+import type { MetaItem } from "./meta";
+
+export interface LeaveTypeMetadata {
+  category_meta: MetaItem[];
+  duration_unit_meta: MetaItem[];
+}

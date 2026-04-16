@@ -28,10 +28,6 @@ import {
   useEmployeeMutations,
 } from "@/hooks/useEmployee";
 import { useContractList, useContractMutations } from "@/hooks/useContract";
-import { useBranchList } from "@/hooks/useBranch";
-import { useDepartmentList } from "@/hooks/useDepartment";
-import { usePositionList } from "@/hooks/usePosition";
-import { useRoleList } from "@/hooks/useRole";
 import { CONTACT_TYPE_LABELS } from "@/types/employee";
 import { CONTRACT_TYPE_LABELS, CONTRACT_TYPE_COLORS } from "@/types/contract";
 import type {
@@ -39,6 +35,7 @@ import type {
   EmployeeContact,
   CreateContactPayload,
   ContactType,
+  Gender,
   MaritalStatus,
   UpdateEmployeePayload,
   EmployeeMetadata,
@@ -51,7 +48,6 @@ import type {
 import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import { useDemo } from "@/contexts/DemoContext";
 import { resetEmployeePassword } from "@/lib/employee-api";
-import { useAuth } from "@/contexts/AuthContext";
 import { useEmployeeMetadata } from "@/hooks/useMetadata";
 
 // ════════════════════════════════════════════
@@ -363,19 +359,12 @@ function EmployeeForm({
   onClose,
   onSubmit,
   isLoading,
-  branches,
-  departments,
-  positions,
-  roles,
+  metadata,
 }: {
   initialData: Employee;
   onClose: () => void;
   onSubmit: (payload: UpdateEmployeePayload) => void;
   isLoading?: boolean;
-  branches: { id: number; name: string }[];
-  departments: { id: number; name: string }[];
-  positions: { id: number; title: string }[];
-  roles: { id: number; name: string }[];
   metadata: EmployeeMetadata | null;
 }) {
   const [formData, setFormData] = useState({
@@ -525,10 +514,12 @@ function EmployeeForm({
             label="Cabang"
             value={formData.branch_id}
             onChange={(val) => handleChange("branch_id", val)}
-            options={branches.map((b) => ({
-              value: b.id.toString(),
-              label: b.name,
-            }))}
+            options={
+              metadata?.branch_meta.map((b) => ({
+                value: b.id,
+                label: b.name,
+              })) || []
+            }
             placeholder="Pilih cabang"
             searchPlaceholder="Cari cabang..."
           />
@@ -536,10 +527,12 @@ function EmployeeForm({
             label="Departemen"
             value={formData.department_id}
             onChange={(val) => handleChange("department_id", val)}
-            options={departments.map((d) => ({
-              value: d.id.toString(),
-              label: d.name,
-            }))}
+            options={
+              metadata?.department_meta.map((d) => ({
+                value: d.id,
+                label: d.name,
+              })) || []
+            }
             placeholder="Pilih departemen"
             searchPlaceholder="Cari departemen..."
           />
@@ -549,10 +542,12 @@ function EmployeeForm({
             label="Jabatan"
             value={formData.job_positions_id}
             onChange={(val) => handleChange("job_positions_id", val)}
-            options={positions.map((p) => ({
-              value: p.id.toString(),
-              label: p.title,
-            }))}
+            options={
+              metadata?.job_position_meta.map((p) => ({
+                value: p.id,
+                label: p.name,
+              })) || []
+            }
             placeholder="Pilih jabatan"
             searchPlaceholder="Cari jabatan..."
           />
@@ -560,10 +555,12 @@ function EmployeeForm({
             label="Role"
             value={formData.role_id}
             onChange={(val) => handleChange("role_id", val)}
-            options={roles.map((r) => ({
-              value: r.id.toString(),
-              label: r.name,
-            }))}
+            options={
+              metadata?.role_meta.map((r) => ({
+                value: r.id,
+                label: r.name,
+              })) || []
+            }
             placeholder="Pilih role"
             searchPlaceholder="Cari role..."
           />
@@ -920,7 +917,6 @@ export function EmployeeDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const employeeId = Number.parseInt(id || "0");
-  const { token } = useAuth();
   const { isDemo } = useDemo();
 
   const {
@@ -933,12 +929,6 @@ export function EmployeeDetailPage() {
   const { data: contracts, refetch: refetchContracts } =
     useContractList(employeeId);
   const { data: metadata } = useEmployeeMetadata();
-
-  // Fetch reference data for employee form
-  const { data: branches } = useBranchList();
-  const { data: departments } = useDepartmentList();
-  const { data: positions } = usePositionList();
-  const { data: roles } = useRoleList();
 
   const {
     loading: contactMutLoading,
@@ -1030,14 +1020,10 @@ export function EmployeeDetailPage() {
       toast("Demo mode — password tidak diubah", { icon: "🔒" });
       return;
     }
-    if (!token) {
-      toast.error("Authentication required");
-      return;
-    }
 
     setResetPasswordLoading(true);
     try {
-      await resetEmployeePassword(token, employeeId, {
+      await resetEmployeePassword(employeeId, {
         new_password: newPassword,
         confirm_password: confirmPassword,
       });
@@ -1534,11 +1520,7 @@ export function EmployeeDetailPage() {
             onClose={() => setShowEmployeeForm(false)}
             onSubmit={handleUpdateEmployee}
             isLoading={employeeMutLoading}
-            branches={branches || []}
-            departments={departments || []}
-            positions={positions || []}
-            roles={roles || []}
-            metadata={metadata}
+            metadata={metadata || null}
           />
         )}
       </Modal>

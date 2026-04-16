@@ -654,23 +654,62 @@ export function getDummyEmployeesByDepartment(
 
 export function getDummyEmployeeMetadata(): EmployeeMetadata {
   return {
-    branch_meta: [{ id: "1", name: "Kantor Pusat Surabaya" }],
-    department_meta: [{ id: "1", name: "HRGA" }],
-    role_meta: [{ id: "1", name: "Super Admin" }],
-    job_position_meta: [{ id: "1", name: "Direktur" }],
+    branch_meta: [
+      { id: "1", name: "Kantor Pusat Surabaya" },
+      { id: "2", name: "Cabang Jakarta" },
+      { id: "3", name: "Cabang Bandung" },
+    ],
+    department_meta: [
+      { id: "1", name: "Human Resource & General Affair" },
+      { id: "2", name: "Akademik" },
+      { id: "3", name: "Pendidikan & Kurikulum" },
+      { id: "4", name: "Keuangan" },
+      { id: "5", name: "IT & Pengembangan" },
+    ],
+    role_meta: [
+      { id: "1", name: "Super Admin" },
+      { id: "2", name: "HRD Admin" },
+      { id: "3", name: "Branch Admin" },
+      { id: "4", name: "Supervisor" },
+      { id: "5", name: "Staff" },
+    ],
+    job_position_meta: [
+      { id: "1", name: "Direktur", parent_id: "1" },
+      { id: "2", name: "Manager HRD", parent_id: "1" },
+      { id: "3", name: "Manager Operasional", parent_id: "1" },
+      { id: "4", name: "Koordinator", parent_id: "3" },
+      { id: "5", name: "Guru/Pengajar", parent_id: "2" },
+      { id: "6", name: "Staff Admin", parent_id: "1" },
+      { id: "7", name: "Trainer", parent_id: "3" },
+      { id: "8", name: "IT Support", parent_id: "5" },
+    ],
     gender_meta: [
       { id: "male", name: "Laki-laki" },
       { id: "female", name: "Perempuan" },
     ],
-    religion_meta: [{ id: "Islam", name: "Islam" }],
+    religion_meta: [
+      { id: "Islam", name: "Islam" },
+      { id: "Kristen", name: "Kristen" },
+      { id: "Katolik", name: "Katolik" },
+      { id: "Hindu", name: "Hindu" },
+      { id: "Buddha", name: "Buddha" },
+      { id: "Konghucu", name: "Konghucu" },
+    ],
     marital_status_meta: [
-      { id: "married", name: "Menikah" },
       { id: "single", name: "Belum Menikah" },
+      { id: "married", name: "Menikah" },
+      { id: "widowed", name: "Duda/Janda" },
+      { id: "divorced", name: "Cerai" },
     ],
     blood_type_meta: [
       { id: "A", name: "A" },
+      { id: "B", name: "B" },
+      { id: "AB", name: "AB" },
       { id: "O", name: "O" },
     ],
-    status_meta: [{ id: "active", name: "Aktif" }],
+    status_meta: [
+      { id: "active", name: "Aktif" },
+      { id: "inactive", name: "Nonaktif" },
+    ],
   };
 }

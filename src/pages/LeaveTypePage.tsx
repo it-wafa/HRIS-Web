@@ -2,10 +2,10 @@ import { useState } from "react";
 import { Plus, Pencil, Trash2, CalendarOff, X } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { useLeaveTypeList, useLeaveTypeMutations } from "@/hooks/useLeaveType";
-import {
+import { useLeaveTypeMetadata } from "@/hooks/useMetadata";
+import type {
   LeaveType,
   LeaveCategory,
-  LEAVE_CATEGORY_OPTIONS,
   CreateLeaveTypePayload,
 } from "@/types/leave";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -151,6 +151,7 @@ function Toggle({
 
 export function LeaveTypePage() {
   const { data: leaveTypes, loading, refetch } = useLeaveTypeList();
+  const { data: metadata } = useLeaveTypeMetadata();
   const { createLeaveType, updateLeaveType, deleteLeaveType } =
     useLeaveTypeMutations(() => {
       setIsModalOpen(false);
@@ -260,8 +261,8 @@ export function LeaveTypePage() {
   };
 
   const getCategoryLabel = (cat: LeaveCategory) => {
-    const opt = LEAVE_CATEGORY_OPTIONS.find((o) => o.value === cat);
-    return opt ? opt.label : cat;
+    const opt = metadata?.category_meta?.find((o) => o.id === cat);
+    return opt ? opt.name : cat;
   };
 
   const filteredLeaveTypes =
@@ -269,16 +270,16 @@ export function LeaveTypePage() {
       (lt) => filterCategory === "all" || lt.category === filterCategory,
     ) || [];
 
-  // Convert options for Select component
-  const categoryOptions = LEAVE_CATEGORY_OPTIONS.map((opt) => ({
-    value: opt.value,
-    label: opt.label,
+  // Convert metadata options for Select component
+  const categoryOptions = (metadata?.category_meta || []).map((m) => ({
+    value: m.id,
+    label: m.name,
   }));
 
-  const unitOptions = [
-    { value: "days", label: "Hari" },
-    { value: "hours", label: "Jam" },
-  ];
+  const unitOptions = (metadata?.duration_unit_meta || []).map((m) => ({
+    value: m.id,
+    label: m.name,
+  }));
 
   const filterOptions = [
     { value: "all", label: "Semua Kategori" },

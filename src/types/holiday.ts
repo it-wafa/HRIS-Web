@@ -2,15 +2,15 @@
 // HOLIDAY TYPES
 // ════════════════════════════════════════════
 
+import type { MetaItem } from "./meta";
+
 export type HolidayType =
-  | "public"
   | "national"
   | "joint"
   | "observance"
   | "company";
 
 export const HOLIDAY_TYPE_LABELS: Record<HolidayType, string> = {
-  public: "Libur Umum",
   national: "Nasional",
   joint: "Cuti Bersama",
   observance: "Peringatan",
@@ -21,7 +21,6 @@ export const HOLIDAY_TYPE_COLORS: Record<
   HolidayType,
   { bg: string; text: string }
 > = {
-  public: { bg: "bg-red-500/20", text: "text-red-500" },
   national: { bg: "bg-red-500/20", text: "text-red-500" },
   joint: { bg: "bg-orange-500/20", text: "text-orange-500" },
   observance: { bg: "bg-gray-500/20", text: "text-gray-500" },
@@ -57,4 +56,9 @@ export interface HolidayListParams {
   year?: number;
   type?: HolidayType;
   branch_id?: number;
+}
+
+export interface HolidayMetadata {
+  holiday_type_meta: MetaItem[];
+  branch_meta: MetaItem[];
 }

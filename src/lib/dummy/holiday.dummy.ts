@@ -306,3 +306,19 @@ export function getDummyHolidays(params?: HolidayListParams): Holiday[] {
 export function getDummyHolidayById(id: number): Holiday | undefined {
   return DUMMY_HOLIDAYS.find((holiday) => holiday.id === id);
 }
+
+export function getDummyHolidayMetadata() {
+  return {
+    holiday_type_meta: [
+      { id: "national", name: "Nasional" },
+      { id: "joint", name: "Cuti Bersama" },
+      { id: "observance", name: "Peringatan" },
+      { id: "company", name: "Perusahaan" },
+    ],
+    branch_meta: [
+      { id: "1", name: "Pusat" },
+      { id: "2", name: "Cabang Jakarta" },
+      { id: "3", name: "Cabang Bandung" },
+    ],
+  };
+}

@@ -545,3 +545,21 @@ export function getDummyLeaveRequests(
 export function getDummyLeaveRequestById(id: number): LeaveRequest | null {
   return DUMMY_LEAVE_REQUESTS.find((req) => req.id === id) ?? null;
 }
+
+export function getDummyLeaveTypeMetadata() {
+  return {
+    category_meta: [
+      { id: "annual", name: "Cuti Tahunan" },
+      { id: "sick", name: "Sakit" },
+      { id: "maternity", name: "Cuti Melahirkan" },
+      { id: "paternity", name: "Cuti Ayah" },
+      { id: "unpaid", name: "Tanpa Gaji" },
+      { id: "special", name: "Cuti Khusus" },
+      { id: "other", name: "Lainnya" },
+    ],
+    duration_unit_meta: [
+      { id: "days", name: "Hari" },
+      { id: "hours", name: "Jam" },
+    ],
+  };
+}
