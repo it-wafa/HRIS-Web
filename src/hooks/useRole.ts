@@ -183,15 +183,34 @@ export function usePermissionList() {
 }
 
 // ════════════════════════════════════════════
-// useRolePermissions — Get permission IDs for a role (demo mode only helper)
+// useRolePermissions — Get permission codes for a role (demo + live mode)
 // ════════════════════════════════════════════
 
 export function useRolePermissions(roleId: number | null): string[] {
   const { isDemo } = useDemo();
+  const [permissionCodes, setPermissionCodes] = useState<string[]>([]);
 
-  if (!roleId || !isDemo) return [];
+  useEffect(() => {
+    if (!roleId) {
+      setPermissionCodes([]);
+      return;
+    }
 
-  return getDummyRolePermissions(roleId);
+    if (isDemo) {
+      setPermissionCodes(getDummyRolePermissions(roleId));
+      return;
+    }
+
+    // Live mode: reuse existing GET /roles/:id which already returns permissions[]
+    fetchRoleById(roleId)
+      .then((res) => {
+        const codes = res.data.permissions?.map((p) => p.code) ?? [];
+        setPermissionCodes(codes);
+      })
+      .catch(() => setPermissionCodes([]));
+  }, [roleId, isDemo]);
+
+  return permissionCodes;
 }
 
 // ════════════════════════════════════════════

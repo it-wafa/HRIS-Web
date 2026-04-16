@@ -15,11 +15,12 @@ import {
   updateShiftTemplate as updateShiftApi,
   deleteShiftTemplate as deleteShiftApi,
   fetchEmployeeSchedules,
+  fetchEmployeeScheduleById,
   createEmployeeSchedule as createScheduleApi,
   updateEmployeeSchedule as updateScheduleApi,
   deleteEmployeeSchedule as deleteScheduleApi,
 } from "@/lib/shift-api";
-import { getDummyShiftTemplates, getDummyEmployeeSchedules } from "@/lib/dummy";
+import { getDummyShiftTemplates, getDummyEmployeeSchedules, getDummyEmployeeScheduleById } from "@/lib/dummy";
 import toast from "react-hot-toast";
 
 // ── Generic async state ──
@@ -309,4 +310,52 @@ export function useScheduleMutations(onSuccess?: () => void) {
   );
 
   return { loading, createSchedule, updateSchedule, deleteSchedule };
+}
+
+// ════════════════════════════════════════════
+// useScheduleById — Fetch single employee schedule
+// ════════════════════════════════════════════
+
+export function useScheduleById(id: number | null) {
+  const { isDemo } = useDemo();
+  const [state, setState] = useState<AsyncState<EmployeeSchedule>>({
+    data: null,
+    loading: false,
+    error: null,
+  });
+
+  const refetch = useCallback(() => {
+    if (!id) {
+      setState({ data: null, loading: false, error: null });
+      return;
+    }
+
+    if (isDemo) {
+      const schedule = getDummyEmployeeScheduleById(id);
+      setState({
+        data: schedule || null,
+        loading: false,
+        error: schedule ? null : "Schedule not found",
+      });
+      return;
+    }
+
+    // Live mode
+    setState((s) => ({ ...s, loading: true, error: null }));
+    fetchEmployeeScheduleById(id)
+      .then((res) =>
+        setState({ data: res.data, loading: false, error: null }),
+      )
+      .catch((err: unknown) => {
+        const message =
+          err instanceof Error ? err.message : "Failed to fetch schedule";
+        setState({ data: null, loading: false, error: message });
+      });
+  }, [isDemo, id]);
+
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
+
+  return { ...state, refetch };
 }

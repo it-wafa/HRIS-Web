@@ -2,7 +2,6 @@ import { useState, useMemo } from "react";
 import {
   CalendarDays,
   Plus,
-  FileText,
   BarChart3,
   X,
   AlertCircle,
@@ -1042,159 +1041,10 @@ function LeaveBalanceTab() {
 }
 
 // ════════════════════════════════════════════
-// TAB 3: JENIS CUTI
-// ════════════════════════════════════════════
-
-function LeaveTypeTab() {
-  const { data: leaveTypes, loading } = useLeaveTypeList();
-
-  const CATEGORY_LABELS: Record<string, string> = {
-    annual: "Cuti Tahunan",
-    sick: "Sakit",
-    special: "Cuti Khusus",
-    other: "Lainnya",
-  };
-  const CATEGORY_COLORS: Record<string, string> = {
-    annual: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-    sick: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-    special:
-      "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
-    other: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400",
-  };
-
-  return (
-    <div className="space-y-4">
-      <p className="text-sm text-(--muted-foreground)">
-        Konfigurasi jenis cuti yang berlaku di perusahaan (read-only).
-      </p>
-      {loading ? (
-        <SkeletonTable cols={5} />
-      ) : !leaveTypes || leaveTypes.length === 0 ? (
-        <EmptyState
-          title="Belum ada jenis cuti"
-          description="Hubungi administrator untuk mengkonfigurasi jenis cuti"
-          icon={<FileText className="h-12 w-12" />}
-        />
-      ) : (
-        <>
-          <div className="hidden md:block overflow-hidden rounded-xl border border-(--border)">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-(--border) bg-(--muted)/50">
-                    {[
-                      "Nama",
-                      "Kategori",
-                      "Maks. per Pengajuan",
-                      "Maks. per Tahun",
-                      "Dokumen",
-                    ].map((h) => (
-                      <th
-                        key={h}
-                        className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-(--muted-foreground)"
-                      >
-                        {h}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {leaveTypes.map((lt, index) => (
-                    <tr
-                      key={lt.id}
-                      className={cn(
-                        "border-b border-(--border) last:border-b-0",
-                        index % 2 === 0 ? "bg-(--card)" : "bg-(--muted)/20",
-                      )}
-                    >
-                      <td className="px-5 py-3 text-sm font-medium text-(--foreground)">
-                        {lt.name}
-                      </td>
-                      <td className="px-5 py-3">
-                        <span
-                          className={cn(
-                            "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
-                            CATEGORY_COLORS[lt.category],
-                          )}
-                        >
-                          {CATEGORY_LABELS[lt.category]}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3 text-sm text-(--muted-foreground)">
-                        {lt.max_duration_per_request
-                          ? `${lt.max_duration_per_request} ${lt.max_duration_unit}`
-                          : "Tidak dibatasi"}
-                      </td>
-                      <td className="px-5 py-3 text-sm text-(--muted-foreground)">
-                        {lt.max_total_duration_per_year
-                          ? `${lt.max_total_duration_per_year} ${lt.max_total_duration_unit}`
-                          : "Tidak dibatasi"}
-                      </td>
-                      <td className="px-5 py-3">
-                        {lt.requires_document ? (
-                          <span className="text-xs text-amber-600">
-                            ✓ {lt.requires_document_type}
-                          </span>
-                        ) : (
-                          <span className="text-xs text-(--muted-foreground)">
-                            Tidak wajib
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-3 md:hidden">
-            {leaveTypes.map((lt) => (
-              <div
-                key={lt.id}
-                className="rounded-xl border border-(--border) bg-(--card) p-4"
-              >
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <p className="text-sm font-semibold text-(--foreground)">
-                    {lt.name}
-                  </p>
-                  <span
-                    className={cn(
-                      "inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium",
-                      CATEGORY_COLORS[lt.category],
-                    )}
-                  >
-                    {CATEGORY_LABELS[lt.category]}
-                  </span>
-                </div>
-                <div className="grid grid-cols-2 gap-2 text-xs text-(--muted-foreground)">
-                  <div>
-                    <p className="font-medium">Maks/Pengajuan</p>
-                    <p>
-                      {lt.max_duration_per_request
-                        ? `${lt.max_duration_per_request} ${lt.max_duration_unit}`
-                        : "—"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="font-medium">Dokumen</p>
-                    <p>{lt.requires_document ? "Wajib" : "Tidak"}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-// ════════════════════════════════════════════
 // MAIN PAGE
 // ════════════════════════════════════════════
 
-type TabType = "requests" | "balances" | "types";
+type TabType = "requests" | "balances";
 
 export function LeavePage() {
   const [activeTab, setActiveTab] = useState<TabType>("requests");
@@ -1202,7 +1052,6 @@ export function LeavePage() {
   const TABS = [
     { id: "requests" as TabType, label: "Pengajuan Cuti", icon: CalendarDays },
     { id: "balances" as TabType, label: "Saldo Cuti", icon: BarChart3 },
-    { id: "types" as TabType, label: "Jenis Cuti", icon: FileText },
   ];
 
   return (
@@ -1243,7 +1092,6 @@ export function LeavePage() {
       <div className="mx-auto max-w-350 p-3 sm:p-5">
         {activeTab === "requests" && <LeaveRequestTab />}
         {activeTab === "balances" && <LeaveBalanceTab />}
-        {activeTab === "types" && <LeaveTypeTab />}
       </div>
     </MainLayout>
   );
