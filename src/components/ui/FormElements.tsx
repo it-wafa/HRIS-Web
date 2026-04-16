@@ -198,6 +198,47 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
 Select.displayName = "Select";
 
 // ============================================
+// TOGGLE SWITCH
+// ============================================
+
+export function Toggle({
+  checked,
+  onChange,
+  label,
+  id,
+  className,
+}: {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  label?: React.ReactNode;
+  id?: string;
+  className?: string;
+}) {
+  return (
+    <label htmlFor={id} className={cn("flex items-center gap-3 cursor-pointer", className)}>
+      <div
+        className={cn(
+          "relative h-6 w-11 rounded-full transition-colors",
+          checked ? "bg-(--primary)" : "bg-(--muted)",
+        )}
+        onClick={(e) => {
+          e.preventDefault();
+          onChange(!checked);
+        }}
+      >
+        <div
+          className={cn(
+            "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform",
+            checked ? "translate-x-5" : "translate-x-0.5",
+          )}
+        />
+      </div>
+      {label && <span className="text-sm text-(--foreground)">{label}</span>}
+    </label>
+  );
+}
+
+// ============================================
 // THEME TOGGLE
 // ============================================
 

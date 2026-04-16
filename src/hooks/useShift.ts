@@ -11,6 +11,7 @@ import type {
 } from "@/types/shift";
 import {
   fetchShiftTemplates,
+  fetchShiftMetadata,
   createShiftTemplate as createShiftApi,
   updateShiftTemplate as updateShiftApi,
   deleteShiftTemplate as deleteShiftApi,
@@ -29,6 +30,50 @@ interface AsyncState<T> {
   data: T | null;
   loading: boolean;
   error: string | null;
+}
+
+// ════════════════════════════════════════════
+// useShiftMetadata — Fetch shift form metadata
+// ════════════════════════════════════════════
+
+export function useShiftMetadata() {
+  const { isDemo } = useDemo();
+  const [state, setState] = useState<AsyncState<{ day_of_week_meta: { id: string; name: string }[] }>>(
+    { data: null, loading: true, error: null }
+  );
+
+  useEffect(() => {
+    if (isDemo) {
+      // Demo: use static list matching backend
+      setState({
+        data: {
+          day_of_week_meta: [
+            { id: "monday",    name: "Senin" },
+            { id: "tuesday",   name: "Selasa" },
+            { id: "wednesday", name: "Rabu" },
+            { id: "thursday",  name: "Kamis" },
+            { id: "friday",    name: "Jumat" },
+            { id: "saturday",  name: "Sabtu" },
+            { id: "sunday",    name: "Minggu" },
+          ],
+        },
+        loading: false,
+        error: null,
+      });
+      return;
+    }
+
+    fetchShiftMetadata()
+      .then((res) =>
+        setState({ data: res.data, loading: false, error: null }),
+      )
+      .catch((err: unknown) => {
+        const message = err instanceof Error ? err.message : "Failed to fetch shift metadata";
+        setState({ data: null, loading: false, error: message });
+      });
+  }, [isDemo]);
+
+  return state;
 }
 
 // ════════════════════════════════════════════

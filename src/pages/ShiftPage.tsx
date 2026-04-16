@@ -23,6 +23,7 @@ import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import {
   useShiftList,
   useShiftMutations,
+  useShiftMetadata,
   useScheduleList,
   useScheduleMutations,
 } from "@/hooks/useShift";
@@ -38,7 +39,6 @@ import type {
   UpdateSchedulePayload,
   DayOfWeek,
 } from "@/types/shift";
-import { DAY_OF_WEEK_OPTIONS } from "@/types/shift";
 
 // ════════════════════════════════════════════
 // MODAL WRAPPER
@@ -510,14 +510,14 @@ const DEFAULT_NON_WORKING_DAY_CONFIG: CreateShiftDetailPayload = {
   break_asr_end: null,
 };
 
-function createDefaultDetails(): CreateShiftDetailPayload[] {
-  return DAY_OF_WEEK_OPTIONS.map((day, index) => {
+function createDefaultDetails(dayMeta: { id: string; name: string }[]): CreateShiftDetailPayload[] {
+  return dayMeta.map((day, index) => {
     const isWeekend = index >= 5;
     return {
       ...(isWeekend
         ? DEFAULT_NON_WORKING_DAY_CONFIG
         : DEFAULT_WORKING_DAY_CONFIG),
-      day_of_week: day.value,
+      day_of_week: day.id,
     };
   });
 }
@@ -543,11 +543,13 @@ function ShiftForm({
   onClose,
   onSubmit,
   editShift,
+  dayMeta,
   isLoading,
 }: {
   onClose: () => void;
   onSubmit: (payload: CreateShiftPayload | UpdateShiftPayload) => void;
   editShift?: ShiftTemplate;
+  dayMeta: { id: string; name: string }[];
   isLoading?: boolean;
 }) {
   const [name, setName] = useState(editShift?.name || "");
@@ -556,14 +558,14 @@ function ShiftForm({
     if (editShift?.details && editShift.details.length > 0) {
       // Sort by day order and convert
       const sortedDetails = [...editShift.details].sort((a, b) => {
-        const dayOrder = DAY_OF_WEEK_OPTIONS.map((d) => d.value);
+        const dayOrder = dayMeta.map((d) => d.id);
         return (
           dayOrder.indexOf(a.day_of_week) - dayOrder.indexOf(b.day_of_week)
         );
       });
       return sortedDetails.map(convertDetailToPayload);
     }
-    return createDefaultDetails();
+    return createDefaultDetails(dayMeta);
   });
   const [expandedDays, setExpandedDays] = useState<Set<number>>(() => {
     // Default: expand weekdays that are working days, collapse weekends
@@ -745,10 +747,10 @@ function ShiftForm({
           Konfigurasi Jam Per Hari
         </p>
         <div className="space-y-2 max-h-100 overflow-y-auto pr-1">
-          {DAY_OF_WEEK_OPTIONS.map((day, index) => (
+          {dayMeta.map((day, index) => (
             <DayShiftConfig
-              key={day.value}
-              dayLabel={day.label}
+              key={day.id}
+              dayLabel={day.name}
               dayIndex={index}
               config={details[index]}
               onChange={(updated) => handleDetailChange(index, updated)}
@@ -1116,21 +1118,23 @@ function TabSelector({
 function ShiftDetailModal({
   shift,
   onClose,
+  dayMeta,
 }: {
   shift: ShiftTemplate;
   onClose: () => void;
+  dayMeta: { id: string; name: string }[];
 }) {
   // Sort details by day order
   const sortedDetails = useMemo(() => {
     if (!shift.details) return [];
     return [...shift.details].sort((a, b) => {
-      const dayOrder = DAY_OF_WEEK_OPTIONS.map((d) => d.value);
+      const dayOrder = dayMeta.map((d) => d.id);
       return dayOrder.indexOf(a.day_of_week) - dayOrder.indexOf(b.day_of_week);
     });
-  }, [shift.details]);
+  }, [shift.details, dayMeta]);
 
-  const getDayLabel = (day: DayOfWeek) => {
-    return DAY_OF_WEEK_OPTIONS.find((d) => d.value === day)?.label || day;
+  const getDayLabel = (day: DayOfWeek | string) => {
+    return dayMeta.find((d) => d.id === day)?.name || day;
   };
 
   const formatTimeWindow = (start: string | null, end: string | null) => {
@@ -1259,12 +1263,15 @@ function TemplateShiftTab({
   setShowForm: (show: boolean) => void;
 }) {
   const { data: shifts, loading, refetch } = useShiftList();
+  const { data: metadata } = useShiftMetadata();
   const {
     loading: mutationLoading,
     createShift,
     updateShift,
     deleteShift,
   } = useShiftMutations(refetch);
+
+  const dayMeta = metadata?.day_of_week_meta ?? [];
 
   const [editShift, setEditShift] = useState<ShiftTemplate | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ShiftTemplate | null>(null);
@@ -1562,6 +1569,7 @@ function TemplateShiftTab({
         <ShiftForm
           onClose={() => setShowForm(false)}
           onSubmit={handleCreate}
+          dayMeta={dayMeta}
           isLoading={mutationLoading}
         />
       </Modal>
@@ -1577,6 +1585,7 @@ function TemplateShiftTab({
             onClose={() => setEditShift(null)}
             onSubmit={handleUpdate}
             editShift={editShift}
+            dayMeta={dayMeta}
             isLoading={mutationLoading}
           />
         )}
@@ -1586,6 +1595,7 @@ function TemplateShiftTab({
       {detailShift && (
         <ShiftDetailModal
           shift={detailShift}
+          dayMeta={dayMeta}
           onClose={() => setDetailShift(null)}
         />
       )}

@@ -2,12 +2,14 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useDemo } from "@/contexts/DemoContext";
 import type {
   Holiday,
+  HolidayMetadata,
   CreateHolidayPayload,
   UpdateHolidayPayload,
   HolidayListParams,
 } from "@/types/holiday";
 import {
   fetchHolidays,
+  fetchHolidayMetadata,
   createHoliday as createHolidayApi,
   updateHoliday as updateHolidayApi,
   deleteHoliday as deleteHolidayApi,
@@ -21,6 +23,47 @@ interface AsyncState<T> {
   data: T | null;
   loading: boolean;
   error: string | null;
+}
+
+// ════════════════════════════════════════════
+// useHolidayMetadata — Fetch holiday form metadata (types + branches)
+// ════════════════════════════════════════════
+
+export function useHolidayMetadata() {
+  const { isDemo } = useDemo();
+  const [state, setState] = useState<AsyncState<HolidayMetadata>>(
+    { data: null, loading: true, error: null }
+  );
+
+  useEffect(() => {
+    if (isDemo) {
+      setState({
+        data: {
+          holiday_type_meta: [
+            { id: "national",   name: "Nasional" },
+            { id: "joint",      name: "Cuti Bersama" },
+            { id: "observance", name: "Peringatan" },
+            { id: "company",    name: "Perusahaan" },
+          ],
+          branch_meta: [],
+        },
+        loading: false,
+        error: null,
+      });
+      return;
+    }
+
+    fetchHolidayMetadata()
+      .then((res) =>
+        setState({ data: res.data, loading: false, error: null }),
+      )
+      .catch((err: unknown) => {
+        const message = err instanceof Error ? err.message : "Failed to fetch holiday metadata";
+        setState({ data: null, loading: false, error: message });
+      });
+  }, [isDemo]);
+
+  return state;
 }
 
 // ════════════════════════════════════════════

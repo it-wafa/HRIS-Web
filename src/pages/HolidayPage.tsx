@@ -15,8 +15,8 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Input, Button } from "@/components/ui/FormElements";
 import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import { SummaryCard } from "@/components/ui/SummaryCard";
-import { useHolidayList, useHolidayMutations } from "@/hooks/useHoliday";
-import { useBranchList } from "@/hooks/useBranch";
+import { useHolidayList, useHolidayMutations, useHolidayMetadata } from "@/hooks/useHoliday";
+
 import {
   HOLIDAY_TYPE_LABELS,
   HOLIDAY_TYPE_COLORS,
@@ -154,12 +154,14 @@ function HolidayForm({
   onSubmit,
   editHoliday,
   branches,
+  typeMeta,
   isLoading,
 }: {
   onClose: () => void;
   onSubmit: (payload: CreateHolidayPayload) => void;
   editHoliday?: Holiday;
-  branches: { id: number; name: string }[];
+  branches: { id: string | number; name: string }[];
+  typeMeta: { id: string; name: string }[];
   isLoading?: boolean;
 }) {
   const [formData, setFormData] = useState({
@@ -232,12 +234,10 @@ function HolidayForm({
             label="Tipe"
             value={formData.type}
             onChange={(val) => handleChange("type", val)}
-            options={Object.entries(HOLIDAY_TYPE_LABELS).map(
-              ([value, label]) => ({
-                value,
-                label,
-              }),
-            )}
+            options={typeMeta.map((m) => ({
+              value: m.id,
+              label: m.name,
+            }))}
             placeholder="Pilih tipe"
             searchPlaceholder="Cari tipe..."
           />
@@ -741,13 +741,16 @@ export function HolidayPage() {
   // Data
   const params = { year, type: filterType || undefined };
   const { data: holidays, loading, refetch } = useHolidayList(params);
-  const { data: branches } = useBranchList();
+  const { data: metadata } = useHolidayMetadata();
   const {
     loading: mutationLoading,
     createHoliday,
     updateHoliday,
     deleteHoliday,
   } = useHolidayMutations(refetch);
+
+  const typeMeta = metadata?.holiday_type_meta ?? [];
+  const branchMeta = metadata?.branch_meta ?? [];
 
   // Client-side filter by branch
   const filtered = useMemo(() => {
@@ -784,9 +787,6 @@ export function HolidayPage() {
     const result = await deleteHoliday(deleteTarget.id);
     if (result) setDeleteTarget(null);
   };
-
-  const branchOptions =
-    branches?.map((b) => ({ id: b.id, name: b.name })) || [];
 
   return (
     <MainLayout>
@@ -847,11 +847,9 @@ export function HolidayPage() {
               onChange={(val) => setFilterType(val as HolidayType | "")}
               options={[
                 { value: "", label: "Semua Tipe" },
-                ...(
-                  Object.entries(HOLIDAY_TYPE_LABELS) as [HolidayType, string][]
-                ).map(([value, label]) => ({
-                  value,
-                  label,
+                ...typeMeta.map((m) => ({
+                  value: m.id,
+                  label: m.name,
                 })),
               ]}
               placeholder="Filter tipe..."
@@ -862,10 +860,10 @@ export function HolidayPage() {
               onChange={(val) => setFilterBranch(val)}
               options={[
                 { value: "", label: "Semua Cabang" },
-                ...(branches?.map((b) => ({
+                ...branchMeta.map((b) => ({
                   value: String(b.id),
                   label: b.name,
-                })) || []),
+                })),
               ]}
               placeholder="Filter cabang..."
               searchPlaceholder="Cari cabang..."
@@ -972,7 +970,8 @@ export function HolidayPage() {
         <HolidayForm
           onClose={() => setShowForm(false)}
           onSubmit={handleCreate}
-          branches={branchOptions}
+          branches={branchMeta}
+          typeMeta={typeMeta}
           isLoading={mutationLoading}
         />
       </Modal>
@@ -988,7 +987,8 @@ export function HolidayPage() {
             onClose={() => setEditHoliday(null)}
             onSubmit={handleUpdate}
             editHoliday={editHoliday}
-            branches={branchOptions}
+            branches={branchMeta}
+            typeMeta={typeMeta}
             isLoading={mutationLoading}
           />
         )}

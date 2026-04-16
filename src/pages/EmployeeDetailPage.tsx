@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { Input, Button } from "@/components/ui/FormElements";
+import { Input, Button, Toggle } from "@/components/ui/FormElements";
 import {
   useEmployeeById,
   useEmployeeContacts,
@@ -649,33 +649,37 @@ function EmployeeForm({
       </div>
 
       {/* Status */}
-      <div className="space-y-4">
+      <div className="space-y-4 pt-2">
         <h4 className="font-semibold text-(--foreground) text-sm border-b border-(--border) pb-2">
           Status
         </h4>
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
+        <div className="flex flex-col gap-4 sm:flex-row sm:gap-8 pt-2 pb-2">
+          <Toggle
             id="is_active"
             checked={formData.is_active}
-            onChange={(e) => handleChange("is_active", e.target.checked)}
-            className="h-4 w-4 rounded border-(--border)"
+            onChange={(checked) => handleChange("is_active", checked)}
+            label={
+              <div className="flex flex-col">
+                <span className="font-medium text-(--foreground)">Status Pegawai</span>
+                <span className="text-xs text-(--muted-foreground)">
+                  {formData.is_active ? "Aktif" : "Nonaktif"}
+                </span>
+              </div>
+            }
           />
-          <label htmlFor="is_active" className="text-sm text-(--foreground)">
-            Pegawai aktif
-          </label>
-        </div>
-        <div className="flex items-center gap-2 mt-2">
-          <input
-            type="checkbox"
+          <Toggle
             id="is_trainer"
             checked={formData.is_trainer}
-            onChange={(e) => handleChange("is_trainer", e.target.checked)}
-            className="h-4 w-4 rounded border-(--border)"
+            onChange={(checked) => handleChange("is_trainer", checked)}
+            label={
+              <div className="flex flex-col">
+                <span className="font-medium text-(--foreground)">Trainer Wafa</span>
+                <span className="text-xs text-(--muted-foreground)">
+                  {formData.is_trainer ? "Ya" : "Tidak"}
+                </span>
+              </div>
+            }
           />
-          <label htmlFor="is_trainer" className="text-sm text-(--foreground)">
-            Trainer Wafa
-          </label>
         </div>
       </div>
 
