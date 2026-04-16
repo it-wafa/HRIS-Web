@@ -3,76 +3,47 @@ import type {
   CreatePositionPayload,
   UpdatePositionPayload,
 } from "@/types/job-position";
-import type { ApiResponse, ApiError } from "./api";
-import { API_URL } from "./const";
-
-/** Fetch wrapper targeting the API */
-async function apiCall<T>(
-  endpoint: string,
-  options: RequestInit = {},
-): Promise<ApiResponse<T>> {
-  const response = await fetch(`${API_URL}${endpoint}`, {
-    ...options,
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-  });
-
-  const data = await response.json();
-
-  if (!response.ok || data.status === false) {
-    const error: ApiError = {
-      statusCode: data.statusCode || response.status,
-      message: data.message || "Something went wrong",
-    };
-    throw error;
-  }
-
-  return data as ApiResponse<T>;
-}
+import { apiCall } from "@/lib/api";
 
 // ════════════════════════════════════════════
 // POSITION API
 // ════════════════════════════════════════════
 
 /** GET /positions — List all job positions */
-export async function fetchPositions(token: string) {
-  return apiCall<JobPosition[]>("/positions", {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+export async function fetchPositions(departmentId?: number) {
+  const searchParams = new URLSearchParams();
+  if (departmentId !== undefined) {
+    searchParams.append("department_id", String(departmentId));
+  }
+  const query = searchParams.toString();
+  const endpoint = query ? `/positions?${query}` : "/positions";
+  return apiCall<JobPosition[]>(endpoint);
 }
 
 /** POST /positions — Create a new job position */
 export async function createPosition(
-  token: string,
   payload: CreatePositionPayload,
 ) {
   return apiCall<JobPosition>("/positions", {
     method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
     body: JSON.stringify(payload),
   });
 }
 
 /** PUT /positions/:id — Update a job position */
 export async function updatePosition(
-  token: string,
   id: number,
   payload: UpdatePositionPayload,
 ) {
   return apiCall<JobPosition>(`/positions/${id}`, {
     method: "PUT",
-    headers: { Authorization: `Bearer ${token}` },
     body: JSON.stringify(payload),
   });
 }
 
 /** DELETE /positions/:id — Delete a job position */
-export async function deletePosition(token: string, id: number) {
+export async function deletePosition(id: number) {
   return apiCall<{ message: string }>(`/positions/${id}`, {
     method: "DELETE",
-    headers: { Authorization: `Bearer ${token}` },
   });
 }

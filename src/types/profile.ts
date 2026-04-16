@@ -3,14 +3,14 @@
 export interface Profile {
   id: string;
   user_id: string;
-  fullname: string;
+  full_name: string;
   photo_url: string;
   created_at: string;
   updated_at: string;
 }
 
 export interface UpdateProfilePayload {
-  fullname: string;
+  full_name: string;
 }
 
 export interface UploadPhotoPayload {

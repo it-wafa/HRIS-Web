@@ -93,3 +93,8 @@ export function getDummyPositions(params?: {
 export function getDummyPositionById(id: number): JobPosition | undefined {
   return DUMMY_POSITIONS.find((position) => position.id === id);
 }
+export function getDummyPositionsByDepartment(
+  departmentId: number,
+): JobPosition[] {
+  return DUMMY_POSITIONS.filter((p) => p.department_id === departmentId);
+}

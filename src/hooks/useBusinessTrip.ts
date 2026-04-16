@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 import { useDemo } from "@/contexts/DemoContext";
 import type {
   BusinessTripRequest,
@@ -29,7 +28,6 @@ interface AsyncState<T> {
 // ════════════════════════════════════════════
 
 export function useBusinessTripList(params?: BusinessTripListParams) {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [state, setState] = useState<AsyncState<BusinessTripRequest[]>>({
     data: null,
@@ -53,12 +51,10 @@ export function useBusinessTripList(params?: BusinessTripListParams) {
     }
 
     // Live mode: fetch from API
-    if (!token) return;
-
     const id = ++fetchRef.current;
     setState((s) => ({ ...s, loading: true, error: null }));
 
-    fetchBusinessTrips(token, paramsRef.current)
+    fetchBusinessTrips(paramsRef.current)
       .then((res) => {
         if (id === fetchRef.current) {
           setState({ data: res.data, loading: false, error: null });
@@ -71,7 +67,7 @@ export function useBusinessTripList(params?: BusinessTripListParams) {
           setState({ data: null, loading: false, error: message });
         }
       });
-  }, [token, isDemo]);
+  }, [isDemo]);
 
   useEffect(() => {
     refetch();
@@ -91,7 +87,6 @@ export function useBusinessTripList(params?: BusinessTripListParams) {
 // ════════════════════════════════════════════
 
 export function useBusinessTripMutations(onSuccess?: () => void) {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [loading, setLoading] = useState(false);
 
@@ -101,14 +96,9 @@ export function useBusinessTripMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return null;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return null;
-      }
-
       setLoading(true);
       try {
-        const res = await createTripApi(token, payload);
+        const res = await createTripApi(payload);
         toast.success("Pengajuan dinas luar berhasil dikirim");
         onSuccess?.();
         return res.data;
@@ -121,7 +111,7 @@ export function useBusinessTripMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   const approveTrip = useCallback(
@@ -130,11 +120,6 @@ export function useBusinessTripMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return null;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return null;
-      }
-
       const payload: UpdateBusinessTripStatusPayload = {
         status: "approved",
         approver_notes: notes,
@@ -142,7 +127,7 @@ export function useBusinessTripMutations(onSuccess?: () => void) {
 
       setLoading(true);
       try {
-        const res = await updateStatusApi(token, id, payload);
+        const res = await updateStatusApi(id, payload);
         toast.success("Dinas luar disetujui");
         onSuccess?.();
         return res.data;
@@ -155,7 +140,7 @@ export function useBusinessTripMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   const rejectTrip = useCallback(
@@ -164,11 +149,6 @@ export function useBusinessTripMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return null;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return null;
-      }
-
       const payload: UpdateBusinessTripStatusPayload = {
         status: "rejected",
         approver_notes: notes,
@@ -176,7 +156,7 @@ export function useBusinessTripMutations(onSuccess?: () => void) {
 
       setLoading(true);
       try {
-        const res = await updateStatusApi(token, id, payload);
+        const res = await updateStatusApi(id, payload);
         toast.success("Dinas luar ditolak");
         onSuccess?.();
         return res.data;
@@ -189,7 +169,7 @@ export function useBusinessTripMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   const deleteTrip = useCallback(
@@ -198,14 +178,9 @@ export function useBusinessTripMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return false;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return false;
-      }
-
       setLoading(true);
       try {
-        await deleteTripApi(token, id);
+        await deleteTripApi(id);
         toast.success("Pengajuan dinas luar berhasil dihapus");
         onSuccess?.();
         return true;
@@ -218,7 +193,7 @@ export function useBusinessTripMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   return { loading, createTrip, approveTrip, rejectTrip, deleteTrip };

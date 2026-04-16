@@ -21,6 +21,7 @@ export {
   DUMMY_POSITIONS,
   getDummyPositions,
   getDummyPositionById,
+  getDummyPositionsByDepartment,
 } from "./position.dummy";
 
 // Role & Permission
@@ -50,6 +51,7 @@ export {
   getDummyEmployeeById,
   getDummyEmployeeContacts,
   getDummyEmployeeContactById,
+  getDummyEmployeesByDepartment,
 } from "./employee.dummy";
 
 // Shift & Schedule

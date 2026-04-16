@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 import { useDemo } from "@/contexts/DemoContext";
 import type {
   EmployeeDashboardData,
@@ -36,7 +35,6 @@ interface AsyncState<T> {
 // ══════════════════════════════════════════════════════════════════════════════
 
 export function useEmployeeDashboard() {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [state, setState] = useState<AsyncState<EmployeeDashboardData>>({
     data: null,
@@ -58,12 +56,10 @@ export function useEmployeeDashboard() {
     }
 
     // Live mode: fetch from API
-    if (!token) return;
-
     const id = ++fetchRef.current;
     setState((s) => ({ ...s, loading: true, error: null }));
 
-    fetchEmployeeDashboard(token)
+    fetchEmployeeDashboard()
       .then((res) => {
         if (id === fetchRef.current) {
           setState({ data: res.data, loading: false, error: null });
@@ -78,7 +74,7 @@ export function useEmployeeDashboard() {
           setState({ data: null, loading: false, error: message });
         }
       });
-  }, [token, isDemo]);
+  }, [isDemo]);
 
   useEffect(() => {
     refetch();
@@ -92,7 +88,6 @@ export function useEmployeeDashboard() {
 // ══════════════════════════════════════════════════════════════════════════════
 
 export function useHRDDashboard() {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [state, setState] = useState<AsyncState<HRDDashboardData>>({
     data: null,
@@ -114,12 +109,10 @@ export function useHRDDashboard() {
     }
 
     // Live mode: fetch from API
-    if (!token) return;
-
     const id = ++fetchRef.current;
     setState((s) => ({ ...s, loading: true, error: null }));
 
-    fetchHRDDashboard(token)
+    fetchHRDDashboard()
       .then((res) => {
         if (id === fetchRef.current) {
           setState({ data: res.data, loading: false, error: null });
@@ -132,7 +125,7 @@ export function useHRDDashboard() {
           setState({ data: null, loading: false, error: message });
         }
       });
-  }, [token, isDemo]);
+  }, [isDemo]);
 
   useEffect(() => {
     refetch();
@@ -170,7 +163,6 @@ function detectMobile(): boolean {
 }
 
 export function useClockWidget(): ClockWidgetHookReturn {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [loading, setLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(detectMobile());
@@ -200,12 +192,10 @@ export function useClockWidget(): ClockWidgetHookReturn {
     }
 
     // Live mode: fetch from employee dashboard to get today status
-    if (!token) return;
-
     const id = ++fetchRef.current;
     setLoading(true);
 
-    fetchEmployeeDashboard(token)
+    fetchEmployeeDashboard()
       .then((res) => {
         if (id === fetchRef.current) {
           setStatus(res.data.today);
@@ -218,7 +208,7 @@ export function useClockWidget(): ClockWidgetHookReturn {
           setLoading(false);
         }
       });
-  }, [token, isDemo]);
+  }, [isDemo]);
 
   useEffect(() => {
     refetch();
@@ -232,14 +222,9 @@ export function useClockWidget(): ClockWidgetHookReturn {
         return false;
       }
 
-      if (!token) {
-        toast.error("Authentication required");
-        return false;
-      }
-
       setLoading(true);
       try {
-        await clockInApi(token, payload);
+        await clockInApi(payload);
         toast.success("Clock in berhasil");
         refetch();
         return true;
@@ -252,7 +237,7 @@ export function useClockWidget(): ClockWidgetHookReturn {
         setLoading(false);
       }
     },
-    [token, isDemo, refetch],
+    [isDemo, refetch],
   );
 
   // Clock Out
@@ -263,14 +248,9 @@ export function useClockWidget(): ClockWidgetHookReturn {
         return false;
       }
 
-      if (!token) {
-        toast.error("Authentication required");
-        return false;
-      }
-
       setLoading(true);
       try {
-        await clockOutApi(token, payload);
+        await clockOutApi(payload);
         toast.success("Clock out berhasil");
         refetch();
         return true;
@@ -283,7 +263,7 @@ export function useClockWidget(): ClockWidgetHookReturn {
         setLoading(false);
       }
     },
-    [token, isDemo, refetch],
+    [isDemo, refetch],
   );
 
   return {

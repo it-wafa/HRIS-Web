@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 import { useDemo } from "@/contexts/DemoContext";
 import type {
   ShiftTemplate,
@@ -36,7 +35,6 @@ interface AsyncState<T> {
 // ════════════════════════════════════════════
 
 export function useShiftList() {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [state, setState] = useState<AsyncState<ShiftTemplate[]>>({
     data: null,
@@ -54,12 +52,10 @@ export function useShiftList() {
     }
 
     // Live mode: fetch from API
-    if (!token) return;
-
     const id = ++fetchRef.current;
     setState((s) => ({ ...s, loading: true, error: null }));
 
-    fetchShiftTemplates(token)
+    fetchShiftTemplates()
       .then((res) => {
         if (id === fetchRef.current) {
           setState({ data: res.data, loading: false, error: null });
@@ -74,7 +70,7 @@ export function useShiftList() {
           setState({ data: null, loading: false, error: message });
         }
       });
-  }, [token, isDemo]);
+  }, [isDemo]);
 
   useEffect(() => {
     refetch();
@@ -88,7 +84,6 @@ export function useShiftList() {
 // ════════════════════════════════════════════
 
 export function useShiftMutations(onSuccess?: () => void) {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [loading, setLoading] = useState(false);
 
@@ -98,14 +93,9 @@ export function useShiftMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return null;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return null;
-      }
-
       setLoading(true);
       try {
-        const res = await createShiftApi(token, payload);
+        const res = await createShiftApi(payload);
         toast.success("Template shift berhasil ditambahkan");
         onSuccess?.();
         return res.data;
@@ -120,7 +110,7 @@ export function useShiftMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   const updateShift = useCallback(
@@ -129,14 +119,9 @@ export function useShiftMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return null;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return null;
-      }
-
       setLoading(true);
       try {
-        const res = await updateShiftApi(token, id, payload);
+        const res = await updateShiftApi(id, payload);
         toast.success("Template shift berhasil diperbarui");
         onSuccess?.();
         return res.data;
@@ -151,7 +136,7 @@ export function useShiftMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   const deleteShift = useCallback(
@@ -160,14 +145,9 @@ export function useShiftMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return false;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return false;
-      }
-
       setLoading(true);
       try {
-        await deleteShiftApi(token, id);
+        await deleteShiftApi(id);
         toast.success("Template shift berhasil dihapus");
         onSuccess?.();
         return true;
@@ -180,7 +160,7 @@ export function useShiftMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   return { loading, createShift, updateShift, deleteShift };
@@ -191,7 +171,6 @@ export function useShiftMutations(onSuccess?: () => void) {
 // ════════════════════════════════════════════
 
 export function useScheduleList(params?: ScheduleListParams) {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [state, setState] = useState<AsyncState<EmployeeSchedule[]>>({
     data: null,
@@ -213,12 +192,10 @@ export function useScheduleList(params?: ScheduleListParams) {
     }
 
     // Live mode: fetch from API
-    if (!token) return;
-
     const id = ++fetchRef.current;
     setState((s) => ({ ...s, loading: true, error: null }));
 
-    fetchEmployeeSchedules(token, params)
+    fetchEmployeeSchedules(params)
       .then((res) => {
         if (id === fetchRef.current) {
           setState({ data: res.data, loading: false, error: null });
@@ -234,7 +211,6 @@ export function useScheduleList(params?: ScheduleListParams) {
         }
       });
   }, [
-    token,
     isDemo,
     params?.employee_id,
     params?.shift_template_id,
@@ -253,7 +229,6 @@ export function useScheduleList(params?: ScheduleListParams) {
 // ════════════════════════════════════════════
 
 export function useScheduleMutations(onSuccess?: () => void) {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [loading, setLoading] = useState(false);
 
@@ -263,14 +238,9 @@ export function useScheduleMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return null;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return null;
-      }
-
       setLoading(true);
       try {
-        const res = await createScheduleApi(token, payload);
+        const res = await createScheduleApi(payload);
         toast.success("Jadwal pegawai berhasil ditambahkan");
         onSuccess?.();
         return res.data;
@@ -285,7 +255,7 @@ export function useScheduleMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   const updateSchedule = useCallback(
@@ -294,14 +264,9 @@ export function useScheduleMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return null;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return null;
-      }
-
       setLoading(true);
       try {
-        const res = await updateScheduleApi(token, id, payload);
+        const res = await updateScheduleApi(id, payload);
         toast.success("Jadwal pegawai berhasil diperbarui");
         onSuccess?.();
         return res.data;
@@ -316,7 +281,7 @@ export function useScheduleMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   const deleteSchedule = useCallback(
@@ -325,14 +290,9 @@ export function useScheduleMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return false;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return false;
-      }
-
       setLoading(true);
       try {
-        await deleteScheduleApi(token, id);
+        await deleteScheduleApi(id);
         toast.success("Jadwal pegawai berhasil dihapus");
         onSuccess?.();
         return true;
@@ -345,7 +305,7 @@ export function useScheduleMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   return { loading, createSchedule, updateSchedule, deleteSchedule };

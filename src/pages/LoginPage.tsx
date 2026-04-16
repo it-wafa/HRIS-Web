@@ -12,7 +12,7 @@ import toast from "react-hot-toast";
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const { setToken } = useAuth();
+  const { setAuthData } = useAuth();
   const { startDemo } = useDemo();
 
   const [email, setEmail] = useState("");
@@ -42,7 +42,8 @@ export function LoginPage() {
     setIsLoading(true);
     try {
       const res = await loginApi(email, password);
-      setToken(res.data.token);
+      // Ensure the correct properties from LoginResponse are set
+      setAuthData(res.data);
       toast.success(SUCCESS_MESSAGES.loginSuccess);
       navigate("/");
     } catch (err) {

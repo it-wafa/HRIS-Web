@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 import { useDemo } from "@/contexts/DemoContext";
 import type {
   EmploymentContract,
@@ -28,7 +27,6 @@ interface AsyncState<T> {
 // ════════════════════════════════════════════
 
 export function useContractList(employeeId: number | null) {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [state, setState] = useState<AsyncState<EmploymentContract[]>>({
     data: null,
@@ -55,12 +53,10 @@ export function useContractList(employeeId: number | null) {
     }
 
     // Live mode: fetch from API
-    if (!token) return;
-
     const id = ++fetchRef.current;
     setState((s) => ({ ...s, loading: true, error: null }));
 
-    fetchContracts(token, employeeId)
+    fetchContracts(employeeId)
       .then((res) => {
         if (id === fetchRef.current) {
           setState({ data: res.data, loading: false, error: null });
@@ -73,7 +69,7 @@ export function useContractList(employeeId: number | null) {
           setState({ data: null, loading: false, error: message });
         }
       });
-  }, [token, isDemo, employeeId]);
+  }, [isDemo, employeeId]);
 
   useEffect(() => {
     refetch();
@@ -87,7 +83,6 @@ export function useContractList(employeeId: number | null) {
 // ════════════════════════════════════════════
 
 export function useContractMutations(onSuccess?: () => void) {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [loading, setLoading] = useState(false);
 
@@ -97,14 +92,9 @@ export function useContractMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return null;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return null;
-      }
-
       setLoading(true);
       try {
-        const res = await createContractApi(token, employeeId, payload);
+        const res = await createContractApi(employeeId, payload);
         toast.success("Kontrak berhasil ditambahkan");
         onSuccess?.();
         return res.data;
@@ -117,7 +107,7 @@ export function useContractMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   const updateContract = useCallback(
@@ -126,14 +116,9 @@ export function useContractMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return null;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return null;
-      }
-
       setLoading(true);
       try {
-        const res = await updateContractApi(token, id, payload);
+        const res = await updateContractApi(id, payload);
         toast.success("Kontrak berhasil diperbarui");
         onSuccess?.();
         return res.data;
@@ -146,7 +131,7 @@ export function useContractMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   const deleteContract = useCallback(
@@ -155,14 +140,9 @@ export function useContractMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return false;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return false;
-      }
-
       setLoading(true);
       try {
-        await deleteContractApi(token, id);
+        await deleteContractApi(id);
         toast.success("Kontrak berhasil dihapus");
         onSuccess?.();
         return true;
@@ -175,7 +155,7 @@ export function useContractMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   return { loading, createContract, updateContract, deleteContract };

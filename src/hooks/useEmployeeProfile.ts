@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useDemo } from "@/contexts/DemoContext";
-import { useAuth } from "@/contexts/AuthContext";
+
 import type { EmployeeProfile, EmployeeProfileContact } from "@/types/profile";
 import { getDummyEmployeeProfile, getDummyProfileContacts } from "@/lib/dummy";
 
@@ -21,7 +21,7 @@ interface AsyncState<T> {
 
 export function useEmployeeProfile() {
   const { isDemo } = useDemo();
-  const { token } = useAuth();
+
   const [state, setState] = useState<AsyncState<EmployeeProfile>>({
     data: null,
     loading: true,
@@ -39,10 +39,7 @@ export function useEmployeeProfile() {
       return;
     }
 
-    if (!token) {
-      setState({ data: null, loading: false, error: "No token" });
-      return;
-    }
+
 
     // TODO: Implement actual API call when backend is ready
     // For now, simulate loading state then show demo data
@@ -56,7 +53,7 @@ export function useEmployeeProfile() {
         error: null,
       });
     }, 500);
-  }, [isDemo, token]);
+  }, [isDemo]);
 
   useEffect(() => {
     refetch();
@@ -75,7 +72,7 @@ export function useEmployeeProfile() {
 
 export function useEmployeeProfileContacts() {
   const { isDemo } = useDemo();
-  const { token } = useAuth();
+
   const [state, setState] = useState<AsyncState<EmployeeProfileContact[]>>({
     data: null,
     loading: true,
@@ -93,10 +90,7 @@ export function useEmployeeProfileContacts() {
       return;
     }
 
-    if (!token) {
-      setState({ data: null, loading: false, error: "No token" });
-      return;
-    }
+
 
     // TODO: Implement actual API call when backend is ready
     // For now, simulate loading state then show demo data
@@ -110,7 +104,7 @@ export function useEmployeeProfileContacts() {
         error: null,
       });
     }, 500);
-  }, [isDemo, token]);
+  }, [isDemo]);
 
   useEffect(() => {
     refetch();

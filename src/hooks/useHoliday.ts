@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 import { useDemo } from "@/contexts/DemoContext";
 import type {
   Holiday,
@@ -29,7 +28,6 @@ interface AsyncState<T> {
 // ════════════════════════════════════════════
 
 export function useHolidayList(params?: HolidayListParams) {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [state, setState] = useState<AsyncState<Holiday[]>>({
     data: null,
@@ -47,12 +45,10 @@ export function useHolidayList(params?: HolidayListParams) {
     }
 
     // Live mode: fetch from API
-    if (!token) return;
-
     const id = ++fetchRef.current;
     setState((s) => ({ ...s, loading: true, error: null }));
 
-    fetchHolidays(token, params)
+    fetchHolidays(params)
       .then((res) => {
         if (id === fetchRef.current) {
           setState({ data: res.data, loading: false, error: null });
@@ -65,7 +61,7 @@ export function useHolidayList(params?: HolidayListParams) {
           setState({ data: null, loading: false, error: message });
         }
       });
-  }, [token, isDemo, params?.year, params?.type, params?.branch_id]);
+  }, [isDemo, params?.year, params?.type, params?.branch_id]);
 
   useEffect(() => {
     refetch();
@@ -79,7 +75,6 @@ export function useHolidayList(params?: HolidayListParams) {
 // ════════════════════════════════════════════
 
 export function useHolidayMutations(onSuccess?: () => void) {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [loading, setLoading] = useState(false);
 
@@ -89,14 +84,9 @@ export function useHolidayMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return null;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return null;
-      }
-
       setLoading(true);
       try {
-        const res = await createHolidayApi(token, payload);
+        const res = await createHolidayApi(payload);
         toast.success("Hari libur berhasil ditambahkan");
         onSuccess?.();
         return res.data;
@@ -109,7 +99,7 @@ export function useHolidayMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   const updateHoliday = useCallback(
@@ -118,14 +108,9 @@ export function useHolidayMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return null;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return null;
-      }
-
       setLoading(true);
       try {
-        const res = await updateHolidayApi(token, id, payload);
+        const res = await updateHolidayApi(id, payload);
         toast.success("Hari libur berhasil diperbarui");
         onSuccess?.();
         return res.data;
@@ -138,7 +123,7 @@ export function useHolidayMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   const deleteHoliday = useCallback(
@@ -147,14 +132,9 @@ export function useHolidayMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return false;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return false;
-      }
-
       setLoading(true);
       try {
-        await deleteHolidayApi(token, id);
+        await deleteHolidayApi(id);
         toast.success("Hari libur berhasil dihapus");
         onSuccess?.();
         return true;
@@ -167,7 +147,7 @@ export function useHolidayMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   return { loading, createHoliday, updateHoliday, deleteHoliday };

@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 import { useDemo } from "@/contexts/DemoContext";
 import type { AuditLogDisplay, AuditLogListParams } from "@/types/audit-log";
 import { fetchAuditLogs } from "@/lib/audit-log-api";
@@ -100,7 +99,6 @@ function transformToDisplay(log: AuditLog): AuditLogDisplay {
 // ══════════════════════════════════════════════════════════════════════════════
 
 export function useAuditLogList(params?: AuditLogListParams) {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [state, setState] = useState<AsyncState<AuditLogDisplay[]>>({
     data: null,
@@ -124,12 +122,10 @@ export function useAuditLogList(params?: AuditLogListParams) {
     }
 
     // Live mode: fetch from API
-    if (!token) return;
-
     const id = ++fetchRef.current;
     setState((s) => ({ ...s, loading: true, error: null }));
 
-    fetchAuditLogs(token, paramsRef.current)
+    fetchAuditLogs(paramsRef.current)
       .then((res) => {
         if (id === fetchRef.current) {
           // Transform to display format
@@ -144,7 +140,7 @@ export function useAuditLogList(params?: AuditLogListParams) {
           setState({ data: null, loading: false, error: message });
         }
       });
-  }, [token, isDemo]);
+  }, [isDemo]);
 
   useEffect(() => {
     refetch();

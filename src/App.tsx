@@ -8,7 +8,7 @@ import { EmployeePage } from "./pages/EmployeePage";
 import { EmployeeDetailPage } from "./pages/EmployeeDetailPage";
 import { BranchPage } from "./pages/BranchPage";
 import { DepartmentPage } from "./pages/DepartmentPage";
-import { PositionPage } from "./pages/PositionPage";
+
 import { RolePage } from "./pages/RolePage";
 import { ShiftPage } from "./pages/ShiftPage";
 import { HolidayPage } from "./pages/HolidayPage";
@@ -91,14 +91,7 @@ function App() {
           </PrivateRoute>
         }
       />
-      <Route
-        path="/positions"
-        element={
-          <PrivateRoute>
-            <PositionPage />
-          </PrivateRoute>
-        }
-      />
+
       <Route
         path="/roles"
         element={

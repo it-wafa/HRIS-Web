@@ -11,7 +11,6 @@ import {
   Users,
   Building2,
   Network,
-  Briefcase,
   Shield,
   Calendar,
   Clock,
@@ -44,7 +43,6 @@ const MASTER_DATA_NAV: NavItem[] = [
   { icon: Users, label: "Pegawai", path: "/employees" },
   { icon: Building2, label: "Cabang", path: "/branches" },
   { icon: Network, label: "Departemen", path: "/departments" },
-  { icon: Briefcase, label: "Jabatan", path: "/positions" },
   { icon: Shield, label: "Role", path: "/roles" },
   { icon: CalendarOff, label: "Jenis Cuti", path: "/leave-types" },
 ];

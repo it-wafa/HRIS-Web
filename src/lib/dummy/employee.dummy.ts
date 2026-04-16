@@ -644,3 +644,9 @@ export function getDummyEmployeeContactById(
 ): EmployeeContact | undefined {
   return DUMMY_EMPLOYEE_CONTACTS.find((c) => c.id === id);
 }
+
+export function getDummyEmployeesByDepartment(
+  departmentId: number,
+): Employee[] {
+  return DUMMY_EMPLOYEES.filter((e) => e.department_id === departmentId);
+}

@@ -7,35 +7,7 @@ import type {
   CreateContactPayload,
   UpdateContactPayload,
 } from "@/types/employee";
-import type { ApiResponse, ApiError } from "./api";
-import { API_URL } from "./const";
-
-/** Fetch wrapper targeting the API */
-async function apiCall<T>(
-  endpoint: string,
-  options: RequestInit = {},
-): Promise<ApiResponse<T>> {
-  const response = await fetch(`${API_URL}${endpoint}`, {
-    ...options,
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-  });
-
-  const data = await response.json();
-
-  if (!response.ok || data.status === false) {
-    const error: ApiError = {
-      statusCode: data.statusCode || response.status,
-      message: data.message || "Something went wrong",
-    };
-    throw error;
-  }
-
-  return data as ApiResponse<T>;
-}
+import { apiCall } from "@/lib/api";
 
 // ════════════════════════════════════════════
 // EMPLOYEE API
@@ -43,7 +15,6 @@ async function apiCall<T>(
 
 /** GET /employees — List all employees with optional filters */
 export async function fetchEmployees(
-  token: string,
   params?: EmployeeListParams,
 ) {
   const query = new URLSearchParams();
@@ -55,48 +26,39 @@ export async function fetchEmployees(
   const queryString = query.toString();
   const endpoint = queryString ? `/employees?${queryString}` : "/employees";
 
-  return apiCall<Employee[]>(endpoint, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  return apiCall<Employee[]>(endpoint);
 }
 
 /** GET /employees/:id — Get employee by ID */
-export async function fetchEmployeeById(token: string, id: number) {
-  return apiCall<Employee>(`/employees/${id}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+export async function fetchEmployeeById(id: number) {
+  return apiCall<Employee>(`/employees/${id}`);
 }
 
 /** POST /employees — Create a new employee */
 export async function createEmployee(
-  token: string,
   payload: CreateEmployeePayload,
 ) {
   return apiCall<Employee>("/employees", {
     method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
     body: JSON.stringify(payload),
   });
 }
 
 /** PUT /employees/:id — Update an employee */
 export async function updateEmployee(
-  token: string,
   id: number,
   payload: UpdateEmployeePayload,
 ) {
   return apiCall<Employee>(`/employees/${id}`, {
     method: "PUT",
-    headers: { Authorization: `Bearer ${token}` },
     body: JSON.stringify(payload),
   });
 }
 
 /** DELETE /employees/:id — Delete an employee */
-export async function deleteEmployee(token: string, id: number) {
+export async function deleteEmployee(id: number) {
   return apiCall<{ message: string }>(`/employees/${id}`, {
     method: "DELETE",
-    headers: { Authorization: `Bearer ${token}` },
   });
 }
 
@@ -105,43 +67,36 @@ export async function deleteEmployee(token: string, id: number) {
 // ════════════════════════════════════════════
 
 /** GET /employees/:employeeId/contacts — List contacts for an employee */
-export async function fetchEmployeeContacts(token: string, employeeId: number) {
-  return apiCall<EmployeeContact[]>(`/employees/${employeeId}/contacts`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+export async function fetchEmployeeContacts(employeeId: number) {
+  return apiCall<EmployeeContact[]>(`/employees/${employeeId}/contacts`);
 }
 
 /** POST /employees/:employeeId/contacts — Create a new contact */
 export async function createEmployeeContact(
-  token: string,
   employeeId: number,
   payload: CreateContactPayload,
 ) {
   return apiCall<EmployeeContact>(`/employees/${employeeId}/contacts`, {
     method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
     body: JSON.stringify(payload),
   });
 }
 
 /** PUT /employee-contacts/:id — Update a contact */
 export async function updateEmployeeContact(
-  token: string,
   contactId: number,
   payload: UpdateContactPayload,
 ) {
   return apiCall<EmployeeContact>(`/employee-contacts/${contactId}`, {
     method: "PUT",
-    headers: { Authorization: `Bearer ${token}` },
     body: JSON.stringify(payload),
   });
 }
 
 /** DELETE /employee-contacts/:id — Delete a contact */
-export async function deleteEmployeeContact(token: string, contactId: number) {
+export async function deleteEmployeeContact(contactId: number) {
   return apiCall<{ message: string }>(`/employee-contacts/${contactId}`, {
     method: "DELETE",
-    headers: { Authorization: `Bearer ${token}` },
   });
 }
 
@@ -156,7 +111,6 @@ export interface ResetPasswordPayload {
 
 /** PATCH /employees/:id/reset-password — Reset password for an employee (admin only) */
 export async function resetEmployeePassword(
-  token: string,
   employeeId: number,
   payload: ResetPasswordPayload,
 ) {
@@ -164,7 +118,6 @@ export async function resetEmployeePassword(
     `/employees/${employeeId}/reset-password`,
     {
       method: "PATCH",
-      headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify(payload),
     },
   );

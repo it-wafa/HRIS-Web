@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 import { useDemo } from "@/contexts/DemoContext";
 import type {
   MutabaahLog,
@@ -40,7 +39,6 @@ interface AsyncState<T> {
 // ════════════════════════════════════════════
 
 export function useMutabaahList(params?: MutabaahListParams) {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [state, setState] = useState<AsyncState<MutabaahLog[]>>({
     data: null,
@@ -62,12 +60,10 @@ export function useMutabaahList(params?: MutabaahListParams) {
       return;
     }
 
-    if (!token) return;
-
     const id = ++fetchRef.current;
     setState((s) => ({ ...s, loading: true, error: null }));
 
-    fetchMutabaahLogs(token, paramsRef.current)
+    fetchMutabaahLogs(paramsRef.current)
       .then((res) => {
         if (id === fetchRef.current) {
           setState({ data: res.data, loading: false, error: null });
@@ -82,7 +78,7 @@ export function useMutabaahList(params?: MutabaahListParams) {
           setState({ data: null, loading: false, error: message });
         }
       });
-  }, [token, isDemo]);
+  }, [isDemo]);
 
   useEffect(() => {
     refetch();
@@ -106,7 +102,6 @@ export function useMutabaahList(params?: MutabaahListParams) {
 // ════════════════════════════════════════════
 
 export function useMutabaahActions(onSuccess?: () => void) {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [todayStatus, setTodayStatus] = useState<AsyncState<MutabaahTodayStatus>>({
     data: null,
@@ -127,12 +122,10 @@ export function useMutabaahActions(onSuccess?: () => void) {
       return;
     }
 
-    if (!token) return;
-
     const id = ++fetchRef.current;
     setTodayStatus((s) => ({ ...s, loading: true, error: null }));
 
-    fetchMutabaahToday(token)
+    fetchMutabaahToday()
       .then((res) => {
         if (id === fetchRef.current) {
           setTodayStatus({ data: res.data, loading: false, error: null });
@@ -147,7 +140,7 @@ export function useMutabaahActions(onSuccess?: () => void) {
           setTodayStatus({ data: null, loading: false, error: message });
         }
       });
-  }, [token, isDemo]);
+  }, [isDemo]);
 
   useEffect(() => {
     refetchToday();
@@ -159,14 +152,9 @@ export function useMutabaahActions(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return null;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return null;
-      }
-
       setActionLoading(true);
       try {
-        const res = await submitMutabaahApi(token, {
+        const res = await submitMutabaahApi({
           attendance_log_id: attendanceLogId,
         });
         toast.success("Tilawah berhasil dicatat");
@@ -182,7 +170,7 @@ export function useMutabaahActions(onSuccess?: () => void) {
         setActionLoading(false);
       }
     },
-    [token, isDemo, refetchToday, onSuccess],
+    [isDemo, refetchToday, onSuccess],
   );
 
   const cancelToday = useCallback(
@@ -191,14 +179,9 @@ export function useMutabaahActions(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return null;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return null;
-      }
-
       setActionLoading(true);
       try {
-        const res = await cancelMutabaahApi(token, {
+        const res = await cancelMutabaahApi({
           mutabaah_log_id: mutabaahLogId,
         });
         toast.success("Tilawah dibatalkan");
@@ -214,7 +197,7 @@ export function useMutabaahActions(onSuccess?: () => void) {
         setActionLoading(false);
       }
     },
-    [token, isDemo, refetchToday, onSuccess],
+    [isDemo, refetchToday, onSuccess],
   );
 
   return {
@@ -231,7 +214,6 @@ export function useMutabaahActions(onSuccess?: () => void) {
 // ════════════════════════════════════════════
 
 export function useMutabaahDailyReport(date: string) {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [state, setState] = useState<AsyncState<MutabaahDailyReport[]>>({
     data: null,
@@ -251,12 +233,10 @@ export function useMutabaahDailyReport(date: string) {
       return;
     }
 
-    if (!token) return;
-
     const id = ++fetchRef.current;
     setState((s) => ({ ...s, loading: true, error: null }));
 
-    fetchMutabaahDailyReport(token, date)
+    fetchMutabaahDailyReport(date)
       .then((res) => {
         if (id === fetchRef.current) {
           setState({ data: res.data, loading: false, error: null });
@@ -269,7 +249,7 @@ export function useMutabaahDailyReport(date: string) {
           setState({ data: null, loading: false, error: message });
         }
       });
-  }, [token, isDemo, date]);
+  }, [isDemo, date]);
 
   useEffect(() => {
     refetch();
@@ -279,7 +259,6 @@ export function useMutabaahDailyReport(date: string) {
 }
 
 export function useMutabaahMonthlyReport(month: number, year: number) {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [state, setState] = useState<AsyncState<MutabaahMonthlySummary[]>>({
     data: null,
@@ -299,12 +278,10 @@ export function useMutabaahMonthlyReport(month: number, year: number) {
       return;
     }
 
-    if (!token) return;
-
     const id = ++fetchRef.current;
     setState((s) => ({ ...s, loading: true, error: null }));
 
-    fetchMutabaahMonthlyReport(token, month, year)
+    fetchMutabaahMonthlyReport(month, year)
       .then((res) => {
         if (id === fetchRef.current) {
           setState({ data: res.data, loading: false, error: null });
@@ -319,7 +296,7 @@ export function useMutabaahMonthlyReport(month: number, year: number) {
           setState({ data: null, loading: false, error: message });
         }
       });
-  }, [token, isDemo, month, year]);
+  }, [isDemo, month, year]);
 
   useEffect(() => {
     refetch();
@@ -329,7 +306,6 @@ export function useMutabaahMonthlyReport(month: number, year: number) {
 }
 
 export function useMutabaahCategoryReport(date: string) {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [state, setState] = useState<AsyncState<MutabaahCategorySummary[]>>({
     data: null,
@@ -349,12 +325,10 @@ export function useMutabaahCategoryReport(date: string) {
       return;
     }
 
-    if (!token) return;
-
     const id = ++fetchRef.current;
     setState((s) => ({ ...s, loading: true, error: null }));
 
-    fetchMutabaahCategoryReport(token, date)
+    fetchMutabaahCategoryReport(date)
       .then((res) => {
         if (id === fetchRef.current) {
           setState({ data: res.data, loading: false, error: null });
@@ -369,7 +343,7 @@ export function useMutabaahCategoryReport(date: string) {
           setState({ data: null, loading: false, error: message });
         }
       });
-  }, [token, isDemo, date]);
+  }, [isDemo, date]);
 
   useEffect(() => {
     refetch();

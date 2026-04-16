@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 import { useDemo } from "@/contexts/DemoContext";
 import type {
   Department,
@@ -29,7 +28,6 @@ interface AsyncState<T> {
 // ════════════════════════════════════════════
 
 export function useDepartmentList(params?: DepartmentListParams) {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [state, setState] = useState<AsyncState<Department[]>>({
     data: null,
@@ -51,12 +49,10 @@ export function useDepartmentList(params?: DepartmentListParams) {
     }
 
     // Live mode: fetch from API
-    if (!token) return;
-
     const id = ++fetchRef.current;
     setState((s) => ({ ...s, loading: true, error: null }));
 
-    fetchDepartments(token, params)
+    fetchDepartments(params)
       .then((res) => {
         if (id === fetchRef.current) {
           setState({ data: res.data, loading: false, error: null });
@@ -69,7 +65,7 @@ export function useDepartmentList(params?: DepartmentListParams) {
           setState({ data: null, loading: false, error: message });
         }
       });
-  }, [token, isDemo, params?.branch_id, params?.is_active]);
+  }, [isDemo, params?.branch_id, params?.is_active]);
 
   useEffect(() => {
     refetch();
@@ -83,7 +79,6 @@ export function useDepartmentList(params?: DepartmentListParams) {
 // ════════════════════════════════════════════
 
 export function useDepartmentMutations(onSuccess?: () => void) {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [loading, setLoading] = useState(false);
 
@@ -93,14 +88,9 @@ export function useDepartmentMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return null;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return null;
-      }
-
       setLoading(true);
       try {
-        const res = await createDepartmentApi(token, payload);
+        const res = await createDepartmentApi(payload);
         toast.success("Departemen berhasil ditambahkan");
         onSuccess?.();
         return res.data;
@@ -113,7 +103,7 @@ export function useDepartmentMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   const updateDepartment = useCallback(
@@ -122,14 +112,9 @@ export function useDepartmentMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return null;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return null;
-      }
-
       setLoading(true);
       try {
-        const res = await updateDepartmentApi(token, id, payload);
+        const res = await updateDepartmentApi(id, payload);
         toast.success("Departemen berhasil diperbarui");
         onSuccess?.();
         return res.data;
@@ -142,7 +127,7 @@ export function useDepartmentMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   const deleteDepartment = useCallback(
@@ -151,14 +136,9 @@ export function useDepartmentMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return false;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return false;
-      }
-
       setLoading(true);
       try {
-        await deleteDepartmentApi(token, id);
+        await deleteDepartmentApi(id);
         toast.success("Departemen berhasil dihapus");
         onSuccess?.();
         return true;
@@ -171,7 +151,7 @@ export function useDepartmentMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   return { loading, createDepartment, updateDepartment, deleteDepartment };

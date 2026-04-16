@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 import { useDemo } from "@/contexts/DemoContext";
 import type { AttendanceLog, AttendanceListParams } from "@/types/attendance";
 import type {
@@ -33,7 +32,6 @@ interface AsyncState<T> {
 // ════════════════════════════════════════════
 
 export function useAttendanceList(params?: AttendanceListParams) {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [state, setState] = useState<AsyncState<AttendanceLog[]>>({
     data: null,
@@ -57,12 +55,10 @@ export function useAttendanceList(params?: AttendanceListParams) {
     }
 
     // Live mode: fetch from API
-    if (!token) return;
-
     const id = ++fetchRef.current;
     setState((s) => ({ ...s, loading: true, error: null }));
 
-    fetchAttendanceLogs(token, paramsRef.current)
+    fetchAttendanceLogs(paramsRef.current)
       .then((res) => {
         if (id === fetchRef.current) {
           setState({ data: res.data, loading: false, error: null });
@@ -75,7 +71,7 @@ export function useAttendanceList(params?: AttendanceListParams) {
           setState({ data: null, loading: false, error: message });
         }
       });
-  }, [token, isDemo]);
+  }, [isDemo]);
 
   useEffect(() => {
     refetch();
@@ -101,7 +97,6 @@ export function useAttendanceList(params?: AttendanceListParams) {
 // ════════════════════════════════════════════
 
 export function useOverrideList(params?: OverrideListParams) {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [state, setState] = useState<AsyncState<AttendanceOverride[]>>({
     data: null,
@@ -125,12 +120,10 @@ export function useOverrideList(params?: OverrideListParams) {
     }
 
     // Live mode: fetch from API
-    if (!token) return;
-
     const id = ++fetchRef.current;
     setState((s) => ({ ...s, loading: true, error: null }));
 
-    fetchAttendanceOverrides(token, paramsRef.current)
+    fetchAttendanceOverrides(paramsRef.current)
       .then((res) => {
         if (id === fetchRef.current) {
           setState({ data: res.data, loading: false, error: null });
@@ -143,7 +136,7 @@ export function useOverrideList(params?: OverrideListParams) {
           setState({ data: null, loading: false, error: message });
         }
       });
-  }, [token, isDemo]);
+  }, [isDemo]);
 
   useEffect(() => {
     refetch();
@@ -163,7 +156,6 @@ export function useOverrideList(params?: OverrideListParams) {
 // ════════════════════════════════════════════
 
 export function useOverrideMutations(onSuccess?: () => void) {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [loading, setLoading] = useState(false);
 
@@ -173,14 +165,9 @@ export function useOverrideMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return null;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return null;
-      }
-
       setLoading(true);
       try {
-        const res = await createOverrideApi(token, payload);
+        const res = await createOverrideApi(payload);
         toast.success("Pengajuan koreksi berhasil dikirim");
         onSuccess?.();
         return res.data;
@@ -193,7 +180,7 @@ export function useOverrideMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   const approveOverride = useCallback(
@@ -202,11 +189,6 @@ export function useOverrideMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return null;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return null;
-      }
-
       const payload: UpdateOverrideStatusPayload = {
         status: "approved",
         approver_notes: notes,
@@ -214,7 +196,7 @@ export function useOverrideMutations(onSuccess?: () => void) {
 
       setLoading(true);
       try {
-        const res = await updateOverrideStatusApi(token, id, payload);
+        const res = await updateOverrideStatusApi(id, payload);
         toast.success("Koreksi disetujui");
         onSuccess?.();
         return res.data;
@@ -227,7 +209,7 @@ export function useOverrideMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   const rejectOverride = useCallback(
@@ -236,11 +218,6 @@ export function useOverrideMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return null;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return null;
-      }
-
       const payload: UpdateOverrideStatusPayload = {
         status: "rejected",
         approver_notes: notes,
@@ -248,7 +225,7 @@ export function useOverrideMutations(onSuccess?: () => void) {
 
       setLoading(true);
       try {
-        const res = await updateOverrideStatusApi(token, id, payload);
+        const res = await updateOverrideStatusApi(id, payload);
         toast.success("Koreksi ditolak");
         onSuccess?.();
         return res.data;
@@ -261,7 +238,7 @@ export function useOverrideMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   return { loading, createOverride, approveOverride, rejectOverride };
@@ -275,7 +252,6 @@ import type { CreateManualAttendancePayload } from "@/types/attendance";
 import { createManualAttendance as createManualAttendanceApi } from "@/lib/attendance-api";
 
 export function useManualAttendanceMutations(onSuccess?: () => void) {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [loading, setLoading] = useState(false);
 
@@ -285,14 +261,9 @@ export function useManualAttendanceMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return null;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return null;
-      }
-
       setLoading(true);
       try {
-        const res = await createManualAttendanceApi(token, payload);
+        const res = await createManualAttendanceApi(payload);
         toast.success("Presensi manual berhasil ditambahkan");
         onSuccess?.();
         return res.data;
@@ -307,7 +278,7 @@ export function useManualAttendanceMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   return { loading, createManualAttendance };

@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 import { useDemo } from "@/contexts/DemoContext";
 import type {
   Branch,
@@ -28,7 +27,6 @@ interface AsyncState<T> {
 // ════════════════════════════════════════════
 
 export function useBranchList() {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [state, setState] = useState<AsyncState<Branch[]>>({
     data: null,
@@ -46,12 +44,10 @@ export function useBranchList() {
     }
 
     // Live mode: fetch from API
-    if (!token) return;
-
     const id = ++fetchRef.current;
     setState((s) => ({ ...s, loading: true, error: null }));
 
-    fetchBranches(token)
+    fetchBranches()
       .then((res) => {
         if (id === fetchRef.current) {
           setState({ data: res.data, loading: false, error: null });
@@ -64,7 +60,7 @@ export function useBranchList() {
           setState({ data: null, loading: false, error: message });
         }
       });
-  }, [token, isDemo]);
+  }, [isDemo]);
 
   useEffect(() => {
     refetch();
@@ -78,7 +74,6 @@ export function useBranchList() {
 // ════════════════════════════════════════════
 
 export function useBranchMutations(onSuccess?: () => void) {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [loading, setLoading] = useState(false);
 
@@ -88,14 +83,9 @@ export function useBranchMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return null;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return null;
-      }
-
       setLoading(true);
       try {
-        const res = await createBranchApi(token, payload);
+        const res = await createBranchApi(payload);
         toast.success("Cabang berhasil ditambahkan");
         onSuccess?.();
         return res.data;
@@ -108,7 +98,7 @@ export function useBranchMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   const updateBranch = useCallback(
@@ -117,14 +107,9 @@ export function useBranchMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return null;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return null;
-      }
-
       setLoading(true);
       try {
-        const res = await updateBranchApi(token, id, payload);
+        const res = await updateBranchApi(id, payload);
         toast.success("Cabang berhasil diperbarui");
         onSuccess?.();
         return res.data;
@@ -137,7 +122,7 @@ export function useBranchMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   const deleteBranch = useCallback(
@@ -146,14 +131,9 @@ export function useBranchMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return false;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return false;
-      }
-
       setLoading(true);
       try {
-        await deleteBranchApi(token, id);
+        await deleteBranchApi(id);
         toast.success("Cabang berhasil dihapus");
         onSuccess?.();
         return true;
@@ -166,7 +146,7 @@ export function useBranchMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   return { loading, createBranch, updateBranch, deleteBranch };

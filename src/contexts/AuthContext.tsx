@@ -5,19 +5,14 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
-import { parseJwt } from "@/lib/utils";
 import { useDemo } from "@/contexts/DemoContext";
 import { fetchProfile } from "@/lib/profile-api";
-import type { JwtPayload } from "@/types/auth";
+import { refreshTokenApi } from "@/lib/api";
+import type { LoginAccount, LoginResponse } from "@/types/auth";
 
 // ============================================
 // TYPES
 // ============================================
-
-interface User {
-  id: string;
-  email: string;
-}
 
 /** Cached profile data stored in localStorage */
 interface CachedProfile {
@@ -26,13 +21,16 @@ interface CachedProfile {
 }
 
 interface AuthContextType {
-  user: User | null;
+  user: LoginAccount | null;
+  permissions: string[];
   token: string | null;
+  refreshTokenStr: string | null;
   isLoading: boolean;
   cachedProfile: CachedProfile | null;
-  setToken: (token: string) => void;
+  setAuthData: (data: LoginResponse) => void;
   logout: () => void;
   refreshCachedProfile: () => Promise<void>;
+  refreshAuth: () => Promise<boolean>;
 }
 
 // ============================================
@@ -42,11 +40,16 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const TOKEN_KEY = "token";
+const REFRESH_KEY = "refresh_token";
+const ACCOUNT_KEY = "account";
+const PERMISSIONS_KEY = "permissions";
 const PROFILE_KEY = "profile";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<LoginAccount | null>(null);
+  const [permissions, setPermissions] = useState<string[]>([]);
   const [token, setTokenState] = useState<string | null>(null);
+  const [refreshTokenStr, setRefreshTokenStr] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [cachedProfile, setCachedProfile] = useState<CachedProfile | null>(
     null,
@@ -54,72 +57,63 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { isDemo, stopDemo } = useDemo();
 
   /** Fetch profile from API and cache to localStorage */
-  const fetchAndCacheProfile = useCallback(async (jwt: string) => {
+  const fetchAndCacheProfile = useCallback(async () => {
     try {
-      const res = await fetchProfile(jwt);
+      const res = await fetchProfile();
       const profile: CachedProfile = {
-        fullname: res.data.fullname,
-        photo_url: res.data.photo_url,
+        fullname: res.data.full_name, // Assumes fetchProfile updated to new API models
+        photo_url: res.data.photo_url || "",
       };
       setCachedProfile(profile);
       localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
     } catch {
-      // Profile fetch failed — user may not have a profile yet
-      // Clear cached profile
       setCachedProfile(null);
       localStorage.removeItem(PROFILE_KEY);
     }
   }, []);
 
-  /** Refresh cached profile (callable from outside, e.g., after profile update) */
+  /** Refresh cached profile */
   const refreshCachedProfile = useCallback(async () => {
     const jwt = localStorage.getItem(TOKEN_KEY);
     if (jwt) {
-      await fetchAndCacheProfile(jwt);
+      await fetchAndCacheProfile();
     }
   }, [fetchAndCacheProfile]);
 
   const processToken = useCallback(
-    (jwt: string | null, shouldFetchProfile = false) => {
+    (
+      jwt: string | null,
+      refresh: string | null,
+      accountObj: LoginAccount | null,
+      perms: string[] | null,
+      shouldFetchProfile = false,
+    ) => {
       if (!jwt) {
         setUser(null);
+        setPermissions([]);
         setTokenState(null);
+        setRefreshTokenStr(null);
         setCachedProfile(null);
         localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(REFRESH_KEY);
+        localStorage.removeItem(ACCOUNT_KEY);
+        localStorage.removeItem(PERMISSIONS_KEY);
         localStorage.removeItem(PROFILE_KEY);
         return;
       }
 
-      const payload = parseJwt<JwtPayload>(jwt);
-      if (!payload) {
-        setUser(null);
-        setTokenState(null);
-        setCachedProfile(null);
-        localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(PROFILE_KEY);
-        return;
-      }
-
-      // Check expiry
-      if (payload.exp && payload.exp * 1000 < Date.now()) {
-        setUser(null);
-        setTokenState(null);
-        setCachedProfile(null);
-        localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(PROFILE_KEY);
-        return;
-      }
-
-      setUser({
-        id: payload.id,
-        email: payload.email,
-      });
+      setUser(accountObj);
+      setPermissions(perms || []);
       setTokenState(jwt);
+      setRefreshTokenStr(refresh);
       localStorage.setItem(TOKEN_KEY, jwt);
+      if (refresh) localStorage.setItem(REFRESH_KEY, refresh);
+      if (accountObj) localStorage.setItem(ACCOUNT_KEY, JSON.stringify(accountObj));
+      if (perms) localStorage.setItem(PERMISSIONS_KEY, JSON.stringify(perms));
 
       // Fetch profile if this is a fresh login
       if (shouldFetchProfile) {
-        fetchAndCacheProfile(jwt);
+        fetchAndCacheProfile();
       }
     },
     [fetchAndCacheProfile],
@@ -127,11 +121,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // On mount, restore token from localStorage
   useEffect(() => {
-    // Restore from localStorage
-    const stored = localStorage.getItem(TOKEN_KEY);
+    const storedToken = localStorage.getItem(TOKEN_KEY);
+    const storedRefresh = localStorage.getItem(REFRESH_KEY);
+    const storedAccountRaw = localStorage.getItem(ACCOUNT_KEY);
+    const storedPermsRaw = localStorage.getItem(PERMISSIONS_KEY);
     const storedProfile = localStorage.getItem(PROFILE_KEY);
 
-    // Restore cached profile from localStorage
+    let storedAccount = null;
+    let storedPerms = null;
+
+    if (storedAccountRaw) {
+      try {
+        storedAccount = JSON.parse(storedAccountRaw);
+      } catch (e) {
+        /* empty */
+      }
+    }
+    
+    if (storedPermsRaw) {
+      try {
+        storedPerms = JSON.parse(storedPermsRaw);
+      } catch (e) {
+        /* empty */
+      }
+    }
+
     if (storedProfile) {
       try {
         setCachedProfile(JSON.parse(storedProfile));
@@ -140,33 +154,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    processToken(stored, false);
+    processToken(storedToken, storedRefresh, storedAccount, storedPerms, false);
     setIsLoading(false);
   }, [processToken]);
 
-  const setToken = useCallback(
-    (jwt: string) => {
-      // Fresh login — fetch profile
-      processToken(jwt, true);
+  const setAuthData = useCallback(
+    (data: LoginResponse) => {
+      processToken(data.token, data.refresh, data.account, data.permissions, true);
     },
     [processToken],
   );
 
   const logout = useCallback(() => {
-    processToken(null, false);
+    processToken(null, null, null, null, false);
     if (isDemo) stopDemo();
   }, [processToken, isDemo, stopDemo]);
+
+  const refreshAuth = useCallback(async (): Promise<boolean> => {
+    const currentRefresh = localStorage.getItem(REFRESH_KEY);
+    if (!currentRefresh) return false;
+    try {
+      const res = await refreshTokenApi(currentRefresh);
+      if (res.status) {
+        setTokenState(res.data.token);
+        setRefreshTokenStr(res.data.refresh);
+        localStorage.setItem(TOKEN_KEY, res.data.token);
+        localStorage.setItem(REFRESH_KEY, res.data.refresh);
+        return true;
+      }
+      return false;
+    } catch {
+      logout();
+      return false;
+    }
+  }, [logout]);
 
   return (
     <AuthContext.Provider
       value={{
         user,
+        permissions,
         token,
+        refreshTokenStr,
         isLoading,
         cachedProfile,
-        setToken,
+        setAuthData,
         logout,
         refreshCachedProfile,
+        refreshAuth
       }}
     >
       {children}
@@ -179,3 +214,4 @@ export function useAuth() {
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");
   return ctx;
 }
+

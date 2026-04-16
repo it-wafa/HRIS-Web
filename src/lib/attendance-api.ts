@@ -5,35 +5,7 @@ import type {
   UpdateOverrideStatusPayload,
   OverrideListParams,
 } from "@/types/attendance-override";
-import type { ApiResponse, ApiError } from "./api";
-import { API_URL } from "./const";
-
-/** Fetch wrapper targeting the API */
-async function apiCall<T>(
-  endpoint: string,
-  options: RequestInit = {},
-): Promise<ApiResponse<T>> {
-  const response = await fetch(`${API_URL}${endpoint}`, {
-    ...options,
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
-  });
-
-  const data = await response.json();
-
-  if (!response.ok || data.status === false) {
-    const error: ApiError = {
-      statusCode: data.statusCode || response.status,
-      message: data.message || "Something went wrong",
-    };
-    throw error;
-  }
-
-  return data as ApiResponse<T>;
-}
+import { apiCall } from "@/lib/api";
 
 // ════════════════════════════════════════════
 // ATTENDANCE LOG API
@@ -54,20 +26,15 @@ function buildQueryString<T extends object>(params?: T): string {
 
 /** GET /attendance — List attendance logs */
 export async function fetchAttendanceLogs(
-  token: string,
   params?: AttendanceListParams,
 ) {
   const query = buildQueryString(params);
-  return apiCall<AttendanceLog[]>(`/attendance${query}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  return apiCall<AttendanceLog[]>(`/attendance${query}`);
 }
 
 /** GET /attendance/:id — Get attendance log by ID */
-export async function fetchAttendanceLogById(token: string, id: number) {
-  return apiCall<AttendanceLog>(`/attendance/${id}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+export async function fetchAttendanceLogById(id: number) {
+  return apiCall<AttendanceLog>(`/attendance/${id}`);
 }
 
 // ════════════════════════════════════════════
@@ -76,43 +43,34 @@ export async function fetchAttendanceLogById(token: string, id: number) {
 
 /** GET /attendance-overrides — List attendance overrides */
 export async function fetchAttendanceOverrides(
-  token: string,
   params?: OverrideListParams,
 ) {
   const query = buildQueryString(params);
-  return apiCall<AttendanceOverride[]>(`/attendance-overrides${query}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  return apiCall<AttendanceOverride[]>(`/attendance-overrides${query}`);
 }
 
 /** GET /attendance-overrides/:id — Get override by ID */
-export async function fetchAttendanceOverrideById(token: string, id: number) {
-  return apiCall<AttendanceOverride>(`/attendance-overrides/${id}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+export async function fetchAttendanceOverrideById(id: number) {
+  return apiCall<AttendanceOverride>(`/attendance-overrides/${id}`);
 }
 
 /** POST /attendance-overrides — Create attendance override request */
 export async function createAttendanceOverride(
-  token: string,
   payload: CreateOverridePayload,
 ) {
   return apiCall<AttendanceOverride>("/attendance-overrides", {
     method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
     body: JSON.stringify(payload),
   });
 }
 
 /** PUT /attendance-overrides/:id — Update override status (approve/reject) */
 export async function updateOverrideStatus(
-  token: string,
   id: number,
   payload: UpdateOverrideStatusPayload,
 ) {
   return apiCall<AttendanceOverride>(`/attendance-overrides/${id}`, {
     method: "PUT",
-    headers: { Authorization: `Bearer ${token}` },
     body: JSON.stringify(payload),
   });
 }
@@ -125,12 +83,10 @@ import type { CreateManualAttendancePayload } from "@/types/attendance";
 
 /** POST /attendance/manual — Create manual attendance entry */
 export async function createManualAttendance(
-  token: string,
   payload: CreateManualAttendancePayload,
 ) {
   return apiCall<AttendanceLog>("/attendance/manual", {
     method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
     body: JSON.stringify(payload),
   });
 }

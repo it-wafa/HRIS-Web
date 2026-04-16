@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 import { useDemo } from "@/contexts/DemoContext";
 import type {
   LeaveType,
@@ -30,7 +29,6 @@ interface AsyncState<T> {
 // ══════════════════════════════════════════════════════════════════════════════
 
 export function useLeaveTypeList() {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [state, setState] = useState<AsyncState<LeaveType[]>>({
     data: null,
@@ -52,12 +50,10 @@ export function useLeaveTypeList() {
     }
 
     // Live mode: fetch from API
-    if (!token) return;
-
     const id = ++fetchRef.current;
     setState((s) => ({ ...s, loading: true, error: null }));
 
-    fetchLeaveTypes(token)
+    fetchLeaveTypes()
       .then((res) => {
         if (id === fetchRef.current) {
           setState({ data: res.data, loading: false, error: null });
@@ -70,7 +66,7 @@ export function useLeaveTypeList() {
           setState({ data: null, loading: false, error: message });
         }
       });
-  }, [token, isDemo]);
+  }, [isDemo]);
 
   useEffect(() => {
     refetch();
@@ -98,7 +94,6 @@ interface LeaveTypeMutationsReturn {
 export function useLeaveTypeMutations(
   onSuccess?: () => void,
 ): LeaveTypeMutationsReturn {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [loading, setLoading] = useState(false);
 
@@ -109,14 +104,9 @@ export function useLeaveTypeMutations(
         return null;
       }
 
-      if (!token) {
-        toast.error("Authentication required");
-        return null;
-      }
-
       setLoading(true);
       try {
-        const res = await createLeaveTypeApi(token, payload);
+        const res = await createLeaveTypeApi(payload);
         toast.success("Jenis cuti berhasil ditambahkan");
         onSuccess?.();
         return res.data;
@@ -129,7 +119,7 @@ export function useLeaveTypeMutations(
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   const updateLeaveType = useCallback(
@@ -142,14 +132,9 @@ export function useLeaveTypeMutations(
         return null;
       }
 
-      if (!token) {
-        toast.error("Authentication required");
-        return null;
-      }
-
       setLoading(true);
       try {
-        const res = await updateLeaveTypeApi(token, id, payload);
+        const res = await updateLeaveTypeApi(id, payload);
         toast.success("Jenis cuti berhasil diperbarui");
         onSuccess?.();
         return res.data;
@@ -162,7 +147,7 @@ export function useLeaveTypeMutations(
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   const deleteLeaveType = useCallback(
@@ -172,14 +157,9 @@ export function useLeaveTypeMutations(
         return false;
       }
 
-      if (!token) {
-        toast.error("Authentication required");
-        return false;
-      }
-
       setLoading(true);
       try {
-        await deleteLeaveTypeApi(token, id);
+        await deleteLeaveTypeApi(id);
         toast.success("Jenis cuti berhasil dihapus");
         onSuccess?.();
         return true;
@@ -192,7 +172,7 @@ export function useLeaveTypeMutations(
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   return {

@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 import { useDemo } from "@/contexts/DemoContext";
 import type {
   JobPosition,
@@ -27,8 +26,7 @@ interface AsyncState<T> {
 // usePositionList — Fetch all positions
 // ════════════════════════════════════════════
 
-export function usePositionList() {
-  const { token } = useAuth();
+export function usePositionList(departmentId?: number) {
   const { isDemo } = useDemo();
   const [state, setState] = useState<AsyncState<JobPosition[]>>({
     data: null,
@@ -46,12 +44,10 @@ export function usePositionList() {
     }
 
     // Live mode: fetch from API
-    if (!token) return;
-
     const id = ++fetchRef.current;
     setState((s) => ({ ...s, loading: true, error: null }));
 
-    fetchPositions(token)
+    fetchPositions(departmentId)
       .then((res) => {
         if (id === fetchRef.current) {
           setState({ data: res.data, loading: false, error: null });
@@ -64,7 +60,7 @@ export function usePositionList() {
           setState({ data: null, loading: false, error: message });
         }
       });
-  }, [token, isDemo]);
+  }, [isDemo, departmentId]);
 
   useEffect(() => {
     refetch();
@@ -78,7 +74,6 @@ export function usePositionList() {
 // ════════════════════════════════════════════
 
 export function usePositionMutations(onSuccess?: () => void) {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [loading, setLoading] = useState(false);
 
@@ -88,14 +83,9 @@ export function usePositionMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return null;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return null;
-      }
-
       setLoading(true);
       try {
-        const res = await createPositionApi(token, payload);
+        const res = await createPositionApi(payload);
         toast.success("Jabatan berhasil ditambahkan");
         onSuccess?.();
         return res.data;
@@ -108,7 +98,7 @@ export function usePositionMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   const updatePosition = useCallback(
@@ -117,14 +107,9 @@ export function usePositionMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return null;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return null;
-      }
-
       setLoading(true);
       try {
-        const res = await updatePositionApi(token, id, payload);
+        const res = await updatePositionApi(id, payload);
         toast.success("Jabatan berhasil diperbarui");
         onSuccess?.();
         return res.data;
@@ -137,7 +122,7 @@ export function usePositionMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   const deletePosition = useCallback(
@@ -146,14 +131,9 @@ export function usePositionMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return false;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return false;
-      }
-
       setLoading(true);
       try {
-        await deletePositionApi(token, id);
+        await deletePositionApi(id);
         toast.success("Jabatan berhasil dihapus");
         onSuccess?.();
         return true;
@@ -166,7 +146,7 @@ export function usePositionMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   return { loading, createPosition, updatePosition, deletePosition };

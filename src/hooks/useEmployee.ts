@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 import { useDemo } from "@/contexts/DemoContext";
 import type {
   Employee,
@@ -41,7 +40,6 @@ interface AsyncState<T> {
 // ════════════════════════════════════════════
 
 export function useEmployeeList(params?: EmployeeListParams) {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [state, setState] = useState<AsyncState<Employee[]>>({
     data: null,
@@ -63,12 +61,10 @@ export function useEmployeeList(params?: EmployeeListParams) {
     }
 
     // Live mode: fetch from API
-    if (!token) return;
-
     const id = ++fetchRef.current;
     setState((s) => ({ ...s, loading: true, error: null }));
 
-    fetchEmployees(token, params)
+    fetchEmployees(params)
       .then((res) => {
         if (id === fetchRef.current) {
           setState({ data: res.data, loading: false, error: null });
@@ -81,7 +77,7 @@ export function useEmployeeList(params?: EmployeeListParams) {
           setState({ data: null, loading: false, error: message });
         }
       });
-  }, [token, isDemo, params?.branch_id, params?.is_active, params?.search]);
+  }, [isDemo, params?.branch_id, params?.department_id, params?.is_active, params?.search]);
 
   useEffect(() => {
     refetch();
@@ -95,7 +91,6 @@ export function useEmployeeList(params?: EmployeeListParams) {
 // ════════════════════════════════════════════
 
 export function useEmployeeById(id: number | null) {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [state, setState] = useState<AsyncState<Employee>>({
     data: null,
@@ -123,12 +118,10 @@ export function useEmployeeById(id: number | null) {
     }
 
     // Live mode: fetch from API
-    if (!token) return;
-
     const reqId = ++fetchRef.current;
     setState((s) => ({ ...s, loading: true, error: null }));
 
-    fetchEmployeeById(token, id)
+    fetchEmployeeById(id)
       .then((res) => {
         if (reqId === fetchRef.current) {
           setState({ data: res.data, loading: false, error: null });
@@ -141,7 +134,7 @@ export function useEmployeeById(id: number | null) {
           setState({ data: null, loading: false, error: message });
         }
       });
-  }, [token, isDemo, id]);
+  }, [isDemo, id]);
 
   useEffect(() => {
     refetch();
@@ -155,7 +148,6 @@ export function useEmployeeById(id: number | null) {
 // ════════════════════════════════════════════
 
 export function useEmployeeContacts(employeeId: number | null) {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [state, setState] = useState<AsyncState<EmployeeContact[]>>({
     data: null,
@@ -182,12 +174,10 @@ export function useEmployeeContacts(employeeId: number | null) {
     }
 
     // Live mode: fetch from API
-    if (!token) return;
-
     const id = ++fetchRef.current;
     setState((s) => ({ ...s, loading: true, error: null }));
 
-    fetchEmployeeContacts(token, employeeId)
+    fetchEmployeeContacts(employeeId)
       .then((res) => {
         if (id === fetchRef.current) {
           setState({ data: res.data, loading: false, error: null });
@@ -200,7 +190,7 @@ export function useEmployeeContacts(employeeId: number | null) {
           setState({ data: null, loading: false, error: message });
         }
       });
-  }, [token, isDemo, employeeId]);
+  }, [isDemo, employeeId]);
 
   useEffect(() => {
     refetch();
@@ -214,7 +204,6 @@ export function useEmployeeContacts(employeeId: number | null) {
 // ════════════════════════════════════════════
 
 export function useEmployeeMutations(onSuccess?: () => void) {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [loading, setLoading] = useState(false);
 
@@ -224,14 +213,9 @@ export function useEmployeeMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return null;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return null;
-      }
-
       setLoading(true);
       try {
-        const res = await createEmployeeApi(token, payload);
+        const res = await createEmployeeApi(payload);
         toast.success("Pegawai berhasil ditambahkan");
         onSuccess?.();
         return res.data;
@@ -244,7 +228,7 @@ export function useEmployeeMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   const updateEmployee = useCallback(
@@ -253,14 +237,9 @@ export function useEmployeeMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return null;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return null;
-      }
-
       setLoading(true);
       try {
-        const res = await updateEmployeeApi(token, id, payload);
+        const res = await updateEmployeeApi(id, payload);
         toast.success("Pegawai berhasil diperbarui");
         onSuccess?.();
         return res.data;
@@ -273,7 +252,7 @@ export function useEmployeeMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   const deleteEmployee = useCallback(
@@ -282,14 +261,9 @@ export function useEmployeeMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return false;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return false;
-      }
-
       setLoading(true);
       try {
-        await deleteEmployeeApi(token, id);
+        await deleteEmployeeApi(id);
         toast.success("Pegawai berhasil dihapus");
         onSuccess?.();
         return true;
@@ -302,7 +276,7 @@ export function useEmployeeMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   return { loading, createEmployee, updateEmployee, deleteEmployee };
@@ -313,7 +287,6 @@ export function useEmployeeMutations(onSuccess?: () => void) {
 // ════════════════════════════════════════════
 
 export function useEmployeeContactMutations(onSuccess?: () => void) {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [loading, setLoading] = useState(false);
 
@@ -323,14 +296,9 @@ export function useEmployeeContactMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return null;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return null;
-      }
-
       setLoading(true);
       try {
-        const res = await createContactApi(token, employeeId, payload);
+        const res = await createContactApi(employeeId, payload);
         toast.success("Kontak berhasil ditambahkan");
         onSuccess?.();
         return res.data;
@@ -343,7 +311,7 @@ export function useEmployeeContactMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   const updateContact = useCallback(
@@ -352,14 +320,9 @@ export function useEmployeeContactMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return null;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return null;
-      }
-
       setLoading(true);
       try {
-        const res = await updateContactApi(token, contactId, payload);
+        const res = await updateContactApi(contactId, payload);
         toast.success("Kontak berhasil diperbarui");
         onSuccess?.();
         return res.data;
@@ -372,7 +335,7 @@ export function useEmployeeContactMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   const deleteContact = useCallback(
@@ -381,14 +344,9 @@ export function useEmployeeContactMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return false;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return false;
-      }
-
       setLoading(true);
       try {
-        await deleteContactApi(token, contactId);
+        await deleteContactApi(contactId);
         toast.success("Kontak berhasil dihapus");
         onSuccess?.();
         return true;
@@ -401,7 +359,7 @@ export function useEmployeeContactMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   return { loading, createContact, updateContact, deleteContact };

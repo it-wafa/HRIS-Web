@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 import { useDemo } from "@/contexts/DemoContext";
 import type {
   DailyReport,
@@ -28,7 +27,6 @@ interface AsyncState<T> {
 // ════════════════════════════════════════════
 
 export function useDailyReportList(params?: DailyReportListParams) {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [state, setState] = useState<AsyncState<DailyReport[]>>({
     data: null,
@@ -52,12 +50,10 @@ export function useDailyReportList(params?: DailyReportListParams) {
     }
 
     // Live mode: fetch from API
-    if (!token) return;
-
     const id = ++fetchRef.current;
     setState((s) => ({ ...s, loading: true, error: null }));
 
-    fetchDailyReports(token, paramsRef.current)
+    fetchDailyReports(paramsRef.current)
       .then((res) => {
         if (id === fetchRef.current) {
           setState({ data: res.data, loading: false, error: null });
@@ -70,7 +66,7 @@ export function useDailyReportList(params?: DailyReportListParams) {
           setState({ data: null, loading: false, error: message });
         }
       });
-  }, [token, isDemo]);
+  }, [isDemo]);
 
   useEffect(() => {
     refetch();
@@ -95,7 +91,6 @@ export function useDailyReportList(params?: DailyReportListParams) {
 // ════════════════════════════════════════════
 
 export function useDailyReportMutations(onSuccess?: () => void) {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [loading, setLoading] = useState(false);
 
@@ -105,14 +100,9 @@ export function useDailyReportMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return null;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return null;
-      }
-
       setLoading(true);
       try {
-        const res = await createReportApi(token, payload);
+        const res = await createReportApi(payload);
         toast.success("Laporan harian berhasil dikirim");
         onSuccess?.();
         return res.data;
@@ -125,7 +115,7 @@ export function useDailyReportMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   const updateReport = useCallback(
@@ -134,14 +124,9 @@ export function useDailyReportMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return null;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return null;
-      }
-
       setLoading(true);
       try {
-        const res = await updateReportApi(token, id, payload);
+        const res = await updateReportApi(id, payload);
         toast.success("Laporan harian berhasil diperbarui");
         onSuccess?.();
         return res.data;
@@ -154,7 +139,7 @@ export function useDailyReportMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   return { loading, createReport, updateReport };

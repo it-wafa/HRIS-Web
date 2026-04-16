@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 import { useDemo } from "@/contexts/DemoContext";
 import type {
   LeaveType,
@@ -39,7 +38,6 @@ interface AsyncState<T> {
 // ════════════════════════════════════════════
 
 export function useLeaveTypeList() {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [state, setState] = useState<AsyncState<LeaveType[]>>({
     data: null,
@@ -61,12 +59,10 @@ export function useLeaveTypeList() {
     }
 
     // Live mode: fetch from API
-    if (!token) return;
-
     const id = ++fetchRef.current;
     setState((s) => ({ ...s, loading: true, error: null }));
 
-    fetchLeaveTypes(token)
+    fetchLeaveTypes()
       .then((res) => {
         if (id === fetchRef.current) {
           setState({ data: res.data, loading: false, error: null });
@@ -79,7 +75,7 @@ export function useLeaveTypeList() {
           setState({ data: null, loading: false, error: message });
         }
       });
-  }, [token, isDemo]);
+  }, [isDemo]);
 
   useEffect(() => {
     refetch();
@@ -93,7 +89,6 @@ export function useLeaveTypeList() {
 // ════════════════════════════════════════════
 
 export function useLeaveBalanceList(params?: LeaveBalanceListParams) {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [state, setState] = useState<AsyncState<LeaveBalance[]>>({
     data: null,
@@ -117,12 +112,10 @@ export function useLeaveBalanceList(params?: LeaveBalanceListParams) {
     }
 
     // Live mode: fetch from API
-    if (!token) return;
-
     const id = ++fetchRef.current;
     setState((s) => ({ ...s, loading: true, error: null }));
 
-    fetchLeaveBalances(token, paramsRef.current)
+    fetchLeaveBalances(paramsRef.current)
       .then((res) => {
         if (id === fetchRef.current) {
           setState({ data: res.data, loading: false, error: null });
@@ -135,7 +128,7 @@ export function useLeaveBalanceList(params?: LeaveBalanceListParams) {
           setState({ data: null, loading: false, error: message });
         }
       });
-  }, [token, isDemo]);
+  }, [isDemo]);
 
   useEffect(() => {
     refetch();
@@ -155,7 +148,6 @@ export function useLeaveBalanceList(params?: LeaveBalanceListParams) {
 // ════════════════════════════════════════════
 
 export function useLeaveRequestList(params?: LeaveListParams) {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [state, setState] = useState<AsyncState<LeaveRequest[]>>({
     data: null,
@@ -179,12 +171,10 @@ export function useLeaveRequestList(params?: LeaveListParams) {
     }
 
     // Live mode: fetch from API
-    if (!token) return;
-
     const id = ++fetchRef.current;
     setState((s) => ({ ...s, loading: true, error: null }));
 
-    fetchLeaveRequests(token, paramsRef.current)
+    fetchLeaveRequests(paramsRef.current)
       .then((res) => {
         if (id === fetchRef.current) {
           setState({ data: res.data, loading: false, error: null });
@@ -197,7 +187,7 @@ export function useLeaveRequestList(params?: LeaveListParams) {
           setState({ data: null, loading: false, error: message });
         }
       });
-  }, [token, isDemo]);
+  }, [isDemo]);
 
   useEffect(() => {
     refetch();
@@ -222,7 +212,6 @@ export function useLeaveRequestList(params?: LeaveListParams) {
 // ════════════════════════════════════════════
 
 export function useLeaveRequestMutations(onSuccess?: () => void) {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [loading, setLoading] = useState(false);
 
@@ -232,14 +221,9 @@ export function useLeaveRequestMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return null;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return null;
-      }
-
       setLoading(true);
       try {
-        const res = await createRequestApi(token, payload);
+        const res = await createRequestApi(payload);
         toast.success("Pengajuan cuti berhasil dikirim");
         onSuccess?.();
         return res.data;
@@ -252,7 +236,7 @@ export function useLeaveRequestMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   const approveRequest = useCallback(
@@ -261,14 +245,9 @@ export function useLeaveRequestMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return null;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return null;
-      }
-
       setLoading(true);
       try {
-        const res = await approveRequestApi(token, id, payload);
+        const res = await approveRequestApi(id, payload);
         toast.success("Cuti disetujui");
         onSuccess?.();
         return res.data;
@@ -281,7 +260,7 @@ export function useLeaveRequestMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   const rejectRequest = useCallback(
@@ -290,14 +269,9 @@ export function useLeaveRequestMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return null;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return null;
-      }
-
       setLoading(true);
       try {
-        const res = await rejectRequestApi(token, id, payload);
+        const res = await rejectRequestApi(id, payload);
         toast.success("Cuti ditolak");
         onSuccess?.();
         return res.data;
@@ -310,7 +284,7 @@ export function useLeaveRequestMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   return { loading, createRequest, approveRequest, rejectRequest };

@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 import { useDemo } from "@/contexts/DemoContext";
 import type {
   Role,
@@ -37,7 +36,6 @@ interface AsyncState<T> {
 // ════════════════════════════════════════════
 
 export function useRoleList() {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [state, setState] = useState<AsyncState<Role[]>>({
     data: null,
@@ -55,12 +53,10 @@ export function useRoleList() {
     }
 
     // Live mode: fetch from API
-    if (!token) return;
-
     const id = ++fetchRef.current;
     setState((s) => ({ ...s, loading: true, error: null }));
 
-    fetchRoles(token)
+    fetchRoles()
       .then((res) => {
         if (id === fetchRef.current) {
           setState({ data: res.data, loading: false, error: null });
@@ -73,7 +69,7 @@ export function useRoleList() {
           setState({ data: null, loading: false, error: message });
         }
       });
-  }, [token, isDemo]);
+  }, [isDemo]);
 
   useEffect(() => {
     refetch();
@@ -87,7 +83,6 @@ export function useRoleList() {
 // ════════════════════════════════════════════
 
 export function useRoleById(id: number | null) {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [state, setState] = useState<AsyncState<Role>>({
     data: null,
@@ -115,12 +110,10 @@ export function useRoleById(id: number | null) {
     }
 
     // Live mode: fetch from API
-    if (!token) return;
-
     const reqId = ++fetchRef.current;
     setState((s) => ({ ...s, loading: true, error: null }));
 
-    fetchRoleById(token, id)
+    fetchRoleById(id)
       .then((res) => {
         if (reqId === fetchRef.current) {
           setState({ data: res.data, loading: false, error: null });
@@ -133,7 +126,7 @@ export function useRoleById(id: number | null) {
           setState({ data: null, loading: false, error: message });
         }
       });
-  }, [token, isDemo, id]);
+  }, [isDemo, id]);
 
   useEffect(() => {
     refetch();
@@ -147,7 +140,6 @@ export function useRoleById(id: number | null) {
 // ════════════════════════════════════════════
 
 export function usePermissionList() {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [state, setState] = useState<AsyncState<Permission[]>>({
     data: null,
@@ -165,12 +157,10 @@ export function usePermissionList() {
     }
 
     // Live mode: fetch from API
-    if (!token) return;
-
     const id = ++fetchRef.current;
     setState((s) => ({ ...s, loading: true, error: null }));
 
-    fetchPermissions(token)
+    fetchPermissions()
       .then((res) => {
         if (id === fetchRef.current) {
           setState({ data: res.data, loading: false, error: null });
@@ -183,7 +173,7 @@ export function usePermissionList() {
           setState({ data: null, loading: false, error: message });
         }
       });
-  }, [token, isDemo]);
+  }, [isDemo]);
 
   useEffect(() => {
     refetch();
@@ -209,7 +199,6 @@ export function useRolePermissions(roleId: number | null) {
 // ════════════════════════════════════════════
 
 export function useRoleMutations(onSuccess?: () => void) {
-  const { token } = useAuth();
   const { isDemo } = useDemo();
   const [loading, setLoading] = useState(false);
 
@@ -219,14 +208,9 @@ export function useRoleMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return null;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return null;
-      }
-
       setLoading(true);
       try {
-        const res = await createRoleApi(token, payload);
+        const res = await createRoleApi(payload);
         toast.success("Role berhasil ditambahkan");
         onSuccess?.();
         return res.data;
@@ -239,7 +223,7 @@ export function useRoleMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   const updateRole = useCallback(
@@ -248,14 +232,9 @@ export function useRoleMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return null;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return null;
-      }
-
       setLoading(true);
       try {
-        const res = await updateRoleApi(token, id, payload);
+        const res = await updateRoleApi(id, payload);
         toast.success("Role berhasil diperbarui");
         onSuccess?.();
         return res.data;
@@ -268,7 +247,7 @@ export function useRoleMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   const deleteRole = useCallback(
@@ -277,14 +256,9 @@ export function useRoleMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return false;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return false;
-      }
-
       setLoading(true);
       try {
-        await deleteRoleApi(token, id);
+        await deleteRoleApi(id);
         toast.success("Role berhasil dihapus");
         onSuccess?.();
         return true;
@@ -297,7 +271,7 @@ export function useRoleMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   const updateRolePermissions = useCallback(
@@ -306,14 +280,9 @@ export function useRoleMutations(onSuccess?: () => void) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return null;
       }
-      if (!token) {
-        toast.error("Authentication required");
-        return null;
-      }
-
       setLoading(true);
       try {
-        const res = await updateRolePermissionsApi(token, roleId, {
+        const res = await updateRolePermissionsApi(roleId, {
           permission_ids: permissionIds,
         });
         toast.success("Permissions berhasil diperbarui");
@@ -328,7 +297,7 @@ export function useRoleMutations(onSuccess?: () => void) {
         setLoading(false);
       }
     },
-    [token, isDemo, onSuccess],
+    [isDemo, onSuccess],
   );
 
   return { loading, createRole, updateRole, deleteRole, updateRolePermissions };
