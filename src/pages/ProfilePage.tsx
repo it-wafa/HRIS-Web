@@ -618,10 +618,10 @@ export function ProfilePage() {
   const { data: contacts, loading: contactsLoading } =
     useEmployeeProfileContacts();
   const { data: metadata } = useEmployeeMetadata();
-  const { uploadPhoto, removePhoto } = useProfile();
+  const { uploadPhoto } = useProfile();
 
   const [activeTab, setActiveTab] = useState(0);
-  const [photoUploading, setPhotoUploading] = useState(false);
+  const [_, setPhotoUploading] = useState(false);
   const loading = profileLoading || contactsLoading;
 
   const formatDate = (dateStr?: string | null) => {
@@ -679,22 +679,23 @@ export function ProfilePage() {
     input.click();
   };
 
-  const handleRemovePhoto = async () => {
-    if (isDemo) {
-      toast("Demo mode — foto tidak diubah", { icon: "🔒" });
-      return;
-    }
-    try {
-      setPhotoUploading(true);
-      await removePhoto();
-      toast.success("Foto profil berhasil dihapus");
-      refetchProfile();
-    } catch {
-      toast.error("Gagal menghapus foto");
-    } finally {
-      setPhotoUploading(false);
-    }
-  };
+  // TODO: implement remove photo feature
+  // const handleRemovePhoto = async () => {
+  //   if (isDemo) {
+  //     toast("Demo mode — foto tidak diubah", { icon: "🔒" });
+  //     return;
+  //   }
+  //   try {
+  //     setPhotoUploading(true);
+  //     await removePhoto();
+  //     toast.success("Foto profil berhasil dihapus");
+  //     refetchProfile();
+  //   } catch {
+  //     toast.error("Gagal menghapus foto");
+  //   } finally {
+  //     setPhotoUploading(false);
+  //   }
+  // };
 
   if (loading) {
     return (
