@@ -9,6 +9,13 @@ export type AttendanceStatus =
 
 export type ClockMethod = "gps" | "qr_code" | "face_recognition" | "manual";
 
+export interface AttendanceMetadata {
+  status_meta: { id: string; name: string }[];
+  clock_method_meta: { id: string; name: string }[];
+  override_type_meta: { id: string; name: string }[];
+  employee_meta: { id: string; name: string }[];
+}
+
 export interface AttendanceLog {
   id: number;
   employee_id: number;

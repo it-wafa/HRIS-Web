@@ -517,7 +517,7 @@ function createDefaultDetails(dayMeta: { id: string; name: string }[]): CreateSh
       ...(isWeekend
         ? DEFAULT_NON_WORKING_DAY_CONFIG
         : DEFAULT_WORKING_DAY_CONFIG),
-      day_of_week: day.id,
+      day_of_week: day.id as DayOfWeek,
     };
   });
 }

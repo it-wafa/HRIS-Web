@@ -32,6 +32,11 @@ export async function fetchAttendanceLogs(
   return apiCall<AttendanceLog[]>(`/attendance${query}`);
 }
 
+/** GET /attendance/metadata — Get attendance metadata */
+export async function fetchAttendanceMetadata() {
+  return apiCall<import("@/types/attendance").AttendanceMetadata>(`/attendance/metadata`);
+}
+
 /** GET /attendance/:id — Get attendance log by ID */
 export async function fetchAttendanceLogById(id: number) {
   return apiCall<AttendanceLog>(`/attendance/${id}`);

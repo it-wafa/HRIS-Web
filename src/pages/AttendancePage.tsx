@@ -31,8 +31,8 @@ import {
 import { SummaryCard } from "@/components/ui/SummaryCard";
 import { useEmployeeList } from "@/hooks/useEmployee";
 import { useBranchList } from "@/hooks/useBranch";
+import { useAttendanceMetadata } from "@/hooks/useMetadata";
 import {
-  ATTENDANCE_STATUS_OPTIONS,
   type AttendanceStatus,
   type AttendanceLog,
   type CreateManualAttendancePayload,
@@ -162,6 +162,7 @@ function OverrideForm({
   onSubmit,
   logs,
   isLoading,
+  metadata,
 }: {
   onClose: () => void;
   onSubmit: (payload: {
@@ -173,6 +174,7 @@ function OverrideForm({
   }) => void;
   logs: AttendanceLog[];
   isLoading?: boolean;
+  metadata?: any;
 }) {
   const [formData, setFormData] = useState({
     attendance_log_id: "",
@@ -249,7 +251,10 @@ function OverrideForm({
           label="Tipe Koreksi"
           value={formData.override_type}
           onChange={(val) => handleChange("override_type", val)}
-          options={OVERRIDE_TYPE_OPTIONS}
+          options={metadata?.override_type_meta?.map((t: any) => ({
+            value: t.id,
+            label: t.name,
+          })) || OVERRIDE_TYPE_OPTIONS}
           placeholder="Pilih tipe koreksi..."
         />
       </div>
@@ -324,12 +329,14 @@ function OverrideDetailModal({
   onApprove,
   onReject,
   isLoading,
+  metadata,
 }: {
   override: AttendanceOverride;
   onClose: () => void;
   onApprove: () => void;
   onReject: (notes: string) => void;
   isLoading?: boolean;
+  metadata?: any;
 }) {
   const [rejectMode, setRejectMode] = useState(false);
   const [rejectNotes, setRejectNotes] = useState("");
@@ -410,7 +417,9 @@ function OverrideDetailModal({
                   Tipe Koreksi
                 </p>
                 <p className="text-sm font-medium text-(--foreground)">
-                  {OVERRIDE_TYPE_OPTIONS.find(
+                  {metadata?.override_type_meta?.find(
+                    (o: any) => o.id === ov.override_type,
+                  )?.name || OVERRIDE_TYPE_OPTIONS.find(
                     (o) => o.value === ov.override_type,
                   )?.label || ov.override_type}
                 </p>
@@ -739,6 +748,7 @@ function AttendanceLogTab() {
   const { data: logs, loading, refetch } = useAttendanceList(params);
   const { data: employees } = useEmployeeList({ is_active: true });
   const { data: branches } = useBranchList();
+  const { data: metadata } = useAttendanceMetadata();
   const { createManualAttendance, loading: manualLoading } =
     useManualAttendanceMutations(() => {
       setShowManualForm(false);
@@ -863,10 +873,10 @@ function AttendanceLogTab() {
             onChange={setFilterStatus}
             options={[
               { value: "", label: "Semua Status" },
-              ...ATTENDANCE_STATUS_OPTIONS.map((s) => ({
-                value: s.value,
-                label: s.label,
-              })),
+              ...(metadata?.status_meta?.map((s) => ({
+                value: s.id,
+                label: s.name,
+              })) || []),
             ]}
             placeholder="Filter status..."
           />
@@ -1088,6 +1098,7 @@ function AttendanceOverrideTab() {
   const { data: overrides, loading, refetch } = useOverrideList(params);
   const { data: employees } = useEmployeeList({ is_active: true });
   const { data: logs } = useAttendanceList({});
+  const { data: metadata } = useAttendanceMetadata();
   const {
     loading: mutLoading,
     createOverride,
@@ -1419,6 +1430,7 @@ function AttendanceOverrideTab() {
           onSubmit={handleCreate}
           logs={logs || []}
           isLoading={mutLoading}
+          metadata={metadata}
         />
       </Modal>
 
@@ -1429,6 +1441,7 @@ function AttendanceOverrideTab() {
           onApprove={() => handleApprove(detailOverride)}
           onReject={(notes) => handleReject(detailOverride, notes)}
           isLoading={mutLoading}
+          metadata={metadata}
         />
       )}
     </div>

@@ -12,12 +12,14 @@ import { getDummyDepartmentMetadata } from "@/lib/dummy/department.dummy";
 import { getDummyLeaveTypeMetadata } from "@/lib/dummy/leave.dummy";
 import { getDummyShiftMetadata } from "@/lib/dummy/shift.dummy";
 import { getDummyHolidayMetadata } from "@/lib/dummy/holiday.dummy";
+import { fetchAttendanceMetadata } from "@/lib/attendance-api";
 import type { EmployeeMetadata } from "@/types/employee";
 import type { RoleMetadata } from "@/types/role";
 import type { DepartmentMetadata } from "@/types/department";
 import type { LeaveTypeMetadata } from "@/types/leave";
 import type { ShiftMetadata } from "@/types/shift";
 import type { HolidayMetadata } from "@/types/holiday";
+import type { AttendanceMetadata } from "@/types/attendance";
 
 // ════════════════════════════════════════════
 // Generic metadata hook factory
@@ -113,5 +115,19 @@ export function useHolidayMetadata() {
     isDemo,
     getDummyHolidayMetadata,
     fetchHolidayMetadata,
+  );
+}
+
+export function useAttendanceMetadata() {
+  const { isDemo } = useDemo();
+  return useGenericMetadata<AttendanceMetadata>(
+    isDemo,
+    () => ({
+      status_meta: [],
+      clock_method_meta: [],
+      override_type_meta: [],
+      employee_meta: [],
+    }), // Dummy attendance metadata fallback
+    fetchAttendanceMetadata,
   );
 }
