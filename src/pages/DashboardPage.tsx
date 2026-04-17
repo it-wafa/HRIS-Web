@@ -558,7 +558,7 @@ function EmployeeDashboardView() {
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-xl border border-(--border) bg-(--card) p-5">
           <h3 className="mb-4 font-semibold text-(--foreground)">Saldo Cuti</h3>
-          {data.leave_balances.length === 0 ? (
+          {(data?.leave_balances?.length || 0) === 0 ? (
             <p className="text-sm text-(--muted-foreground)">
               Tidak ada data saldo cuti
             </p>
@@ -577,7 +577,7 @@ function EmployeeDashboardView() {
           <h3 className="mb-4 font-semibold text-(--foreground)">
             Pengajuan Pending
           </h3>
-          {data.pending_requests.length === 0 ? (
+          {(data?.pending_requests?.length || 0) === 0 ? (
             <p className="text-sm text-(--muted-foreground)">
               Tidak ada pengajuan yang pending
             </p>

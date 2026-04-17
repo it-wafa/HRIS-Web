@@ -4,6 +4,7 @@ import { ArrowLeft, Lock, Eye, EyeOff, ShieldCheck } from "lucide-react";
 import toast from "react-hot-toast";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { useDemo } from "@/contexts/DemoContext";
+import { changePassword } from "@/lib/profile-api";
 
 function PasswordInput({
   id,
@@ -128,15 +129,19 @@ export function ChangePasswordPage() {
 
     setLoading(true);
     try {
-      // TODO: call API to change password
-      await new Promise((resolve) => setTimeout(resolve, 1200));
+      await changePassword({
+        old_password: oldPassword,
+        new_password: newPassword,
+        confirm_password: confirmPassword,
+      });
       toast.success("Password berhasil diubah");
       setOldPassword("");
       setNewPassword("");
       setConfirmPassword("");
       navigate("/profile");
-    } catch {
-      toast.error("Gagal mengubah password");
+    } catch (err: unknown) {
+      const error = err as { message?: string };
+      toast.error(error?.message || "Gagal mengubah password");
     } finally {
       setLoading(false);
     }

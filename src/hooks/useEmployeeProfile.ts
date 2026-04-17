@@ -3,6 +3,10 @@ import { useDemo } from "@/contexts/DemoContext";
 
 import type { EmployeeProfile, EmployeeProfileContact } from "@/types/profile";
 import { getDummyEmployeeProfile, getDummyProfileContacts } from "@/lib/dummy";
+import {
+  fetchEmployeeProfile,
+  fetchEmployeeProfileContacts,
+} from "@/lib/profile-api";
 
 // ════════════════════════════════════════════
 // TYPES
@@ -30,7 +34,6 @@ export function useEmployeeProfile() {
 
   const refetch = useCallback(() => {
     if (isDemo) {
-      // Demo mode: return dummy data
       setState({
         data: getDummyEmployeeProfile(),
         loading: false,
@@ -39,20 +42,19 @@ export function useEmployeeProfile() {
       return;
     }
 
-
-
-    // TODO: Implement actual API call when backend is ready
-    // For now, simulate loading state then show demo data
     setState((s) => ({ ...s, loading: true, error: null }));
 
-    // Simulated API call - replace with actual fetch when ready
-    setTimeout(() => {
-      setState({
-        data: getDummyEmployeeProfile(),
-        loading: false,
-        error: null,
+    fetchEmployeeProfile()
+      .then((res) => {
+        setState({ data: res.data, loading: false, error: null });
+      })
+      .catch((err) => {
+        const message =
+          err && typeof err === "object" && "message" in err
+            ? (err as { message: string }).message
+            : "Gagal memuat data profil";
+        setState({ data: null, loading: false, error: message });
       });
-    }, 500);
   }, [isDemo]);
 
   useEffect(() => {
@@ -81,7 +83,6 @@ export function useEmployeeProfileContacts() {
 
   const refetch = useCallback(() => {
     if (isDemo) {
-      // Demo mode: return dummy data
       setState({
         data: getDummyProfileContacts(),
         loading: false,
@@ -90,20 +91,19 @@ export function useEmployeeProfileContacts() {
       return;
     }
 
-
-
-    // TODO: Implement actual API call when backend is ready
-    // For now, simulate loading state then show demo data
     setState((s) => ({ ...s, loading: true, error: null }));
 
-    // Simulated API call - replace with actual fetch when ready
-    setTimeout(() => {
-      setState({
-        data: getDummyProfileContacts(),
-        loading: false,
-        error: null,
+    fetchEmployeeProfileContacts()
+      .then((res) => {
+        setState({ data: res.data, loading: false, error: null });
+      })
+      .catch((err) => {
+        const message =
+          err && typeof err === "object" && "message" in err
+            ? (err as { message: string }).message
+            : "Gagal memuat data kontak";
+        setState({ data: null, loading: false, error: message });
       });
-    }, 500);
   }, [isDemo]);
 
   useEffect(() => {

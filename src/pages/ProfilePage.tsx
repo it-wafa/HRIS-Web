@@ -27,6 +27,7 @@ import {
   useEmployeeProfile,
   useEmployeeProfileContacts,
 } from "@/hooks/useEmployeeProfile";
+import { useProfile } from "@/hooks/useProfile";
 import { useAttendanceList } from "@/hooks/useAttendance";
 import { useLeaveBalanceList } from "@/hooks/useLeave";
 import { useShiftList, useScheduleList } from "@/hooks/useShift";
@@ -613,12 +614,14 @@ function TabContract({ employeeId }: { employeeId: number | null }) {
 export function ProfilePage() {
   const navigate = useNavigate();
   const { isDemo } = useDemo();
-  const { data: profile, loading: profileLoading } = useEmployeeProfile();
+  const { data: profile, loading: profileLoading, refetch: refetchProfile } = useEmployeeProfile();
   const { data: contacts, loading: contactsLoading } =
     useEmployeeProfileContacts();
   const { data: metadata } = useEmployeeMetadata();
+  const { uploadPhoto, removePhoto } = useProfile();
 
   const [activeTab, setActiveTab] = useState(0);
+  const [photoUploading, setPhotoUploading] = useState(false);
   const loading = profileLoading || contactsLoading;
 
   const formatDate = (dateStr?: string | null) => {
@@ -644,7 +647,53 @@ export function ProfilePage() {
       toast("Demo mode — foto tidak diubah", { icon: "🔒" });
       return;
     }
-    toast.success("Foto berhasil diupload");
+
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/jpeg,image/png";
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error("Ukuran foto maksimal 2MB");
+        return;
+      }
+
+      setPhotoUploading(true);
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const base64 = (reader.result as string).split(",")[1];
+          await uploadPhoto(base64);
+          toast.success("Foto profil berhasil diupload");
+          refetchProfile();
+        } catch {
+          toast.error("Gagal mengupload foto");
+        } finally {
+          setPhotoUploading(false);
+        }
+      };
+      reader.readAsDataURL(file);
+    };
+    input.click();
+  };
+
+  const handleRemovePhoto = async () => {
+    if (isDemo) {
+      toast("Demo mode — foto tidak diubah", { icon: "🔒" });
+      return;
+    }
+    try {
+      setPhotoUploading(true);
+      await removePhoto();
+      toast.success("Foto profil berhasil dihapus");
+      refetchProfile();
+    } catch {
+      toast.error("Gagal menghapus foto");
+    } finally {
+      setPhotoUploading(false);
+    }
   };
 
   if (loading) {

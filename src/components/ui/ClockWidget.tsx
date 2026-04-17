@@ -55,9 +55,9 @@ export function ClockWidget({
     return () => clearInterval(timer);
   }, []);
 
-  const canClockIn = !status.has_clocked_in;
-  const canClockOut = status.has_clocked_in && !status.has_clocked_out;
-  const isComplete = status.has_clocked_in && status.has_clocked_out;
+  const canClockIn = !status?.has_clocked_in;
+  const canClockOut = status?.has_clocked_in && !status?.has_clocked_out;
+  const isComplete = status?.has_clocked_in && status?.has_clocked_out;
 
   const hours = currentTime.getHours();
   const isNight = hours >= 20 || hours < 6;
@@ -93,9 +93,9 @@ export function ClockWidget({
             {isMobile ? <Smartphone size={11} /> : <Monitor size={11} />}
             {isMobile ? "Mobile" : "Desktop"}
           </span>
-          {status.late_minutes > 0 && (
+          {status?.late_minutes > 0 && (
             <span className="inline-flex items-center gap-1 rounded-full bg-red-500/90 px-2.5 py-1 text-xs font-semibold text-white">
-              Terlambat {status.late_minutes} mnt
+              Terlambat {status?.late_minutes} mnt
             </span>
           )}
         </div>
@@ -126,7 +126,7 @@ export function ClockWidget({
               "inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-medium",
               isComplete
                 ? "bg-blue-500/10 text-blue-600 ring-1 ring-blue-500/20"
-                : status.has_clocked_in
+                : status?.has_clocked_in
                   ? "bg-green-500/10 text-green-600 ring-1 ring-green-500/20"
                   : "bg-amber-500/10 text-amber-600 ring-1 ring-amber-500/20",
             )}
@@ -135,20 +135,20 @@ export function ClockWidget({
               className={cn(
                 "h-2 w-2 rounded-full",
                 isComplete && "bg-blue-500",
-                status.has_clocked_in && !isComplete && "bg-green-500",
-                !status.has_clocked_in && "animate-pulse bg-amber-500",
+                status?.has_clocked_in && !isComplete && "bg-green-500",
+                !status?.has_clocked_in && "animate-pulse bg-amber-500",
               )}
             />
             {isComplete
               ? `Presensi Lengkap`
-              : status.has_clocked_in
-                ? `Masuk pukul ${formatClockTime(status.clock_in_at)}`
+              : status?.has_clocked_in
+                ? `Masuk pukul ${formatClockTime(status?.clock_in_at)}`
                 : "Belum Clock In"}
           </div>
         </div>
 
         {/* Punch records - shown when has data */}
-        {(status.has_clocked_in || status.has_clocked_out) && (
+        {(status?.has_clocked_in || status?.has_clocked_out) && (
           <div className="mb-4 grid grid-cols-2 gap-3">
             <div className="rounded-xl bg-(--muted)/50 px-3 py-2.5 text-center">
               <div className="flex items-center justify-center gap-1 text-xs text-(--muted-foreground) mb-1">
@@ -156,7 +156,7 @@ export function ClockWidget({
                 Jam Masuk
               </div>
               <div className="font-mono text-lg font-bold text-(--foreground)">
-                {formatClockTime(status.clock_in_at)}
+                {formatClockTime(status?.clock_in_at)}
               </div>
             </div>
             <div className="rounded-xl bg-(--muted)/50 px-3 py-2.5 text-center">
@@ -165,7 +165,7 @@ export function ClockWidget({
                 Jam Keluar
               </div>
               <div className="font-mono text-lg font-bold text-(--foreground)">
-                {formatClockTime(status.clock_out_at)}
+                {formatClockTime(status?.clock_out_at)}
               </div>
             </div>
           </div>
