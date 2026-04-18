@@ -791,7 +791,7 @@ function HRDDashboardView() {
               Belum Clock In Hari Ini
             </h3>
           </div>
-          {data.not_clocked_in.length === 0 ? (
+          {(data?.not_clocked_in?.length || 0) === 0 ? (
             <div className="p-5">
               <p className="text-sm text-(--muted-foreground)">
                 Semua pegawai sudah clock in
@@ -822,7 +822,7 @@ function HRDDashboardView() {
                   ))}
                 </tbody>
               </table>
-              {data.not_clocked_in.length > 5 && (
+              {(data?.not_clocked_in?.length || 0) > 5 && (
                 <div className="border-t border-(--border) px-5 py-2 text-center">
                   <button
                     onClick={() => navigate("/attendance")}
@@ -840,7 +840,7 @@ function HRDDashboardView() {
           <h3 className="mb-4 font-semibold text-(--foreground)">
             Kontrak Akan Habis
           </h3>
-          {data.expiring_contracts.length === 0 ? (
+          {(data?.expiring_contracts?.length || 0) === 0 ? (
             <p className="text-sm text-(--muted-foreground)">
               Tidak ada kontrak yang akan habis dalam waktu dekat
             </p>
@@ -857,7 +857,7 @@ function HRDDashboardView() {
         </div>
       </div>
 
-      {data.approval_queue.length > 0 && (
+      {(data?.approval_queue?.length || 0) > 0 && (
         <div className="rounded-xl border border-(--border) bg-(--card) overflow-hidden">
           <div className="border-b border-(--border) px-5 py-3">
             <h3 className="font-semibold text-(--foreground)">
