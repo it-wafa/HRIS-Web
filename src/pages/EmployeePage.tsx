@@ -15,6 +15,8 @@ import type {
   MaritalStatus,
   EmployeeMetadata,
 } from "@/types/employee";
+import { PermissionGate } from "@/components/ui/PermissionGate";
+import { PERMISSIONS } from "@/constants/permission";
 
 // ════════════════════════════════════════════
 // MODAL WRAPPER
@@ -644,6 +646,7 @@ export function EmployeePage() {
             Kelola data pegawai beserta kontak &amp; kontrak kerja
           </p>
         </div>
+        <PermissionGate permission={PERMISSIONS.EMPLOYEE_CREATE}>
         <Button
           variant="primary"
           size="sm"
@@ -653,6 +656,7 @@ export function EmployeePage() {
           <Plus size={16} />
           Tambah Pegawai
         </Button>
+        </PermissionGate>
       </header>
 
       <div className="mx-auto max-w-350 p-3 sm:p-5">
@@ -737,6 +741,7 @@ export function EmployeePage() {
             icon={<Users className="h-12 w-12" />}
             action={
               !searchQuery && (
+                <PermissionGate permission={PERMISSIONS.EMPLOYEE_CREATE}>
                 <Button
                   variant="primary"
                   size="sm"
@@ -745,6 +750,7 @@ export function EmployeePage() {
                   <Plus size={16} />
                   Tambah Pegawai
                 </Button>
+                </PermissionGate>
               )
             }
           />

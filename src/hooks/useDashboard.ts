@@ -139,11 +139,11 @@ export function useHRDDashboard() {
 // ══════════════════════════════════════════════════════════════════════════════
 
 interface ClockWidgetHookReturn {
-  status: TodayAttendanceStatus;
+  status: TodayAttendanceStatus | null;
   isMobile: boolean;
   loading: boolean;
-  clockIn: (payload?: ClockInPayload) => Promise<boolean>;
-  clockOut: (payload?: ClockOutPayload) => Promise<boolean>;
+  clockIn: (payload: ClockInPayload) => Promise<boolean>;
+  clockOut: (payload: ClockOutPayload) => Promise<boolean>;
   refetch: () => void;
 }
 
@@ -166,8 +166,8 @@ export function useClockWidget(): ClockWidgetHookReturn {
   const { isDemo } = useDemo();
   const [loading, setLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(detectMobile());
-  const [status, setStatus] = useState<TodayAttendanceStatus>(
-    getDummyTodayStatus(false),
+  const [status, setStatus] = useState<TodayAttendanceStatus | null>(
+    isDemo ? getDummyTodayStatus(false) : null,
   );
 
   const fetchRef = useRef(0);
@@ -216,7 +216,7 @@ export function useClockWidget(): ClockWidgetHookReturn {
 
   // Clock In
   const clockIn = useCallback(
-    async (payload?: ClockInPayload): Promise<boolean> => {
+    async (payload: ClockInPayload): Promise<boolean> => {
       if (isDemo) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return false;
@@ -242,7 +242,7 @@ export function useClockWidget(): ClockWidgetHookReturn {
 
   // Clock Out
   const clockOut = useCallback(
-    async (payload?: ClockOutPayload): Promise<boolean> => {
+    async (payload: ClockOutPayload): Promise<boolean> => {
       if (isDemo) {
         toast("Demo mode — data is read-only", { icon: "🔒" });
         return false;

@@ -19,6 +19,9 @@ import { RequestPage } from "./pages/RequestPage";
 import { DailyReportPage } from "./pages/DailyReportPage";
 import { MutabaahPage } from "./pages/MutabaahPage";
 import { ChangePasswordPage } from "./pages/ChangePassword";
+import { NotFoundPage } from "./pages/NotFoundPage";
+import { ProtectedRoute } from "./components/ui/ProtectedRoute";
+import { PERMISSIONS } from "./constants/permission";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { token, isLoading } = useAuth();
@@ -37,7 +40,9 @@ function App() {
         path="/"
         element={
           <PrivateRoute>
-            <DashboardPage />
+            <ProtectedRoute permission={PERMISSIONS.HOME_EMPLOYEE_READ}>
+              <DashboardPage />
+            </ProtectedRoute>
           </PrivateRoute>
         }
       />
@@ -45,7 +50,9 @@ function App() {
         path="/profile"
         element={
           <PrivateRoute>
-            <ProfilePage />
+            <ProtectedRoute permission={PERMISSIONS.PROFILE_READ}>
+              <ProfilePage />
+            </ProtectedRoute>
           </PrivateRoute>
         }
       />
@@ -53,7 +60,9 @@ function App() {
         path="/change-password"
         element={
           <PrivateRoute>
-            <ChangePasswordPage />
+            <ProtectedRoute permission={PERMISSIONS.PROFILE_RESET_PASSWORD}>
+              <ChangePasswordPage />
+            </ProtectedRoute>
           </PrivateRoute>
         }
       />
@@ -63,7 +72,9 @@ function App() {
         path="/employees"
         element={
           <PrivateRoute>
-            <EmployeePage />
+            <ProtectedRoute permission={PERMISSIONS.EMPLOYEE_READ}>
+              <EmployeePage />
+            </ProtectedRoute>
           </PrivateRoute>
         }
       />
@@ -71,7 +82,9 @@ function App() {
         path="/employees/:id"
         element={
           <PrivateRoute>
-            <EmployeeDetailPage />
+            <ProtectedRoute permission={PERMISSIONS.EMPLOYEE_READ}>
+              <EmployeeDetailPage />
+            </ProtectedRoute>
           </PrivateRoute>
         }
       />
@@ -79,7 +92,9 @@ function App() {
         path="/branches"
         element={
           <PrivateRoute>
-            <BranchPage />
+            <ProtectedRoute permission={PERMISSIONS.BRANCH_READ}>
+              <BranchPage />
+            </ProtectedRoute>
           </PrivateRoute>
         }
       />
@@ -87,7 +102,9 @@ function App() {
         path="/departments"
         element={
           <PrivateRoute>
-            <DepartmentPage />
+            <ProtectedRoute permission={PERMISSIONS.DEPARTMENT_READ}>
+              <DepartmentPage />
+            </ProtectedRoute>
           </PrivateRoute>
         }
       />
@@ -96,7 +113,9 @@ function App() {
         path="/roles"
         element={
           <PrivateRoute>
-            <RolePage />
+            <ProtectedRoute permission={PERMISSIONS.ROLE_READ}>
+              <RolePage />
+            </ProtectedRoute>
           </PrivateRoute>
         }
       />
@@ -104,7 +123,9 @@ function App() {
         path="/leave-types"
         element={
           <PrivateRoute>
-            <LeaveTypePage />
+            <ProtectedRoute permission={PERMISSIONS.LEAVE_TYPE_READ}>
+              <LeaveTypePage />
+            </ProtectedRoute>
           </PrivateRoute>
         }
       />
@@ -114,7 +135,9 @@ function App() {
         path="/shifts"
         element={
           <PrivateRoute>
-            <ShiftPage />
+            <ProtectedRoute permission={PERMISSIONS.TEMPLATE_SHIFT_READ}>
+              <ShiftPage />
+            </ProtectedRoute>
           </PrivateRoute>
         }
       />
@@ -122,7 +145,9 @@ function App() {
         path="/holidays"
         element={
           <PrivateRoute>
-            <HolidayPage />
+            <ProtectedRoute permission={PERMISSIONS.HOLIDAY_READ}>
+              <HolidayPage />
+            </ProtectedRoute>
           </PrivateRoute>
         }
       />
@@ -132,7 +157,9 @@ function App() {
         path="/attendance"
         element={
           <PrivateRoute>
-            <AttendancePage />
+            <ProtectedRoute permission={PERMISSIONS.ATTENDANCE_READ}>
+              <AttendancePage />
+            </ProtectedRoute>
           </PrivateRoute>
         }
       />
@@ -140,7 +167,9 @@ function App() {
         path="/leave"
         element={
           <PrivateRoute>
-            <LeavePage />
+            <ProtectedRoute permission={PERMISSIONS.LEAVE_READ}>
+              <LeavePage />
+            </ProtectedRoute>
           </PrivateRoute>
         }
       />
@@ -150,7 +179,9 @@ function App() {
         path="/requests"
         element={
           <PrivateRoute>
-            <RequestPage />
+            <ProtectedRoute permission={PERMISSIONS.REQUEST_READ}>
+              <RequestPage />
+            </ProtectedRoute>
           </PrivateRoute>
         }
       />
@@ -158,7 +189,9 @@ function App() {
         path="/daily-reports"
         element={
           <PrivateRoute>
-            <DailyReportPage />
+            <ProtectedRoute permission={PERMISSIONS.DAILY_REPORT_READ}>
+              <DailyReportPage />
+            </ProtectedRoute>
           </PrivateRoute>
         }
       />
@@ -166,13 +199,22 @@ function App() {
         path="/mutabaah"
         element={
           <PrivateRoute>
-            <MutabaahPage />
+            <ProtectedRoute permission={PERMISSIONS.MUTABAAH_READ}>
+              <MutabaahPage />
+            </ProtectedRoute>
           </PrivateRoute>
         }
       />
 
-      {/* Default redirect to login */}
-      <Route path="*" element={<Navigate to="/login" replace />} />
+      {/* 404 Not Found */}
+      <Route
+        path="*"
+        element={
+          <PrivateRoute>
+            <NotFoundPage />
+          </PrivateRoute>
+        }
+      />
     </Routes>
   );
 }

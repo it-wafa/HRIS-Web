@@ -118,16 +118,18 @@ export function useHolidayMetadata() {
   );
 }
 
+const getDummyAttendanceMetadataFallback = (): AttendanceMetadata => ({
+  status_meta: [],
+  clock_method_meta: [],
+  override_type_meta: [],
+  employee_meta: [],
+});
+
 export function useAttendanceMetadata() {
   const { isDemo } = useDemo();
   return useGenericMetadata<AttendanceMetadata>(
     isDemo,
-    () => ({
-      status_meta: [],
-      clock_method_meta: [],
-      override_type_meta: [],
-      employee_meta: [],
-    }), // Dummy attendance metadata fallback
+    getDummyAttendanceMetadataFallback, // Dummy attendance metadata fallback
     fetchAttendanceMetadata,
   );
 }

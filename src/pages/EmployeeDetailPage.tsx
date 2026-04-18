@@ -21,6 +21,8 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Input, Button, Toggle } from "@/components/ui/FormElements";
+import { PermissionGate } from "@/components/ui/PermissionGate";
+import { PERMISSIONS } from "@/constants/permission";
 import {
   useEmployeeById,
   useEmployeeContacts,
@@ -1139,22 +1141,26 @@ export function EmployeeDetailPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => setShowEmployeeForm(true)}
-            >
-              <Edit2 size={14} />
-              Edit Pegawai
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowResetPassword(true)}
-            >
-              <Lock size={14} />
-              Ubah Password
-            </Button>
+            <PermissionGate permission={PERMISSIONS.EMPLOYEE_UPDATE}>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => setShowEmployeeForm(true)}
+              >
+                <Edit2 size={14} />
+                Edit Pegawai
+              </Button>
+            </PermissionGate>
+            <PermissionGate permission={PERMISSIONS.EMPLOYEE_RESET_PASSWORD}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowResetPassword(true)}
+              >
+                <Lock size={14} />
+                Ubah Password
+              </Button>
+            </PermissionGate>
           </div>
         </div>
 

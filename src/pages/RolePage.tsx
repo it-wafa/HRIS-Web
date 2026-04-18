@@ -22,6 +22,8 @@ import {
 } from "@/hooks/useRole";
 import { useRoleMetadata } from "@/hooks/useMetadata";
 import type { Role, Permission, CreateRolePayload, RoleMetadata } from "@/types/role";
+import { PermissionGate } from "@/components/ui/PermissionGate";
+import { PERMISSIONS } from "@/constants/permission";
 
 // ════════════════════════════════════════════
 // MODAL WRAPPER
@@ -385,6 +387,7 @@ function RoleCard({
           </span>
         </div>
         <div className="flex items-center gap-2 ml-4">
+          <PermissionGate permission={PERMISSIONS.ROLE_UPDATE}>
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -395,6 +398,8 @@ function RoleCard({
           >
             <Pencil size={16} />
           </button>
+          </PermissionGate>
+          <PermissionGate permission={PERMISSIONS.ROLE_DELETE}>
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -405,6 +410,7 @@ function RoleCard({
           >
             <Trash2 size={16} />
           </button>
+          </PermissionGate>
           <div className="text-(--muted-foreground)">
             {expanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
           </div>
@@ -522,6 +528,7 @@ export function RolePage() {
             Kelola role dan permission per module
           </p>
         </div>
+        <PermissionGate permission={PERMISSIONS.ROLE_CREATE}>
         <Button
           variant="primary"
           size="sm"
@@ -531,6 +538,7 @@ export function RolePage() {
           <Plus size={16} />
           Tambah Role
         </Button>
+        </PermissionGate>
       </header>
 
       <div className="mx-auto max-w-350 p-3 sm:p-5">
@@ -543,6 +551,7 @@ export function RolePage() {
             description="Tambahkan role baru untuk memulai"
             icon={<Shield className="h-12 w-12" />}
             action={
+              <PermissionGate permission={PERMISSIONS.ROLE_CREATE}>
               <Button
                 variant="primary"
                 size="sm"
@@ -551,6 +560,7 @@ export function RolePage() {
                 <Plus size={16} />
                 Tambah Role
               </Button>
+              </PermissionGate>
             }
           />
         ) : (

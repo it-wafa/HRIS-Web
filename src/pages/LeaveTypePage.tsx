@@ -13,6 +13,8 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Input, Button } from "@/components/ui/FormElements";
 import { cn } from "@/lib/utils";
 import { SearchableSelect } from "@/components/ui/SearchableSelect";
+import { PermissionGate } from "@/components/ui/PermissionGate";
+import { PERMISSIONS } from "@/constants/permission";
 
 // ════════════════════════════════════════════
 // MODAL WRAPPER
@@ -298,6 +300,7 @@ export function LeaveTypePage() {
             Kelola master data jenis cuti dan peraturannya.
           </p>
         </div>
+        <PermissionGate permission={PERMISSIONS.LEAVE_TYPE_CREATE}>
         <Button
           variant="primary"
           size="sm"
@@ -306,6 +309,7 @@ export function LeaveTypePage() {
         >
           <Plus size={16} /> Tambah Jenis Cuti
         </Button>
+        </PermissionGate>
       </header>
 
       <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 md:px-6">
@@ -397,6 +401,7 @@ export function LeaveTypePage() {
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-1">
+                          <PermissionGate permission={PERMISSIONS.LEAVE_TYPE_UPDATE}>
                           <button
                             onClick={() => handleOpenModal(lt)}
                             className="rounded-lg p-1.5 text-(--muted-foreground) transition hover:bg-(--muted) hover:text-(--foreground)"
@@ -404,6 +409,8 @@ export function LeaveTypePage() {
                           >
                             <Pencil size={16} />
                           </button>
+                          </PermissionGate>
+                          <PermissionGate permission={PERMISSIONS.LEAVE_TYPE_DELETE}>
                           <button
                             onClick={() => setDeleteTarget(lt)}
                             className="rounded-lg p-1.5 text-(--muted-foreground) transition hover:bg-red-500/10 hover:text-red-500"
@@ -411,6 +418,7 @@ export function LeaveTypePage() {
                           >
                             <Trash2 size={16} />
                           </button>
+                          </PermissionGate>
                         </div>
                       </td>
                     </tr>

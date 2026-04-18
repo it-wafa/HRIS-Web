@@ -37,6 +37,8 @@ import {
   type AttendanceLog,
   type CreateManualAttendancePayload,
 } from "@/types/attendance";
+import { PermissionGate } from "@/components/ui/PermissionGate";
+import { PERMISSIONS } from "@/constants/permission";
 import {
   OVERRIDE_TYPE_OPTIONS,
   type OverrideType,
@@ -894,14 +896,16 @@ function AttendanceLogTab() {
             searchPlaceholder="Cari cabang..."
           />
         </div>
-        <Button
-          variant="primary"
-          onClick={() => setShowManualForm(true)}
-          className="shrink-0"
-        >
-          <UserPlus size={16} />
-          Input Manual
-        </Button>
+        <PermissionGate permission={PERMISSIONS.ATTENDANCE_CREATE}>
+          <Button
+            variant="primary"
+            onClick={() => setShowManualForm(true)}
+            className="shrink-0"
+          >
+            <UserPlus size={16} />
+            Input Manual
+          </Button>
+        </PermissionGate>
       </div>
 
       <div className="flex items-center gap-2">
@@ -1182,15 +1186,17 @@ function AttendanceOverrideTab() {
             placeholder="Filter status..."
           />
         </div>
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={() => setShowForm(true)}
-          className="self-start sm:self-auto"
-        >
-          <Plus size={16} />
-          Ajukan Koreksi
-        </Button>
+        <PermissionGate permission={PERMISSIONS.ATTENDANCE_ADJUSTMENT_CREATE}>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setShowForm(true)}
+            className="self-start sm:self-auto"
+          >
+            <Plus size={16} />
+            Ajukan Koreksi
+          </Button>
+        </PermissionGate>
       </div>
 
       {loading ? (
@@ -1201,14 +1207,16 @@ function AttendanceOverrideTab() {
           description="Ajukan koreksi presensi jika ada kesalahan data kehadiran"
           icon={<Edit2 className="h-12 w-12" />}
           action={
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => setShowForm(true)}
-            >
-              <Plus size={16} />
-              Ajukan Koreksi
-            </Button>
+            <PermissionGate permission={PERMISSIONS.ATTENDANCE_ADJUSTMENT_CREATE}>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => setShowForm(true)}
+              >
+                <Plus size={16} />
+                Ajukan Koreksi
+              </Button>
+            </PermissionGate>
           }
         />
       ) : (
@@ -1312,24 +1320,26 @@ function AttendanceOverrideTab() {
                             </Button>
                             {ov.status === "pending" && (
                               <>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleApprove(ov)}
-                                  className="h-7 px-2 text-xs text-green-700 hover:bg-green-500/10 dark:text-green-400"
-                                >
-                                  <Check size={13} />
-                                  Setuju
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => setDetailOverride(ov)}
-                                  className="h-7 px-2 text-xs text-red-600 hover:bg-red-500/10"
-                                >
-                                  <Ban size={13} />
-                                  Tolak
-                                </Button>
+                                <PermissionGate permission={PERMISSIONS.ATTENDANCE_ADJUSTMENT_APPROVE}>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleApprove(ov)}
+                                    className="h-7 px-2 text-xs text-green-700 hover:bg-green-500/10 dark:text-green-400"
+                                  >
+                                    <Check size={13} />
+                                    Setuju
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setDetailOverride(ov)}
+                                    className="h-7 px-2 text-xs text-red-600 hover:bg-red-500/10"
+                                  >
+                                    <Ban size={13} />
+                                    Tolak
+                                  </Button>
+                                </PermissionGate>
                               </>
                             )}
                           </div>
@@ -1392,24 +1402,26 @@ function AttendanceOverrideTab() {
                     </Button>
                     {ov.status === "pending" && (
                       <>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleApprove(ov)}
-                          className="flex-1 text-green-700 hover:bg-green-500/10 dark:text-green-400"
-                        >
-                          <Check size={13} />
-                          Setuju
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setDetailOverride(ov)}
-                          className="flex-1 text-red-600 hover:bg-red-500/10"
-                        >
-                          <Ban size={13} />
-                          Tolak
-                        </Button>
+                        <PermissionGate permission={PERMISSIONS.ATTENDANCE_ADJUSTMENT_APPROVE}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleApprove(ov)}
+                            className="flex-1 text-green-700 hover:bg-green-500/10 dark:text-green-400"
+                          >
+                            <Check size={13} />
+                            Setuju
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setDetailOverride(ov)}
+                            className="flex-1 text-red-600 hover:bg-red-500/10"
+                          >
+                            <Ban size={13} />
+                            Tolak
+                          </Button>
+                        </PermissionGate>
                       </>
                     )}
                   </div>

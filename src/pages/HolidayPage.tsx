@@ -17,6 +17,8 @@ import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import { SummaryCard } from "@/components/ui/SummaryCard";
 import { useHolidayList, useHolidayMutations, useHolidayMetadata } from "@/hooks/useHoliday";
 
+import { PermissionGate } from "@/components/ui/PermissionGate";
+import { PERMISSIONS } from "@/constants/permission";
 import {
   HOLIDAY_TYPE_LABELS,
   HOLIDAY_TYPE_COLORS,
@@ -573,20 +575,24 @@ function ListView({
                   </td>
                   <td className="px-5 py-4">
                     <div className="flex justify-end gap-1">
-                      <button
-                        onClick={() => onEdit(holiday)}
-                        className="rounded-lg p-2 text-(--muted-foreground) transition hover:bg-(--muted) hover:text-(--foreground)"
-                        title="Edit"
-                      >
-                        <Pencil size={16} />
-                      </button>
-                      <button
-                        onClick={() => onDelete(holiday)}
-                        className="rounded-lg p-2 text-(--muted-foreground) transition hover:bg-red-500/10 hover:text-red-500"
-                        title="Hapus"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      <PermissionGate permission={PERMISSIONS.HOLIDAY_UPDATE}>
+                        <button
+                          onClick={() => onEdit(holiday)}
+                          className="rounded-lg p-2 text-(--muted-foreground) transition hover:bg-(--primary)/10 hover:text-(--primary)"
+                          title="Edit"
+                        >
+                          <Pencil size={16} />
+                        </button>
+                      </PermissionGate>
+                      <PermissionGate permission={PERMISSIONS.HOLIDAY_DELETE}>
+                        <button
+                          onClick={() => onDelete(holiday)}
+                          className="rounded-lg p-2 text-(--muted-foreground) transition hover:bg-red-500/10 hover:text-red-500"
+                          title="Hapus"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </PermissionGate>
                     </div>
                   </td>
                 </tr>
@@ -626,18 +632,22 @@ function ListView({
                 )}
               </div>
               <div className="flex gap-1">
-                <button
-                  onClick={() => onEdit(holiday)}
-                  className="rounded-lg p-2 text-(--muted-foreground) transition hover:bg-(--muted) hover:text-(--foreground)"
-                >
-                  <Pencil size={16} />
-                </button>
-                <button
-                  onClick={() => onDelete(holiday)}
-                  className="rounded-lg p-2 text-(--muted-foreground) transition hover:bg-red-500/10 hover:text-red-500"
-                >
-                  <Trash2 size={16} />
-                </button>
+                <PermissionGate permission={PERMISSIONS.HOLIDAY_UPDATE}>
+                  <button
+                    onClick={() => onEdit(holiday)}
+                    className="rounded-lg p-2 text-(--muted-foreground) transition hover:bg-(--primary)/10 hover:text-(--primary)"
+                  >
+                    <Pencil size={16} />
+                  </button>
+                </PermissionGate>
+                <PermissionGate permission={PERMISSIONS.HOLIDAY_DELETE}>
+                  <button
+                    onClick={() => onDelete(holiday)}
+                    className="rounded-lg p-2 text-(--muted-foreground) transition hover:bg-red-500/10 hover:text-red-500"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </PermissionGate>
               </div>
             </div>
           </div>
@@ -800,15 +810,17 @@ export function HolidayPage() {
             Kelola kalender hari libur nasional dan perusahaan
           </p>
         </div>
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={() => setShowForm(true)}
-          className="self-start sm:self-auto"
-        >
-          <Plus size={16} />
-          Tambah Hari Libur
-        </Button>
+        <PermissionGate permission={PERMISSIONS.HOLIDAY_CREATE}>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setShowForm(true)}
+            className="self-start sm:self-auto"
+          >
+            <Plus size={16} />
+            Tambah Hari Libur
+          </Button>
+        </PermissionGate>
       </header>
 
       <div className="mx-auto max-w-350 p-3 sm:p-5 flex flex-col gap-5">
@@ -941,14 +953,16 @@ export function HolidayPage() {
             action={
               !filterType &&
               !filterBranch && (
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={() => setShowForm(true)}
-                >
-                  <Plus size={16} />
-                  Tambah Hari Libur
-                </Button>
+                <PermissionGate permission={PERMISSIONS.HOLIDAY_CREATE}>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => setShowForm(true)}
+                  >
+                    <Plus size={16} />
+                    Tambah Hari Libur
+                  </Button>
+                </PermissionGate>
               )
             }
           />

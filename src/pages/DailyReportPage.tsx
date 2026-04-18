@@ -21,6 +21,8 @@ import {
 } from "@/hooks/useDailyReport";
 import { SummaryCard } from "@/components/ui/SummaryCard";
 import { useEmployeeList } from "@/hooks/useEmployee";
+import { PermissionGate } from "@/components/ui/PermissionGate";
+import { PERMISSIONS } from "@/constants/permission";
 import type {
   DailyReport,
   CreateDailyReportPayload,
@@ -389,16 +391,18 @@ function ExpandableRow({
         <td className="px-5 py-3">
           <div className="flex items-center justify-end gap-2">
             {!report.is_submitted && (
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onFill(report);
-                }}
-              >
-                Isi Laporan
-              </Button>
+              <PermissionGate permission={PERMISSIONS.DAILY_REPORT_CREATE}>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onFill(report);
+                  }}
+                >
+                  Isi Laporan
+                </Button>
+              </PermissionGate>
             )}
             {report.is_submitted && (
               <>
@@ -518,15 +522,17 @@ export function DailyReportPage() {
             Pantau dan kelola laporan aktivitas harian pegawai (RKH)
           </p>
         </div>
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={() => setShowForm(true)}
-          className="self-start sm:self-auto"
-        >
-          <Plus size={16} />
-          Isi Laporan
-        </Button>
+        <PermissionGate permission={PERMISSIONS.DAILY_REPORT_CREATE}>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setShowForm(true)}
+            className="self-start sm:self-auto"
+          >
+            <Plus size={16} />
+            Isi Laporan
+          </Button>
+        </PermissionGate>
       </header>
 
       <div className="mx-auto max-w-350 p-3 sm:p-5 space-y-4">
@@ -624,14 +630,16 @@ export function DailyReportPage() {
             description="Mulai isi laporan aktivitas harian Anda"
             icon={<FileText className="h-12 w-12" />}
             action={
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => setShowForm(true)}
-              >
-                <Plus size={16} />
-                Isi Laporan
-              </Button>
+              <PermissionGate permission={PERMISSIONS.DAILY_REPORT_CREATE}>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => setShowForm(true)}
+                >
+                  <Plus size={16} />
+                  Isi Laporan
+                </Button>
+              </PermissionGate>
             }
           />
         ) : (
@@ -722,13 +730,15 @@ export function DailyReportPage() {
                       </button>
                     </>
                   ) : (
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      onClick={() => setEditReport(report)}
-                    >
-                      Isi Laporan
-                    </Button>
+                    <PermissionGate permission={PERMISSIONS.DAILY_REPORT_CREATE}>
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={() => setEditReport(report)}
+                      >
+                        Isi Laporan
+                      </Button>
+                    </PermissionGate>
                   )}
                 </div>
               ))}

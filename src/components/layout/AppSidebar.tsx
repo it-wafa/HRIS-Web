@@ -25,6 +25,8 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { usePermission } from "@/hooks/usePermission";
+import { PERMISSIONS } from "@/constants/permission";
 
 // LocalStorage key untuk menyimpan status collapse sidebar
 const SIDEBAR_COLLAPSED_KEY = "sidebar-collapsed";
@@ -33,6 +35,7 @@ interface NavItem {
   icon: React.ElementType;
   label: string;
   path: string;
+  permission?: string;
 }
 
 const MAIN_NAV: NavItem[] = [
@@ -40,32 +43,33 @@ const MAIN_NAV: NavItem[] = [
 ];
 
 const MASTER_DATA_NAV: NavItem[] = [
-  { icon: Users, label: "Pegawai", path: "/employees" },
-  { icon: Building2, label: "Cabang", path: "/branches" },
-  { icon: Network, label: "Departemen", path: "/departments" },
-  { icon: Shield, label: "Role", path: "/roles" },
-  { icon: CalendarOff, label: "Jenis Cuti", path: "/leave-types" },
+  { icon: Users, label: "Pegawai", path: "/employees", permission: PERMISSIONS.EMPLOYEE_READ },
+  { icon: Building2, label: "Cabang", path: "/branches", permission: PERMISSIONS.BRANCH_READ },
+  { icon: Network, label: "Departemen", path: "/departments", permission: PERMISSIONS.DEPARTMENT_READ },
+  { icon: Shield, label: "Role", path: "/roles", permission: PERMISSIONS.ROLE_READ },
+  { icon: CalendarOff, label: "Jenis Cuti", path: "/leave-types", permission: PERMISSIONS.LEAVE_TYPE_READ },
 ];
 
 const JADWAL_NAV: NavItem[] = [
-  { icon: Clock, label: "Shift", path: "/shifts" },
-  { icon: Calendar, label: "Hari Libur", path: "/holidays" },
+  { icon: Clock, label: "Shift", path: "/shifts", permission: PERMISSIONS.TEMPLATE_SHIFT_READ },
+  { icon: Calendar, label: "Hari Libur", path: "/holidays", permission: PERMISSIONS.HOLIDAY_READ },
 ];
 
 const KEHADIRAN_NAV: NavItem[] = [
-  { icon: ClipboardCheck, label: "Presensi", path: "/attendance" },
-  { icon: CalendarOff, label: "Cuti", path: "/leave" },
+  { icon: ClipboardCheck, label: "Presensi", path: "/attendance", permission: PERMISSIONS.ATTENDANCE_READ },
+  { icon: CalendarOff, label: "Cuti", path: "/leave", permission: PERMISSIONS.LEAVE_READ },
 ];
 
 const PENGAJUAN_NAV: NavItem[] = [
-  { icon: Send, label: "Pengajuan", path: "/requests" },
-  { icon: FileText, label: "Laporan Harian", path: "/daily-reports" },
-  { icon: BookOpen, label: "Mutaba'ah", path: "/mutabaah" },
+  { icon: Send, label: "Pengajuan", path: "/requests", permission: PERMISSIONS.REQUEST_READ },
+  { icon: FileText, label: "Laporan Harian", path: "/daily-reports", permission: PERMISSIONS.DAILY_REPORT_READ },
+  { icon: BookOpen, label: "Mutaba'ah", path: "/mutabaah", permission: PERMISSIONS.MUTABAAH_READ },
 ];
 
 export function AppSidebar() {
   const { user, logout, cachedProfile } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { hasPermission } = usePermission();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -141,26 +145,32 @@ export function AppSidebar() {
     label: string,
     items: NavItem[],
     pathPrefix?: string,
-  ) => (
-    <>
-      <div
-        className={cn(
-          "mt-3 mb-1 px-2 text-[10px] font-semibold uppercase tracking-widest text-(--muted-foreground)",
-          collapsed && "hidden",
-        )}
-      >
-        {label}
-      </div>
-      {collapsed && <div className="my-1 mx-2 h-px bg-(--border)" />}
-      {items.map((item) => {
-        const isActive = pathPrefix
-          ? location.pathname === item.path ||
-            location.pathname.startsWith(item.path + "/")
-          : location.pathname === item.path;
-        return renderNavItem(item, isActive);
-      })}
-    </>
-  );
+  ) => {
+    const visibleItems = items.filter(
+      (item) => !item.permission || hasPermission(item.permission),
+    );
+    if (visibleItems.length === 0) return null;
+    return (
+      <>
+        <div
+          className={cn(
+            "mt-3 mb-1 px-2 text-[10px] font-semibold uppercase tracking-widest text-(--muted-foreground)",
+            collapsed && "hidden",
+          )}
+        >
+          {label}
+        </div>
+        {collapsed && <div className="my-1 mx-2 h-px bg-(--border)" />}
+        {visibleItems.map((item) => {
+          const isActive = pathPrefix
+            ? location.pathname === item.path ||
+              location.pathname.startsWith(item.path + "/")
+            : location.pathname === item.path;
+          return renderNavItem(item, isActive);
+        })}
+      </>
+    );
+  };
 
   const AvatarButton = ({
     onClick,

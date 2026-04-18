@@ -1,13 +1,15 @@
-import { useState, useEffect } from "react";
-import { LogIn, LogOut, Smartphone, Monitor, CheckCircle2 } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { LogIn, LogOut, Smartphone, Monitor, CheckCircle2, Camera } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { TodayAttendanceStatus } from "@/types/dashboard";
+import { presignClockPhoto, uploadPhotoToPresigned } from "@/lib/dashboard-api";
+import type { TodayAttendanceStatus, ClockInPayload, ClockOutPayload } from "@/types/dashboard";
+import toast from "react-hot-toast";
 
 export interface ClockWidgetProps {
-  status: TodayAttendanceStatus;
+  status: TodayAttendanceStatus | null;
   isMobile: boolean;
-  onClockIn: () => void;
-  onClockOut: () => void;
+  onClockIn: (payload: ClockInPayload) => void;
+  onClockOut: (payload: ClockOutPayload) => void;
   disabled?: boolean;
   loading?: boolean;
 }
@@ -40,6 +42,39 @@ function formatClockTime(isoString: string | null): string {
   });
 }
 
+/** Get current GPS position */
+function getGeolocation(): Promise<{ latitude: number; longitude: number }> {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error("Geolocation tidak didukung browser ini"));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) =>
+        resolve({
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+        }),
+      (err) => {
+        switch (err.code) {
+          case err.PERMISSION_DENIED:
+            reject(new Error("Izin akses lokasi ditolak. Aktifkan GPS Anda."));
+            break;
+          case err.POSITION_UNAVAILABLE:
+            reject(new Error("Lokasi tidak tersedia."));
+            break;
+          case err.TIMEOUT:
+            reject(new Error("Timeout saat mendapatkan lokasi."));
+            break;
+          default:
+            reject(new Error("Gagal mendapatkan lokasi."));
+        }
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+    );
+  });
+}
+
 export function ClockWidget({
   status,
   isMobile,
@@ -49,6 +84,10 @@ export function ClockWidget({
   loading = false,
 }: ClockWidgetProps) {
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [processingAction, setProcessingAction] = useState<
+    "clock_in" | "clock_out" | null
+  >(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -63,7 +102,6 @@ export function ClockWidget({
   const isNight = hours >= 20 || hours < 6;
   const isMorning = hours >= 6 && hours < 12;
   const isAfternoon = hours >= 12 && hours < 17;
-  // isEvening: hours >= 17 && hours < 20
 
   const gradientBg = isNight
     ? "from-slate-900 via-purple-950 to-slate-900"
@@ -73,8 +111,77 @@ export function ClockWidget({
         ? "from-sky-400 via-blue-500 to-indigo-500"
         : "from-purple-500 via-rose-500 to-pink-500";
 
+  /** Handle camera trigger */
+  const triggerCamera = useCallback((action: "clock_in" | "clock_out") => {
+    setProcessingAction(action);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+      fileInputRef.current.click();
+    }
+  }, []);
+
+  /** Handle file selected from camera */
+  const handleFileSelected = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file || !processingAction) {
+        setProcessingAction(null);
+        return;
+      }
+
+      try {
+        // 1. Get presigned URL
+        toast.loading("Memproses foto...", { id: "clock-process" });
+        const presignRes = await presignClockPhoto(processingAction);
+        const { upload_url, object_key } = presignRes.data;
+
+        // 2. Upload photo
+        await uploadPhotoToPresigned(upload_url, file);
+
+        // 3. Get GPS location
+        toast.loading("Mendapatkan lokasi GPS...", { id: "clock-process" });
+        const { latitude, longitude } = await getGeolocation();
+
+        toast.dismiss("clock-process");
+
+        // 4. Call clock in/out with payload
+        const payload = {
+          photo_key: object_key,
+          latitude,
+          longitude,
+        };
+
+        if (processingAction === "clock_in") {
+          onClockIn(payload);
+        } else {
+          onClockOut(payload);
+        }
+      } catch (err: unknown) {
+        toast.dismiss("clock-process");
+        const message =
+          err instanceof Error ? err.message : "Gagal memproses presensi";
+        toast.error(message);
+      } finally {
+        setProcessingAction(null);
+      }
+    },
+    [processingAction, onClockIn, onClockOut],
+  );
+
+  const isProcessing = loading || processingAction !== null;
+
   return (
     <div className="relative overflow-hidden rounded-2xl border border-(--border) shadow-xl">
+      {/* Hidden camera input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={handleFileSelected}
+      />
+
       {/* Gradient header background */}
       <div
         className={cn(
@@ -93,9 +200,9 @@ export function ClockWidget({
             {isMobile ? <Smartphone size={11} /> : <Monitor size={11} />}
             {isMobile ? "Mobile" : "Desktop"}
           </span>
-          {status?.late_minutes > 0 && (
+          {status && status.late_minutes > 0 && (
             <span className="inline-flex items-center gap-1 rounded-full bg-red-500/90 px-2.5 py-1 text-xs font-semibold text-white">
-              Terlambat {status?.late_minutes} mnt
+              Terlambat {status.late_minutes} mnt
             </span>
           )}
         </div>
@@ -156,7 +263,7 @@ export function ClockWidget({
                 Jam Masuk
               </div>
               <div className="font-mono text-lg font-bold text-(--foreground)">
-                {formatClockTime(status?.clock_in_at)}
+                {formatClockTime(status?.clock_in_at ?? null)}
               </div>
             </div>
             <div className="rounded-xl bg-(--muted)/50 px-3 py-2.5 text-center">
@@ -165,7 +272,7 @@ export function ClockWidget({
                 Jam Keluar
               </div>
               <div className="font-mono text-lg font-bold text-(--foreground)">
-                {formatClockTime(status?.clock_out_at)}
+                {formatClockTime(status?.clock_out_at ?? null)}
               </div>
             </div>
           </div>
@@ -175,8 +282,8 @@ export function ClockWidget({
         <div className="flex gap-3">
           {canClockIn && (
             <button
-              onClick={onClockIn}
-              disabled={disabled || loading}
+              onClick={() => triggerCamera("clock_in")}
+              disabled={disabled || isProcessing}
               className={cn(
                 "group relative flex flex-1 items-center justify-center gap-2.5 overflow-hidden rounded-xl px-4 py-3.5 font-semibold text-white transition-all",
                 "bg-gradient-to-r from-green-500 to-emerald-600 shadow-lg shadow-green-500/25",
@@ -186,10 +293,10 @@ export function ClockWidget({
             >
               <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-emerald-500 opacity-0 transition-opacity group-hover:opacity-100" />
               <span className="relative flex items-center gap-2">
-                {loading ? (
+                {isProcessing && processingAction === "clock_in" ? (
                   <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                 ) : (
-                  <LogIn size={18} />
+                  <Camera size={18} />
                 )}
                 Clock In
               </span>
@@ -198,8 +305,8 @@ export function ClockWidget({
 
           {canClockOut && (
             <button
-              onClick={onClockOut}
-              disabled={disabled || loading}
+              onClick={() => triggerCamera("clock_out")}
+              disabled={disabled || isProcessing}
               className={cn(
                 "group relative flex flex-1 items-center justify-center gap-2.5 overflow-hidden rounded-xl px-4 py-3.5 font-semibold text-white transition-all",
                 "bg-gradient-to-r from-rose-500 to-red-600 shadow-lg shadow-rose-500/25",
@@ -209,10 +316,10 @@ export function ClockWidget({
             >
               <div className="absolute inset-0 bg-gradient-to-r from-rose-400 to-red-500 opacity-0 transition-opacity group-hover:opacity-100" />
               <span className="relative flex items-center gap-2">
-                {loading ? (
+                {isProcessing && processingAction === "clock_out" ? (
                   <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
                 ) : (
-                  <LogOut size={18} />
+                  <Camera size={18} />
                 )}
                 Clock Out
               </span>
@@ -227,11 +334,11 @@ export function ClockWidget({
           )}
         </div>
 
-        {/* Desktop warning */}
-        {!isMobile && !isComplete && (
+        {/* Camera instruction */}
+        {!isComplete && (
           <div className="mt-3 rounded-lg border border-amber-500/20 bg-amber-500/8 px-3 py-2">
             <p className="text-center text-xs text-amber-600">
-              📱 Presensi lebih akurat dari perangkat mobile dengan GPS
+              📸 Foto wajah akan diambil saat presensi untuk verifikasi
             </p>
           </div>
         )}

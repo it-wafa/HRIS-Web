@@ -16,6 +16,8 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Input, Button } from "@/components/ui/FormElements";
 import { MapPicker } from "@/components/ui/MapPicker";
 import { useBranchList, useBranchMutations } from "@/hooks/useBranch";
+import { PermissionGate } from "@/components/ui/PermissionGate";
+import { PERMISSIONS } from "@/constants/permission";
 import type { Branch, CreateBranchPayload } from "@/types/branch";
 
 // ════════════════════════════════════════════
@@ -332,20 +334,24 @@ function BranchCard({
             </h3>
           </div>
           <div className="flex gap-1">
-            <button
-              onClick={onEdit}
-              className="rounded-lg p-2 text-(--muted-foreground) transition hover:bg-(--muted) hover:text-(--foreground)"
-              title="Edit"
-            >
-              <Pencil size={16} />
-            </button>
-            <button
-              onClick={onDelete}
-              className="rounded-lg p-2 text-(--muted-foreground) transition hover:bg-red-500/10 hover:text-red-500"
-              title="Hapus"
-            >
-              <Trash2 size={16} />
-            </button>
+            <PermissionGate permission={PERMISSIONS.BRANCH_UPDATE}>
+              <button
+                onClick={onEdit}
+                className="rounded-lg p-2 text-(--muted-foreground) transition hover:bg-(--muted) hover:text-(--foreground)"
+                title="Edit"
+              >
+                <Pencil size={16} />
+              </button>
+            </PermissionGate>
+            <PermissionGate permission={PERMISSIONS.BRANCH_DELETE}>
+              <button
+                onClick={onDelete}
+                className="rounded-lg p-2 text-(--muted-foreground) transition hover:bg-red-500/10 hover:text-red-500"
+                title="Hapus"
+              >
+                <Trash2 size={16} />
+              </button>
+            </PermissionGate>
           </div>
         </div>
       </div>
@@ -477,15 +483,17 @@ export function BranchPage() {
             Kelola data lokasi kantor/cabang + konfigurasi GPS radius
           </p>
         </div>
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={() => setShowForm(true)}
-          className="self-start sm:self-auto"
-        >
-          <Plus size={16} />
-          Tambah Cabang
-        </Button>
+        <PermissionGate permission={PERMISSIONS.BRANCH_CREATE}>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setShowForm(true)}
+            className="self-start sm:self-auto"
+          >
+            <Plus size={16} />
+            Tambah Cabang
+          </Button>
+        </PermissionGate>
       </header>
 
       <div className="mx-auto max-w-350 p-3 sm:p-5">
@@ -498,14 +506,16 @@ export function BranchPage() {
             description="Tambahkan cabang baru untuk memulai"
             icon={<Building2 className="h-12 w-12" />}
             action={
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => setShowForm(true)}
-              >
-                <Plus size={16} />
-                Tambah Cabang
-              </Button>
+              <PermissionGate permission={PERMISSIONS.BRANCH_CREATE}>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => setShowForm(true)}
+                >
+                  <Plus size={16} />
+                  Tambah Cabang
+                </Button>
+              </PermissionGate>
             }
           />
         ) : (

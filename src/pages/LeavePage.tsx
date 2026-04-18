@@ -24,6 +24,8 @@ import {
   useLeaveRequestMutations,
 } from "@/hooks/useLeave";
 import { useEmployeeList } from "@/hooks/useEmployee";
+import { PermissionGate } from "@/components/ui/PermissionGate";
+import { PERMISSIONS } from "@/constants/permission";
 import {
   LEAVE_STATUS_OPTIONS,
   LEAVE_CATEGORY_OPTIONS,
@@ -661,15 +663,17 @@ function LeaveRequestTab() {
             placeholder="Tahun..."
           />
         </div>
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={() => setShowForm(true)}
-          className="self-start sm:self-auto"
-        >
-          <Plus size={16} />
-          Ajukan Cuti
-        </Button>
+        <PermissionGate permission={PERMISSIONS.LEAVE_CREATE}>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setShowForm(true)}
+            className="self-start sm:self-auto"
+          >
+            <Plus size={16} />
+            Ajukan Cuti
+          </Button>
+        </PermissionGate>
       </div>
 
       {loading ? (
@@ -680,14 +684,16 @@ function LeaveRequestTab() {
           description="Ajukan cuti atau izin tidak masuk di sini"
           icon={<CalendarDays className="h-12 w-12" />}
           action={
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => setShowForm(true)}
-            >
-              <Plus size={16} />
-              Ajukan Cuti
-            </Button>
+            <PermissionGate permission={PERMISSIONS.LEAVE_CREATE}>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => setShowForm(true)}
+              >
+                <Plus size={16} />
+                Ajukan Cuti
+              </Button>
+            </PermissionGate>
           }
         />
       ) : (

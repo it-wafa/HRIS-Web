@@ -28,6 +28,8 @@ import type {
   UpdateDepartmentPayload,
 } from "@/types/department";
 import type { JobPosition, CreatePositionPayload } from "@/types/job-position";
+import { PermissionGate } from "@/components/ui/PermissionGate";
+import { PERMISSIONS } from "@/constants/permission";
 
 // ════════════════════════════════════════════
 // MODAL WRAPPER
@@ -535,12 +537,16 @@ function DepartmentContent() {
           </p>
         </div>
         <div className="flex gap-2">
+          <PermissionGate permission={PERMISSIONS.JOB_POSITION_CREATE}>
           <Button variant="outline" size="sm" onClick={() => setShowPosForm({})}>
             <Plus size={16} /> <span className="hidden sm:inline ml-1">Jabatan</span>
           </Button>
+          </PermissionGate>
+          <PermissionGate permission={PERMISSIONS.DEPARTMENT_CREATE}>
           <Button variant="primary" size="sm" onClick={() => setShowDeptForm(true)}>
             <Plus size={16} /> <span className="hidden sm:inline ml-1">Departemen</span>
           </Button>
+          </PermissionGate>
         </div>
       </header>
 
@@ -572,12 +578,16 @@ function DepartmentContent() {
                 </div>
               </div>
               <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                <PermissionGate permission={PERMISSIONS.DEPARTMENT_UPDATE}>
                 <button onClick={() => setEditDept(dept)} className="rounded-lg p-2 text-(--muted-foreground) hover:bg-(--muted) hover:text-(--foreground)" title="Edit">
                   <Pencil size={16} />
                 </button>
+                </PermissionGate>
+                <PermissionGate permission={PERMISSIONS.DEPARTMENT_DELETE}>
                 <button onClick={() => setDeleteDept(dept)} className="rounded-lg p-2 text-(--muted-foreground) hover:bg-red-500/10 hover:text-red-500" title="Hapus">
                   <Trash2 size={16} />
                 </button>
+                </PermissionGate>
               </div>
             </div>
 
@@ -600,12 +610,16 @@ function DepartmentContent() {
                              <span className="text-xs text-(--muted-foreground) ml-2">({posEmployees.length} Pegawai)</span>
                            </div>
                            <div className="flex gap-1 mt-2 sm:mt-0" onClick={(e) => e.stopPropagation()}>
+                             <PermissionGate permission={PERMISSIONS.JOB_POSITION_UPDATE}>
                              <button onClick={() => setEditPos(pos)} className="rounded-lg p-1.5 text-(--muted-foreground) hover:bg-(--muted) hover:text-(--foreground)" title="Edit">
                                <Pencil size={14} />
                              </button>
+                             </PermissionGate>
+                             <PermissionGate permission={PERMISSIONS.JOB_POSITION_DELETE}>
                              <button onClick={() => setDeletePosTarget(pos)} className="rounded-lg p-1.5 text-(--muted-foreground) hover:bg-red-500/10 hover:text-red-500" title="Hapus">
                                <Trash2 size={14} />
                              </button>
+                             </PermissionGate>
                            </div>
                         </div>
 

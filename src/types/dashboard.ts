@@ -51,6 +51,20 @@ export interface EmployeeDashboardData {
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
+// Today Schedule Status (§6 — shift check)
+// ══════════════════════════════════════════════════════════════════════════════
+
+export interface TodayScheduleStatus {
+  is_working_day: boolean;
+  reason?: string;
+  shift_name?: string;
+  clock_in_start?: string;
+  clock_in_end?: string;
+  clock_out_start?: string;
+  clock_out_end?: string;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
 // Dashboard HRD/Supervisor (§13.2)
 // ══════════════════════════════════════════════════════════════════════════════
 
@@ -122,15 +136,13 @@ export interface ClockWidgetState {
 }
 
 export interface ClockInPayload {
-  lat?: number;
-  lng?: number;
-  photo_url?: string;
-  method?: "gps" | "qr_code" | "face_recognition";
+  photo_key: string;
+  latitude: number;
+  longitude: number;
 }
 
 export interface ClockOutPayload {
-  lat?: number;
-  lng?: number;
-  photo_url?: string;
-  method?: "gps" | "qr_code" | "face_recognition";
+  photo_key: string;
+  latitude: number;
+  longitude: number;
 }

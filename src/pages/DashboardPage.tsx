@@ -11,6 +11,8 @@ import {
   Plane,
   Edit2,
   BookOpen,
+  Coffee,
+  Sun,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -29,9 +31,14 @@ import {
   useClockWidget,
 } from "@/hooks/useDashboard";
 import { useMutabaahActions } from "@/hooks/useMutabaah";
+import { useTodaySchedule } from "@/hooks/useTodaySchedule";
+import { usePermission } from "@/hooks/usePermission";
+import { PERMISSIONS } from "@/constants/permission";
 import type {
   LeaveBalanceSummary,
   PendingRequest,
+  ClockInPayload,
+  ClockOutPayload,
   ApprovalQueueItem,
   NotClockedInEmployee,
   ExpiringContract,
@@ -246,6 +253,52 @@ function ExpiringContractCard({ contract }: { contract: ExpiringContract }) {
 }
 
 // ════════════════════════════════════════════
+// DAY OFF CARD
+// ════════════════════════════════════════════
+
+function DayOffCard({ reason }: { reason?: string }) {
+  return (
+    <div className="relative overflow-hidden rounded-2xl border border-(--border) shadow-xl">
+      {/* Gradient header */}
+      <div className="relative bg-gradient-to-br from-teal-400 via-cyan-500 to-sky-500 px-6 pt-6 pb-10">
+        {/* Decorative */}
+        <div className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-white/10" />
+        <div className="pointer-events-none absolute -right-4 top-10 h-20 w-20 rounded-full bg-white/10" />
+        <div className="pointer-events-none absolute left-4 bottom-2 h-12 w-12 rounded-full bg-white/5" />
+
+        <div className="text-center">
+          <div className="mb-3 inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
+            <Coffee size={32} className="text-white" />
+          </div>
+          <h2 className="text-xl font-bold text-white drop-shadow">
+            Tidak Ada Jadwal Kerja
+          </h2>
+          <p className="mt-1 text-sm font-medium text-white/80">
+            Hari ini Anda bisa menikmati waktu istirahat
+          </p>
+        </div>
+      </div>
+
+      {/* Curved connector */}
+      <div
+        className="bg-gradient-to-br from-teal-400 via-cyan-500 to-sky-500 h-6"
+        style={{ clipPath: "ellipse(100% 100% at 50% 0%)" }}
+      />
+
+      {/* Bottom section */}
+      <div className="mt-2 bg-(--card) px-6 pb-6">
+        <div className="flex items-center justify-center gap-2 rounded-xl bg-teal-500/10 px-4 py-3 ring-1 ring-teal-500/20">
+          <Sun size={16} className="text-teal-600" />
+          <span className="text-sm font-medium text-teal-600">
+            {reason || "Selamat berlibur!"}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════
 // COMBINED ATTENDANCE + MUTABAAH PANEL
 // ════════════════════════════════════════════
 
@@ -254,6 +307,8 @@ interface AttendanceMutabaahPanelProps {
   empDashData: ReturnType<typeof useEmployeeDashboard>["data"];
   empDashLoading: boolean;
   isIntern: boolean;
+  onClockIn: (payload: ClockInPayload) => void;
+  onClockOut: (payload: ClockOutPayload) => void;
   onMutabaahSubmit: () => void;
   onMutabaahCancel: () => void;
   mutabaahLoading: boolean;
@@ -264,12 +319,14 @@ function AttendanceMutabaahPanel({
   empDashData,
   empDashLoading,
   isIntern,
+  onClockIn,
+  onClockOut,
   onMutabaahSubmit,
   onMutabaahCancel,
   mutabaahLoading,
 }: AttendanceMutabaahPanelProps) {
-  const showMutabaah =
-    !isIntern && !empDashLoading && empDashData?.mutabaah_today?.has_record;
+  // Mutabaah selalu ditampilkan untuk non-intern (tidak bergantung clock in)
+  const showMutabaah = !isIntern;
 
   return (
     <div
@@ -282,25 +339,25 @@ function AttendanceMutabaahPanel({
     >
       {/* Clock Widget */}
       <div>
-        {clockWidget.loading ? (
+        {clockWidget.loading && !clockWidget.status ? (
           <ClockWidgetSkeleton />
         ) : (
           <ClockWidget
             status={clockWidget.status}
             isMobile={clockWidget.isMobile}
-            onClockIn={() => clockWidget.clockIn()}
-            onClockOut={() => clockWidget.clockOut()}
+            onClockIn={onClockIn}
+            onClockOut={onClockOut}
             disabled={false}
             loading={clockWidget.loading}
           />
         )}
       </div>
 
-      {/* Mutaba'ah Widget — only if not intern and has record */}
-      {showMutabaah && (
+      {/* Mutaba'ah Widget — always for non-intern, no clock-in dependency */}
+      {showMutabaah && !empDashLoading && empDashData?.mutabaah_today && (
         <div className="flex flex-col justify-center">
           <MutabaahCard
-            status={empDashData!.mutabaah_today}
+            status={empDashData.mutabaah_today}
             onSubmit={onMutabaahSubmit}
             onCancel={onMutabaahCancel}
             loading={mutabaahLoading}
@@ -309,7 +366,7 @@ function AttendanceMutabaahPanel({
       )}
 
       {/* Skeleton for mutabaah loading */}
-      {!isIntern && empDashLoading && (
+      {showMutabaah && empDashLoading && (
         <div className="flex flex-col justify-center">
           <MutabaahWidgetSkeleton />
         </div>
@@ -847,17 +904,16 @@ export function DashboardPage() {
   const { data: profile } = useEmployeeProfile();
   const clockWidget = useClockWidget();
   const { data: empDashData, loading: empDashLoading } = useEmployeeDashboard();
+  const { data: scheduleData, loading: scheduleLoading } = useTodaySchedule();
+  const { hasPermission } = usePermission();
 
-  const roleName = profile?.role_name || "";
-  const isHRD =
-    roleName === "HRD Admin" ||
-    roleName === "Super Admin" ||
-    roleName === "Supervisor";
+  // Permission-based HRD check
+  const isHRD = hasPermission(PERMISSIONS.HOME_ADMIN_READ);
 
   // Intern check — do not show mutabaah card for interns
-  // Check by contract type stored in profile or role name
   const contractType = (profile as unknown as { contract_type?: string })
     ?.contract_type;
+  const roleName = profile?.role_name || "";
   const isIntern =
     contractType === "intern" ||
     roleName?.toLowerCase().includes("intern") ||
@@ -868,7 +924,7 @@ export function DashboardPage() {
     isHRD ? "hrd" : "employee",
   );
 
-  // Mutabaah actions
+  // Mutabaah actions — tidak lagi tergantung attendance_log_id
   const {
     actionLoading: mutabaahLoading,
     submitToday,
@@ -876,8 +932,8 @@ export function DashboardPage() {
   } = useMutabaahActions();
 
   const handleMutabaahSubmit = async () => {
-    const attendanceLogId = empDashData?.mutabaah_today?.attendance_log_id;
-    if (!attendanceLogId) return;
+    // Opsional: passing attendance_log_id jika ada, tapi bukan requirement
+    const attendanceLogId = empDashData?.mutabaah_today?.attendance_log_id ?? 0;
     await submitToday(attendanceLogId);
   };
 
@@ -885,6 +941,14 @@ export function DashboardPage() {
     const logId = empDashData?.mutabaah_today?.mutabaah_log_id;
     if (!logId) return;
     await cancelToday(logId);
+  };
+
+  const handleClockIn = (payload: ClockInPayload) => {
+    clockWidget.clockIn(payload);
+  };
+
+  const handleClockOut = (payload: ClockOutPayload) => {
+    clockWidget.clockOut(payload);
   };
 
   const greeting = () => {
@@ -904,6 +968,10 @@ export function DashboardPage() {
     });
   };
 
+  // Determine work status
+  const isWorkingDay = scheduleLoading || scheduleData?.is_working_day !== false;
+  const dayOffReason = scheduleData?.reason;
+
   return (
     <MainLayout>
       <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 md:px-6">
@@ -921,16 +989,26 @@ export function DashboardPage() {
           {isHRD && <ViewToggle view={view} setView={setView} />}
         </div>
 
-        {/* Clock + Mutabaah side-by-side panel */}
-        <AttendanceMutabaahPanel
-          clockWidget={clockWidget}
-          empDashData={empDashData}
-          empDashLoading={empDashLoading}
-          isIntern={isIntern}
-          onMutabaahSubmit={handleMutabaahSubmit}
-          onMutabaahCancel={handleMutabaahCancel}
-          mutabaahLoading={mutabaahLoading}
-        />
+        {/* Conditional: Working day or Day off */}
+        {scheduleLoading ? (
+          <ClockWidgetSkeleton />
+        ) : isWorkingDay ? (
+          <AttendanceMutabaahPanel
+            clockWidget={clockWidget}
+            empDashData={empDashData}
+            empDashLoading={empDashLoading}
+            isIntern={isIntern}
+            onClockIn={handleClockIn}
+            onClockOut={handleClockOut}
+            onMutabaahSubmit={handleMutabaahSubmit}
+            onMutabaahCancel={handleMutabaahCancel}
+            mutabaahLoading={mutabaahLoading}
+          />
+        ) : (
+          <div className="mx-auto max-w-md">
+            <DayOffCard reason={dayOffReason} />
+          </div>
+        )}
 
         {/* Dashboard Content */}
         {view === "employee" ? <EmployeeDashboardView /> : <HRDDashboardView />}

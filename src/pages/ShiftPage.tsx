@@ -28,6 +28,8 @@ import {
   useScheduleMutations,
 } from "@/hooks/useShift";
 import { useEmployeeList } from "@/hooks/useEmployee";
+import { PermissionGate } from "@/components/ui/PermissionGate";
+import { PERMISSIONS } from "@/constants/permission";
 import type {
   ShiftTemplate,
   ShiftTemplateDetail,
@@ -1352,14 +1354,16 @@ function TemplateShiftTab({
           description="Tambahkan template shift untuk mengatur jadwal kerja"
           icon={<Clock className="h-12 w-12" />}
           action={
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => setShowForm(true)}
-            >
-              <Plus size={16} />
-              Tambah Template
-            </Button>
+            <PermissionGate permission={PERMISSIONS.TEMPLATE_SHIFT_CREATE}>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => setShowForm(true)}
+              >
+                <Plus size={16} />
+                Tambah Template
+              </Button>
+            </PermissionGate>
           }
         />
       ) : (
@@ -1783,14 +1787,16 @@ function ScheduleTab({
             !searchQuery &&
             !filterEmployee &&
             !filterShift && (
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => setShowForm(true)}
-              >
-                <Plus size={16} />
-                Assign Shift
-              </Button>
+              <PermissionGate permission={PERMISSIONS.SCHEDULE_CREATE}>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => setShowForm(true)}
+                >
+                  <Plus size={16} />
+                  Assign Shift
+                </Button>
+              </PermissionGate>
             )
           }
         />
@@ -2031,23 +2037,29 @@ export function ShiftPage() {
         </div>
         <div className="flex items-center gap-2 w-40 justify-end">
           {activeTab === "templates" ? (
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => setShowTemplateForm(true)}
-            >
-              <Plus size={16} />
-              Tambah Template
-            </Button>
+            <PermissionGate permission={PERMISSIONS.TEMPLATE_SHIFT_CREATE}>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => setShowTemplateForm(true)}
+                className="self-start sm:self-auto"
+              >
+                <Plus size={16} />
+                Tambah Template
+              </Button>
+            </PermissionGate>
           ) : (
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => setShowScheduleForm(true)}
-            >
-              <Plus size={16} />
-              Assign Shift
-            </Button>
+            <PermissionGate permission={PERMISSIONS.SCHEDULE_CREATE}>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => setShowScheduleForm(true)}
+                className="self-start sm:self-auto"
+              >
+                <Plus size={16} />
+                Assign Shift
+              </Button>
+            </PermissionGate>
           )}
         </div>
       </header>

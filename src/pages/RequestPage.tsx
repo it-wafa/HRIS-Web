@@ -26,6 +26,8 @@ import {
 } from "@/hooks/useBusinessTrip";
 import { useOvertimeList, useOvertimeMutations } from "@/hooks/useOvertime";
 import { useEmployeeList } from "@/hooks/useEmployee";
+import { PermissionGate } from "@/components/ui/PermissionGate";
+import { PERMISSIONS } from "@/constants/permission";
 import {
   PERMISSION_TYPE_OPTIONS,
   PERMISSION_STATUS_OPTIONS,
@@ -1334,15 +1336,17 @@ function PermissionTab() {
             placeholder="Filter status..."
           />
         </div>
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={() => setShowForm(true)}
-          className="self-start sm:self-auto"
-        >
-          <Plus size={16} />
-          Ajukan Izin
-        </Button>
+        <PermissionGate permission={PERMISSIONS.REQUEST_CREATE}>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setShowForm(true)}
+            className="self-start sm:self-auto"
+          >
+            <Plus size={16} />
+            Ajukan Izin
+          </Button>
+        </PermissionGate>
       </div>
 
       {loading ? (
@@ -1353,14 +1357,16 @@ function PermissionTab() {
           description="Ajukan izin kehadiran di sini"
           icon={<LogOut className="h-12 w-12" />}
           action={
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => setShowForm(true)}
-            >
-              <Plus size={16} />
-              Ajukan Izin
-            </Button>
+            <PermissionGate permission={PERMISSIONS.REQUEST_CREATE}>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => setShowForm(true)}
+              >
+                <Plus size={16} />
+                Ajukan Izin
+              </Button>
+            </PermissionGate>
           }
         />
       ) : (
@@ -1611,15 +1617,17 @@ function BusinessTripTab() {
             placeholder="Filter status..."
           />
         </div>
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={() => setShowForm(true)}
-          className="self-start sm:self-auto"
-        >
-          <Plus size={16} />
-          Ajukan Dinas Luar
-        </Button>
+        <PermissionGate permission={PERMISSIONS.BUSINESS_TRIP_CREATE}>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setShowForm(true)}
+            className="self-start sm:self-auto"
+          >
+            <Plus size={16} />
+            Ajukan Dinas Luar
+          </Button>
+        </PermissionGate>
       </div>
 
       {loading ? (
@@ -1630,14 +1638,16 @@ function BusinessTripTab() {
           description="Ajukan perjalanan dinas di sini"
           icon={<Plane className="h-12 w-12" />}
           action={
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => setShowForm(true)}
-            >
-              <Plus size={16} />
-              Ajukan Dinas Luar
-            </Button>
+            <PermissionGate permission={PERMISSIONS.BUSINESS_TRIP_CREATE}>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => setShowForm(true)}
+              >
+                <Plus size={16} />
+                Ajukan Dinas Luar
+              </Button>
+            </PermissionGate>
           }
         />
       ) : (
@@ -1880,15 +1890,17 @@ function OvertimeTab() {
             placeholder="Filter status..."
           />
         </div>
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={() => setShowForm(true)}
-          className="self-start sm:self-auto"
-        >
-          <Plus size={16} />
-          Ajukan Lembur
-        </Button>
+        <PermissionGate permission={PERMISSIONS.OVERTIME_CREATE}>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => setShowForm(true)}
+            className="self-start sm:self-auto"
+          >
+            <Plus size={16} />
+            Ajukan Lembur
+          </Button>
+        </PermissionGate>
       </div>
 
       {loading ? (
@@ -1899,14 +1911,16 @@ function OvertimeTab() {
           description="Ajukan lembur jika diperlukan"
           icon={<Timer className="h-12 w-12" />}
           action={
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={() => setShowForm(true)}
-            >
-              <Plus size={16} />
-              Ajukan Lembur
-            </Button>
+            <PermissionGate permission={PERMISSIONS.OVERTIME_CREATE}>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => setShowForm(true)}
+              >
+                <Plus size={16} />
+                Ajukan Lembur
+              </Button>
+            </PermissionGate>
           }
         />
       ) : (
