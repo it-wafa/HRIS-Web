@@ -11,6 +11,7 @@ import {
   Ban,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatTime, formatDateLong, formatDateMedium, formatDateShort, formatDateWeekdayShort } from "@/utils/date";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -240,13 +241,7 @@ function PermissionDetailModal({
   const [rejectMode, setRejectMode] = useState(false);
   const [rejectNotes, setRejectNotes] = useState("");
 
-  const formatDate = (dateStr: string) =>
-    new Date(dateStr).toLocaleDateString("id-ID", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
+
 
   return (
     <div
@@ -279,7 +274,7 @@ function PermissionDetailModal({
                 {request.employee_name || "—"}
               </p>
               <p className="text-xs text-(--muted-foreground)">
-                {formatDate(request.date)}
+                {formatDateLong(request.date)}
               </p>
             </div>
             <StatusBadge status={request.status} />
@@ -429,12 +424,7 @@ function BusinessTripDetailModal({
   const [rejectMode, setRejectMode] = useState(false);
   const [rejectNotes, setRejectNotes] = useState("");
 
-  const formatDate = (dateStr: string) =>
-    new Date(dateStr).toLocaleDateString("id-ID", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
+
 
   return (
     <div
@@ -490,7 +480,7 @@ function BusinessTripDetailModal({
               <div className="col-span-2">
                 <p className="text-xs text-(--muted-foreground)">Periode</p>
                 <p className="text-sm text-(--foreground)">
-                  {formatDate(trip.start_date)} — {formatDate(trip.end_date)}
+                  {formatDateMedium(trip.start_date)} — {formatDateMedium(trip.end_date)}
                 </p>
               </div>
             </div>
@@ -619,13 +609,7 @@ function OvertimeDetailModal({
   const [rejectMode, setRejectMode] = useState(false);
   const [rejectNotes, setRejectNotes] = useState("");
 
-  const formatDate = (dateStr: string) =>
-    new Date(dateStr).toLocaleDateString("id-ID", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
+
 
   const formatDuration = (minutes: number) => {
     if (minutes <= 0) return "—";
@@ -634,13 +618,7 @@ function OvertimeDetailModal({
     return h > 0 ? `${h} jam${m > 0 ? ` ${m} menit` : ""}` : `${m} menit`;
   };
 
-  const formatDateTime = (ts: string | null) => {
-    if (!ts) return "—";
-    return new Date(ts).toLocaleTimeString("id-ID", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+
 
   return (
     <div
@@ -673,7 +651,7 @@ function OvertimeDetailModal({
                 {ot.employee_name || "—"}
               </p>
               <p className="text-xs text-(--muted-foreground)">
-                {formatDate(ot.overtime_date)}
+                {formatDateLong(ot.overtime_date)}
               </p>
             </div>
             <StatusBadge status={ot.status} />
@@ -705,8 +683,8 @@ function OvertimeDetailModal({
                     Jam Lembur
                   </p>
                   <p className="text-sm text-(--foreground)">
-                    {formatDateTime(ot.planned_start)} —{" "}
-                    {formatDateTime(ot.planned_end)}
+                    {formatTime(ot.planned_start)} —{" "}
+                    {formatTime(ot.planned_end)}
                   </p>
                 </div>
               )}
@@ -1294,12 +1272,7 @@ function PermissionTab() {
     setDetailRequest(null);
   };
 
-  const formatDate = (dateStr: string) =>
-    new Date(dateStr).toLocaleDateString("id-ID", {
-      weekday: "short",
-      day: "numeric",
-      month: "short",
-    });
+
 
   return (
     <div className="space-y-4">
@@ -1416,7 +1389,7 @@ function PermissionTab() {
                         )?.label || req.permission_type}
                       </td>
                       <td className="px-5 py-3 text-sm text-(--muted-foreground) whitespace-nowrap">
-                        {formatDate(req.date)}
+                        {formatDateWeekdayShort(req.date)}
                       </td>
                       <td className="px-5 py-3 text-sm text-(--muted-foreground)">
                         {req.leave_time || req.return_time
@@ -1468,7 +1441,7 @@ function PermissionTab() {
                   <StatusBadge status={req.status} />
                 </div>
                 <div className="flex items-center gap-3 text-xs text-(--muted-foreground) mb-3">
-                  <span>{formatDate(req.date)}</span>
+                  <span>{formatDateWeekdayShort(req.date)}</span>
                   {(req.leave_time || req.return_time) && (
                     <span>
                       {[req.leave_time, req.return_time]
@@ -1581,12 +1554,7 @@ function BusinessTripTab() {
     setDetailTrip(null);
   };
 
-  const formatDate = (dateStr: string) =>
-    new Date(dateStr).toLocaleDateString("id-ID", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
+
 
   return (
     <div className="space-y-4">
@@ -1692,8 +1660,8 @@ function BusinessTripTab() {
                         {trip.destination}
                       </td>
                       <td className="px-5 py-3 text-sm text-(--muted-foreground) whitespace-nowrap">
-                        {formatDate(trip.start_date)} —{" "}
-                        {formatDate(trip.end_date)}
+                        {formatDateWeekdayShort(trip.start_date)} —{" "}
+                        {formatDateWeekdayShort(trip.end_date)}
                       </td>
                       <td className="px-5 py-3 text-sm font-semibold text-(--foreground)">
                         {trip.total_days}
@@ -1737,7 +1705,7 @@ function BusinessTripTab() {
                   <StatusBadge status={trip.status} />
                 </div>
                 <p className="text-xs text-(--muted-foreground) mb-3">
-                  {formatDate(trip.start_date)} — {formatDate(trip.end_date)} (
+                  {formatDateWeekdayShort(trip.start_date)} — {formatDateWeekdayShort(trip.end_date)} (
                   {trip.total_days} hari)
                 </p>
                 <p className="text-xs text-(--foreground) line-clamp-2 mb-3">
@@ -1844,12 +1812,7 @@ function OvertimeTab() {
     setDetailOvertime(null);
   };
 
-  const formatDate = (dateStr: string) =>
-    new Date(dateStr).toLocaleDateString("id-ID", {
-      weekday: "short",
-      day: "numeric",
-      month: "short",
-    });
+
 
   const formatDuration = (minutes: number) => {
     if (minutes <= 0) return "—";
@@ -1960,7 +1923,7 @@ function OvertimeTab() {
                         {ot.employee_name || "—"}
                       </td>
                       <td className="px-5 py-3 text-sm text-(--muted-foreground) whitespace-nowrap">
-                        {formatDate(ot.overtime_date)}
+                        {formatDateWeekdayShort(ot.overtime_date)}
                       </td>
                       <td className="px-5 py-3 text-sm text-(--foreground)">
                         {formatDuration(ot.planned_minutes)}
@@ -2008,7 +1971,7 @@ function OvertimeTab() {
                       {ot.employee_name || "—"}
                     </p>
                     <p className="text-xs text-(--muted-foreground)">
-                      {formatDate(ot.overtime_date)}
+                      {formatDateMedium(ot.overtime_date)}
                     </p>
                   </div>
                   <StatusBadge status={ot.status} />
@@ -2270,11 +2233,7 @@ function AllRequestsTab() {
                     {req.summary}
                   </td>
                   <td className="px-5 py-3 text-sm text-(--muted-foreground) whitespace-nowrap">
-                    {new Date(req.date).toLocaleDateString("id-ID", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    })}
+                    {formatDateShort(req.date)}
                   </td>
                   <td className="px-5 py-3">
                     <StatusBadge status={req.status} />
@@ -2321,11 +2280,7 @@ function AllRequestsTab() {
               {req.summary}
             </p>
             <p className="text-xs text-(--muted-foreground) mb-3">
-              {new Date(req.date).toLocaleDateString("id-ID", {
-                day: "numeric",
-                month: "short",
-                year: "numeric",
-              })}
+              {formatDateShort(req.date)}
             </p>
             <div className="flex gap-2">
               <MobileActionButton
@@ -2391,12 +2346,7 @@ function AllRequestDetailModal({
   const [rejectMode, setRejectMode] = useState(false);
   const [rejectNotes, setRejectNotes] = useState("");
 
-  const formatDate = (dateStr: string) =>
-    new Date(dateStr).toLocaleDateString("id-ID", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
+
 
   const renderDetails = () => {
     if (item.type === "permission") {
@@ -2443,7 +2393,7 @@ function AllRequestDetailModal({
             <div>
               <p className="text-xs text-(--muted-foreground)">Periode</p>
               <p className="text-sm text-(--foreground)">
-                {formatDate(req.start_date)} — {formatDate(req.end_date)}
+                {formatDateMedium(req.start_date)} — {formatDateMedium(req.end_date)}
               </p>
             </div>
           </div>
@@ -2463,7 +2413,7 @@ function AllRequestDetailModal({
             <div>
               <p className="text-xs text-(--muted-foreground)">Tanggal</p>
               <p className="text-sm font-medium text-(--foreground)">
-                {formatDate(req.overtime_date)}
+                {formatDateMedium(req.overtime_date)}
               </p>
             </div>
             <div>
@@ -2526,7 +2476,7 @@ function AllRequestDetailModal({
                 {item.employee}
               </p>
               <p className="text-xs text-(--muted-foreground)">
-                {formatDate(item.date)}
+                {formatDateMedium(item.date)}
               </p>
             </div>
             <StatusBadge status={item.status} />

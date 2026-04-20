@@ -17,6 +17,7 @@ import {
   Ban,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatTime, formatDateWeekdayShort, formatDateTime } from "@/utils/date";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -347,16 +348,7 @@ function OverrideDetailModal({
   const [rejectMode, setRejectMode] = useState(false);
   const [rejectNotes, setRejectNotes] = useState("");
 
-  const formatDateTime = (ts: string | null) => {
-    if (!ts) return "—";
-    return new Date(ts).toLocaleString("id-ID", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+
 
   const OVERRIDE_STATUS_COLORS: Record<string, string> = {
     pending:
@@ -786,21 +778,7 @@ function AttendanceLogTab() {
     );
   }, [logs, searchQuery]);
 
-  const formatTime = (ts: string | null) => {
-    if (!ts) return "—";
-    const d = new Date(ts);
-    return d.toLocaleTimeString("id-ID", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
 
-  const formatDate = (dateStr: string) =>
-    new Date(dateStr).toLocaleDateString("id-ID", {
-      weekday: "short",
-      day: "numeric",
-      month: "short",
-    });
 
   return (
     <div className="space-y-4">
@@ -980,7 +958,7 @@ function AttendanceLogTab() {
                       )}
                     >
                       <td className="px-5 py-3 text-sm text-(--foreground) whitespace-nowrap">
-                        {formatDate(log.attendance_date)}
+                        {formatDateWeekdayShort(log.attendance_date)}
                       </td>
                       <td className="px-5 py-3">
                         <div>
@@ -1043,7 +1021,7 @@ function AttendanceLogTab() {
                       {log.employee_name || "—"}
                     </p>
                     <p className="text-xs text-(--muted-foreground)">
-                      {formatDate(log.attendance_date)}
+                      {formatDateWeekdayShort(log.attendance_date)}
                     </p>
                   </div>
                   <StatusBadge status={log.status} />
@@ -1153,15 +1131,7 @@ function AttendanceOverrideTab() {
     },
   };
 
-  const formatDateTime = (ts: string | null) => {
-    if (!ts) return "—";
-    return new Date(ts).toLocaleString("id-ID", {
-      day: "numeric",
-      month: "short",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+
 
   return (
     <div className="space-y-4">

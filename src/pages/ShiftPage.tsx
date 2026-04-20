@@ -15,6 +15,7 @@ import {
   Eye,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatDateShort } from "@/utils/date";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -1709,14 +1710,7 @@ function ScheduleTab({
   const shiftOptions = shifts?.map((s) => ({ id: s.id, name: s.name })) || [];
 
   // Format date for display
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("id-ID", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
-  };
+
 
   return (
     <>
@@ -1859,11 +1853,11 @@ function ScheduleTab({
                         </span>
                       </td>
                       <td className="px-5 py-4 text-sm text-(--muted-foreground)">
-                        {formatDate(schedule.effective_date)}
+                        {formatDateShort(schedule.effective_date)}
                       </td>
                       <td className="px-5 py-4 text-sm text-(--muted-foreground)">
                         {schedule.end_date ? (
-                          formatDate(schedule.end_date)
+                          formatDateShort(schedule.end_date)
                         ) : (
                           <span className="italic">Seterusnya</span>
                         )}
@@ -1938,13 +1932,13 @@ function ScheduleTab({
                     <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-(--muted-foreground)">
                       <span className="flex items-center gap-1">
                         <Calendar size={12} />
-                        Mulai: {formatDate(schedule.effective_date)}
+                        Mulai: {formatDateShort(schedule.effective_date)}
                       </span>
                       <span className="flex items-center gap-1">
                         <Calendar size={12} />
                         Akhir:{" "}
                         {schedule.end_date
-                          ? formatDate(schedule.end_date)
+                          ? formatDateShort(schedule.end_date)
                           : "Seterusnya"}
                       </span>
                     </div>

@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
+import { formatDateMedium } from "@/utils/date";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -1047,14 +1048,7 @@ export function EmployeeDetailPage() {
     }
   };
 
-  const formatDate = (dateStr?: string | null) => {
-    if (!dateStr) return "-";
-    return new Date(dateStr).toLocaleDateString("id-ID", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-  };
+
 
   if (loading) {
     return (
@@ -1188,7 +1182,7 @@ export function EmployeeDetailPage() {
                   <InfoItem label="Nama Lengkap" value={employee.full_name} />
                   <InfoItem
                     label="Tanggal Lahir"
-                    value={formatDate(employee.birth_date)}
+                    value={formatDateMedium(employee.birth_date)}
                   />
                   <InfoItem label="Tempat Lahir" value={employee.birth_place} />
                   <InfoItem
@@ -1399,9 +1393,9 @@ export function EmployeeDetailPage() {
                               </span>
                             </td>
                             <td className="px-5 py-4 text-sm text-(--foreground)">
-                              {formatDate(contract.start_date)}
+                              {formatDateMedium(contract.start_date)}
                               {contract.end_date &&
-                                ` — ${formatDate(contract.end_date)}`}
+                                ` — ${formatDateMedium(contract.end_date)}`}
                             </td>
                             <td className="px-5 py-4 text-sm text-(--muted-foreground) max-w-xs truncate">
                               {contract.notes || "-"}

@@ -1,5 +1,6 @@
 import { BookOpen, Check, X, Loader2, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatTime } from "@/utils/date";
 import type { MutabaahTodayStatus } from "@/types/mutabaah";
 
 interface MutabaahWidgetProps {
@@ -21,13 +22,7 @@ export function MutabaahWidget({
 }: MutabaahWidgetProps) {
   if (!status.has_record) return null;
 
-  const formatTime = (ts: string | null) => {
-    if (!ts) return "";
-    return new Date(ts).toLocaleTimeString("id-ID", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+
 
   const canCancel = status.is_submitted && mutabaahLogId != null;
 

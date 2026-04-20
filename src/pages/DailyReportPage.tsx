@@ -10,6 +10,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatDateTimeLong, formatDateLong, formatDateWeekdayShortYear, formatTime } from "@/utils/date";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -200,24 +201,7 @@ function ReportDetailModal({
   report: DailyReport;
   onClose: () => void;
 }) {
-  const formatDateTime = (ts: string | null) => {
-    if (!ts) return "—";
-    return new Date(ts).toLocaleString("id-ID", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
 
-  const formatDate = (dateStr: string) =>
-    new Date(dateStr).toLocaleDateString("id-ID", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
 
   return (
     <div
@@ -238,7 +222,7 @@ function ReportDetailModal({
               Laporan Harian
             </h3>
             <p className="text-xs text-(--muted-foreground)">
-              {formatDate(report.report_date)}
+              {formatDateLong(report.report_date)}
             </p>
           </div>
           <button
@@ -266,7 +250,7 @@ function ReportDetailModal({
           </div>
 
           <div className="flex items-center justify-between text-xs text-(--muted-foreground)">
-            <span>Dikirim: {formatDateTime(report.submitted_at)}</span>
+            <span>Dikirim: {formatDateTimeLong(report.submitted_at)}</span>
             {report.is_submitted ? (
               <span className="inline-flex items-center gap-1 text-green-600">
                 <CheckCircle2 size={12} />
@@ -342,21 +326,7 @@ function ExpandableRow({
 }) {
   const [expanded, setExpanded] = useState(false);
 
-  const formatDate = (dateStr: string) =>
-    new Date(dateStr).toLocaleDateString("id-ID", {
-      weekday: "short",
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
 
-  const formatTime = (ts: string | null) => {
-    if (!ts) return "—";
-    return new Date(ts).toLocaleTimeString("id-ID", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
 
   return (
     <>
@@ -368,7 +338,7 @@ function ExpandableRow({
         onClick={() => setExpanded(!expanded)}
       >
         <td className="px-5 py-3 text-sm text-(--foreground) whitespace-nowrap">
-          {formatDate(report.report_date)}
+          {formatDateWeekdayShortYear(report.report_date)}
         </td>
         <td className="px-5 py-3 text-sm font-medium text-(--foreground)">
           {report.employee_name || "—"}

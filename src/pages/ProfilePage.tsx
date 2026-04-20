@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
+import { formatDateMedium } from "@/utils/date";
 import { MainLayout } from "@/components/layout/MainLayout";
 import {
   useEmployeeProfile,
@@ -486,12 +487,7 @@ function TabContract({ employeeId }: { employeeId: number | null }) {
     return Math.max(0, diff);
   };
 
-  const formatDate = (dateStr: string) =>
-    new Date(dateStr).toLocaleDateString("id-ID", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
+
 
   return (
     <div className="space-y-6">
@@ -520,13 +516,13 @@ function TabContract({ employeeId }: { employeeId: number | null }) {
             />
             <InfoItem
               label="Tanggal Mulai"
-              value={formatDate(activeContract.start_date)}
+              value={formatDateMedium(activeContract.start_date)}
             />
             <InfoItem
               label="Tanggal Selesai"
               value={
                 activeContract.end_date
-                  ? formatDate(activeContract.end_date)
+                  ? formatDateMedium(activeContract.end_date)
                   : "Tidak terbatas"
               }
             />
@@ -595,8 +591,8 @@ function TabContract({ employeeId }: { employeeId: number | null }) {
                   </span>
                 </div>
                 <span className="text-xs text-(--muted-foreground)">
-                  {formatDate(contract.start_date)} -{" "}
-                  {contract.end_date ? formatDate(contract.end_date) : "—"}
+                  {formatDateMedium(contract.start_date)} -{" "}
+                  {contract.end_date ? formatDateMedium(contract.end_date) : "—"}
                 </span>
               </div>
             ))}
@@ -624,14 +620,7 @@ export function ProfilePage() {
   const [_, setPhotoUploading] = useState(false);
   const loading = profileLoading || contactsLoading;
 
-  const formatDate = (dateStr?: string | null) => {
-    if (!dateStr) return "-";
-    return new Date(dateStr).toLocaleDateString("id-ID", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-  };
+
 
   const initials = profile?.full_name
     ? profile.full_name
@@ -845,7 +834,7 @@ export function ProfilePage() {
                   <InfoItem label="Nama Lengkap" value={profile.full_name} />
                   <InfoItem
                     label="Tanggal Lahir"
-                    value={formatDate(profile.birth_date)}
+                    value={formatDateMedium(profile.birth_date)}
                   />
                   <InfoItem label="Tempat Lahir" value={profile.birth_place} />
                   <InfoItem
@@ -993,11 +982,11 @@ export function ProfilePage() {
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                   <InfoItem
                     label="Bergabung Sejak"
-                    value={formatDate(profile.created_at)}
+                    value={formatDateMedium(profile.created_at)}
                   />
                   <InfoItem
                     label="Terakhir Diperbarui"
-                    value={formatDate(profile.updated_at)}
+                    value={formatDateMedium(profile.updated_at)}
                   />
                 </div>
               </div>

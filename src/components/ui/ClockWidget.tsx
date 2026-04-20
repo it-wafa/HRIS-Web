@@ -8,6 +8,7 @@ import {
   Camera,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatTimeFull, formatDateLong, formatTime } from "@/utils/date";
 import { presignClockPhoto, uploadPhotoToPresigned } from "@/lib/dashboard-api";
 import type {
   TodayAttendanceStatus,
@@ -25,33 +26,7 @@ export interface ClockWidgetProps {
   loading?: boolean;
 }
 
-function formatTime(date: Date): string {
-  return date.toLocaleTimeString("id-ID", {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false,
-  });
-}
 
-function formatDate(date: Date): string {
-  return date.toLocaleDateString("id-ID", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-}
-
-function formatClockTime(isoString: string | null): string {
-  if (!isoString) return "--:--";
-  const date = new Date(isoString);
-  return date.toLocaleTimeString("id-ID", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  });
-}
 
 /** Get current GPS position */
 function getGeolocation(): Promise<{ latitude: number; longitude: number }> {
@@ -217,10 +192,10 @@ export function ClockWidget({
         {/* Time display */}
         <div className="text-center">
           <div className="font-mono text-5xl font-bold tracking-tight text-white drop-shadow-lg md:text-6xl">
-            {formatTime(currentTime)}
+            {formatTimeFull(currentTime)}
           </div>
           <div className="mt-1.5 text-sm font-medium text-white/80">
-            {formatDate(currentTime)}
+            {formatDateLong(currentTime)}
           </div>
         </div>
       </div>
@@ -256,7 +231,7 @@ export function ClockWidget({
             {isComplete
               ? `Presensi Lengkap`
               : status?.has_clocked_in
-                ? `Masuk pukul ${formatClockTime(status?.clock_in_at)}`
+                ? `Masuk pukul ${formatTime(status?.clock_in_at)}`
                 : "Belum Clock In"}
           </div>
         </div>
@@ -270,7 +245,7 @@ export function ClockWidget({
                 Jam Masuk
               </div>
               <div className="font-mono text-lg font-bold text-(--foreground)">
-                {formatClockTime(status?.clock_in_at ?? null)}
+                {formatTime(status?.clock_in_at ?? null)}
               </div>
             </div>
             <div className="rounded-xl bg-(--muted)/50 px-3 py-2.5 text-center">
@@ -279,7 +254,7 @@ export function ClockWidget({
                 Jam Keluar
               </div>
               <div className="font-mono text-lg font-bold text-(--foreground)">
-                {formatClockTime(status?.clock_out_at ?? null)}
+                {formatTime(status?.clock_out_at ?? null)}
               </div>
             </div>
           </div>

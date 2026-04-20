@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { BookOpen, Search, CheckCircle2, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatTime } from "@/utils/date";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -78,13 +79,7 @@ function DailyTab() {
     };
   }, [data]);
 
-  const formatTime = (ts: string | null) => {
-    if (!ts) return "—";
-    return new Date(ts).toLocaleTimeString("id-ID", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+
 
   return (
     <div className="space-y-4">

@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { formatDateTime } from "@/utils/date";
 import { Clock, CheckCircle2, XCircle, Circle } from "lucide-react";
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -20,20 +21,7 @@ export interface ApprovalTimelineProps {
   className?: string;
 }
 
-/**
- * Format date/time for display
- */
-function formatDateTime(isoString: string | null): string {
-  if (!isoString) return "-";
-  const date = new Date(isoString);
-  return date.toLocaleString("id-ID", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
+
 
 /**
  * Get icon based on status

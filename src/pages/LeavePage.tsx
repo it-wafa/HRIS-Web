@@ -10,6 +10,7 @@ import {
   Ban,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatDateShort } from "@/utils/date";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -341,12 +342,7 @@ function LeaveDetailModal({
     other: "Lainnya",
   };
 
-  const formatDate = (dateStr: string) =>
-    new Date(dateStr).toLocaleDateString("id-ID", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
+
 
   const getTimelineSteps = (req: LeaveRequest): TimelineStep[] => {
     if (!req.approvals || req.approvals.length === 0) return [];
@@ -408,8 +404,8 @@ function LeaveDetailModal({
             <div>
               <p className="text-xs text-(--muted-foreground)">Periode</p>
               <p className="text-sm font-medium text-(--foreground)">
-                {formatDate(request.start_date)} —{" "}
-                {formatDate(request.end_date)}
+                {formatDateShort(request.start_date)} —{" "}
+                {formatDateShort(request.end_date)}
               </p>
             </div>
             <div>
@@ -609,12 +605,7 @@ function LeaveRequestTab() {
     setSelectedRequest(null);
   };
 
-  const formatDate = (dateStr: string) =>
-    new Date(dateStr).toLocaleDateString("id-ID", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
+
 
   const CATEGORY_LABELS: Record<string, string> = {
     annual: "Cuti Tahunan",
@@ -748,8 +739,8 @@ function LeaveRequestTab() {
                         </div>
                       </td>
                       <td className="px-5 py-3 text-sm text-(--muted-foreground) whitespace-nowrap">
-                        {formatDate(req.start_date)} —{" "}
-                        {formatDate(req.end_date)}
+                        {formatDateShort(req.start_date)} —{" "}
+                        {formatDateShort(req.end_date)}
                       </td>
                       <td className="px-5 py-3 text-sm font-semibold text-(--foreground)">
                         {req.total_days}
@@ -827,7 +818,7 @@ function LeaveRequestTab() {
                   <div>
                     <p className="font-medium">Periode</p>
                     <p>
-                      {formatDate(req.start_date)} — {formatDate(req.end_date)}
+                      {formatDateShort(req.start_date)} — {formatDateShort(req.end_date)}
                     </p>
                   </div>
                   <div>

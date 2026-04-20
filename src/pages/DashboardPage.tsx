@@ -15,6 +15,7 @@ import {
   Sun,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatDateCompact, formatDateShort, formatDateLong, formatTime, getGreeting } from "@/utils/date";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { StatCard, StatCardSkeleton } from "@/components/ui/StatCard";
 import { ClockWidget, ClockWidgetSkeleton } from "@/components/ui/ClockWidget";
@@ -138,10 +139,7 @@ function PendingRequestCard({ request }: { request: PendingRequest }) {
           {request.label}
         </div>
         <div className="text-xs text-(--muted-foreground)">
-          {new Date(request.created_at).toLocaleDateString("id-ID", {
-            day: "numeric",
-            month: "short",
-          })}
+          {formatDateCompact(request.created_at)}
         </div>
       </div>
       <span className="shrink-0 rounded-full bg-yellow-500/10 px-2 py-0.5 text-xs font-medium text-yellow-600">
@@ -173,10 +171,7 @@ function ApprovalQueueRow({ item }: { item: ApprovalQueueItem }) {
         {item.label}
       </td>
       <td className="py-3 px-4 text-xs text-(--muted-foreground)">
-        {new Date(item.created_at).toLocaleDateString("id-ID", {
-          day: "numeric",
-          month: "short",
-        })}
+        {formatDateCompact(item.created_at)}
       </td>
     </tr>
   );
@@ -229,11 +224,7 @@ function ExpiringContractCard({ contract }: { contract: ExpiringContract }) {
         </div>
         <div className="text-xs text-(--muted-foreground)">
           {contract.contract_type} • Berakhir{" "}
-          {new Date(contract.end_date).toLocaleDateString("id-ID", {
-            day: "numeric",
-            month: "short",
-            year: "numeric",
-          })}
+          {formatDateShort(contract.end_date)}
         </div>
       </div>
       <span
@@ -468,17 +459,7 @@ function MutabaahCard({
               )}
             />
             {status.is_submitted
-              ? `Dibaca pukul ${
-                  status.submitted_at
-                    ? new Date(status.submitted_at).toLocaleTimeString(
-                        "id-ID",
-                        {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        },
-                      )
-                    : "--:--"
-                }`
+              ? `Dibaca pukul ${formatTime(status.submitted_at)}`
               : "Belum membaca hari ini"}
           </div>
         </div>
@@ -949,22 +930,7 @@ export function DashboardPage() {
     clockWidget.clockOut(payload);
   };
 
-  const greeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "Selamat Pagi";
-    if (hour < 15) return "Selamat Siang";
-    if (hour < 18) return "Selamat Sore";
-    return "Selamat Malam";
-  };
 
-  const formatDate = () => {
-    return new Date().toLocaleDateString("id-ID", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-  };
 
   // Determine work status
   const isWorkingDay =
@@ -978,12 +944,12 @@ export function DashboardPage() {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-(--foreground)">
-              {greeting()},{" "}
+              {getGreeting()},{" "}
               <span className="text-primary-gradient">
                 {profile?.full_name || cachedProfile?.fullname || "User"}
               </span>
             </h1>
-            <p className="text-sm text-(--muted-foreground)">{formatDate()}</p>
+            <p className="text-sm text-(--muted-foreground)">{formatDateLong(new Date())}</p>
           </div>
           {isHRD && <ViewToggle view={view} setView={setView} />}
         </div>

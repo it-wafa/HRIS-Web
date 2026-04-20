@@ -9,6 +9,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatDateLong } from "@/utils/date";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -509,13 +510,7 @@ function ListView({
     );
   }
 
-  const formatDate = (dateStr: string) =>
-    new Date(dateStr).toLocaleDateString("id-ID", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
+
 
   return (
     <>
@@ -552,7 +547,7 @@ function ListView({
                   )}
                 >
                   <td className="px-5 py-4 text-sm text-(--foreground) whitespace-nowrap">
-                    {formatDate(holiday.date)}
+                    {formatDateLong(holiday.date)}
                   </td>
                   <td className="px-5 py-4">
                     <div>
@@ -624,7 +619,7 @@ function ListView({
                   {holiday.name}
                 </p>
                 <p className="text-xs text-(--muted-foreground) mt-0.5">
-                  {formatDate(holiday.date)}
+                  {formatDateLong(holiday.date)}
                 </p>
                 {holiday.description && (
                   <p className="text-xs text-(--muted-foreground) mt-1 line-clamp-1">
